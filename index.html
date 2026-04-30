@@ -11,6 +11,9 @@
         body { font-family: 'Inter', sans-serif; background: #05070a; color: #e2e8f0; margin: 0; overflow-x: hidden; }
         .glass { background: #0d1117; border: 1px solid #1f2937; }
         
+        /* Dashboard Scaling (Zoom Out) */
+        .main-container { max-width: 480px; margin: 0 auto; padding: 24px; }
+
         /* RIGHT-SIDE DRAWER */
         #sideDrawer {
             position: fixed; top: 0; right: -320px; width: 320px; height: 100%;
@@ -21,15 +24,17 @@
         .sub-panel { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; background: #0d1117; transition: 0.3s ease; z-index: 1001; padding: 24px; }
         .sub-panel.active { left: 0; }
 
-        /* UI Components */
-        .upload-box { position: relative; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, #0d1117, #161b22); border: 1px solid #1f2937; border-radius: 16px; transition: 0.3s; }
+        /* REVERSED SIZE: Upload Boxes */
+        .upload-box { position: relative; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, #0d1117, #161b22); border: 1px solid #1f2937; border-radius: 16px; transition: 0.3s; padding: 10px; }
+        .box-label { font-size: 11px; font-weight: 900; color: #e2e8f0; text-transform: uppercase; margin-bottom: 10px; }
+        .btn-ui { background: #1f2937; color: #94a3b8; padding: 4px 10px; border-radius: 4px; font-size: 8px; font-weight: 700; pointer-events: none; border: 1px solid #334155; }
+        
         .file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
-        .btn-ui { background: #4f46e5; color: white; padding: 6px 12px; border-radius: 4px; font-size: 9px; font-weight: 900; pointer-events: none; }
         .tick { display: none; color: #10b981; font-size: 24px; }
         input:valid ~ .btn-ui, input:valid ~ .box-label { display: none; }
         input:valid ~ .tick { display: block; }
 
-        /* Switch UI */
+        /* Toggle Switch UI */
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .slider { position: absolute; cursor: pointer; inset: 0; background: #1f2937; border-radius: 34px; transition: .4s; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: .4s; }
@@ -40,8 +45,8 @@
         .drawer-overlay.active { display: block; }
         .hidden { display: none !important; }
         
-        /* Save/Edit Utility */
-        .lock-btn { width: 100%; background: #4f46e5; color: white; font-size: 9px; font-weight: bold; padding: 6px; border-radius: 6px; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        /* Utility */
+        .lock-btn { width: 100%; background: #4f46e5; color: white; font-size: 9px; font-weight: bold; padding: 8px; border-radius: 6px; margin-top: 10px; text-transform: uppercase; }
         .edit-link { font-size: 9px; font-weight: 900; color: #6366f1; text-transform: uppercase; text-decoration: underline; cursor: pointer; }
     </style>
 </head>
@@ -62,7 +67,7 @@
                     <input type="password" id="gem" placeholder="Enter API Key" class="w-full bg-black/50 border border-slate-800 rounded-lg p-2 text-xs outline-none">
                     <button onclick="toggleLock('gem')" class="lock-btn">Save & Lock</button>
                 </div>
-                <div id="gemLocked" class="hidden flex justify-between items-center bg-black/20 p-2 rounded-lg border border-white/5">
+                <div id="gemLocked" class="hidden flex justify-between items-center bg-black/20 p-2 rounded-lg">
                     <span class="text-[10px] text-slate-500 italic">••••••••••••••••</span>
                     <span onclick="toggleLock('gem')" class="edit-link">Edit</span>
                 </div>
@@ -80,85 +85,106 @@
             </nav>
         </div>
 
-        <div id="historyPanel" class="sub-panel">
-            <button onclick="closeSub('historyPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
-            <h3 class="text-xs font-black uppercase mb-4 text-slate-300">Journal List</h3>
-            <div id="histList" class="space-y-3 overflow-y-auto max-h-[70vh]"></div>
-        </div>
-
         <div id="settingsPanel" class="sub-panel">
             <button onclick="closeSub('settingsPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
             
-            <div class="flex justify-between items-center mb-10 bg-black/30 p-4 rounded-2xl">
-                <span id="modeLabel" class="text-[10px] font-black uppercase tracking-tighter text-slate-400">MANUAL</span>
+            <div class="flex justify-between items-center mb-8 bg-black/30 p-4 rounded-2xl">
+                <span id="modeLabel" class="text-[10px] font-black uppercase text-slate-400">MANUAL</span>
                 <label class="switch">
                     <input type="checkbox" id="modeSw" onchange="toggleMode()">
                     <span class="slider"></span>
                 </label>
             </div>
             
-            <div id="manArea" class="space-y-4">
-                <div id="manInput">
-                    <input type="number" id="bal" placeholder="XM Balance ($)" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                    <button onclick="toggleLock('man')" class="lock-btn">Save Balance</button>
+            <div class="space-y-4">
+                <div id="accInput">
+                    <div id="manFields" class="space-y-3">
+                        <input type="number" id="bal" placeholder="XM Balance ($)" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
+                    </div>
+                    <div id="liveFields" class="hidden space-y-3">
+                        <input type="password" id="tok" placeholder="MetaApi Token" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
+                        <input type="text" id="accId" placeholder="Account ID" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
+                    </div>
+                    <button onclick="toggleLock('acc')" class="lock-btn">Save Account</button>
                 </div>
-                <div id="manLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-                    <span id="lockedBal" class="text-xs font-bold text-slate-400">$0.00</span>
-                    <span onclick="toggleLock('man')" class="edit-link">Edit</span>
-                </div>
-            </div>
-
-            <div id="liveArea" class="hidden space-y-4">
-                <div id="liveInput">
-                    <input type="password" id="tok" placeholder="MetaApi Token" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none mb-3">
-                    <input type="text" id="acc" placeholder="Account ID" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                    <button onclick="toggleLock('live')" class="lock-btn">Save Credentials</button>
-                </div>
-                <div id="liveLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-                    <span class="text-xs font-bold text-slate-400 italic">Account Linked</span>
-                    <span onclick="toggleLock('live')" class="edit-link">Edit</span>
+                <div id="accLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+                    <span id="lockedAccInfo" class="text-xs font-bold text-slate-400">Linked</span>
+                    <span onclick="toggleLock('acc')" class="edit-link">Edit</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mt-6">
-                <input type="number" id="risk" placeholder="Risk %" class="w-full bg-black/60 border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                <input type="number" id="rr" placeholder="Ratio" class="w-full bg-black/60 border border-slate-800 rounded-xl p-3 text-xs outline-none">
+            <div class="mt-6 space-y-4">
+                <div id="riskInput">
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <input type="number" id="riskPct" placeholder="Risk %" class="bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
+                        <div class="flex items-center gap-1 bg-black border border-slate-800 rounded-xl px-2">
+                            <input type="number" id="rr1" placeholder="R" class="w-full bg-transparent p-1 text-xs outline-none text-center">
+                            <span class="text-indigo-500 font-bold">:</span>
+                            <input type="number" id="rr2" placeholder="R" class="w-full bg-transparent p-1 text-xs outline-none text-center">
+                        </div>
+                    </div>
+                    <button onclick="toggleLock('risk')" class="lock-btn">Save Risk Parameters</button>
+                </div>
+                <div id="riskLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+                    <span id="lockedRiskInfo" class="text-xs font-bold text-slate-400">Risk Locked</span>
+                    <span onclick="toggleLock('risk')" class="edit-link">Edit</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <main class="max-w-md mx-auto p-4">
-        <header class="flex justify-between items-center py-12">
-            <div class="flex items-center gap-6">
-                <div class="h-20 w-20 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl">
-                    <i class="fas fa-bolt text-4xl text-white"></i>
+    <main class="main-container">
+        <header class="flex justify-between items-center py-10">
+            <div class="flex items-center gap-5">
+                <div class="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
+                    <i class="fas fa-bolt text-3xl text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-4xl font-black italic text-white tracking-tighter uppercase leading-none">OMNI-TRADER</h1>
-                    <p id="modeStatus" class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-2">Manual Engine Active</p>
+                    <h1 class="text-3xl font-black italic text-white tracking-tighter uppercase leading-none">OMNI-TRADER</h1>
+                    <p id="modeStatus" class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">Manual Mode</p>
                 </div>
             </div>
-            <button onclick="toggleDrawer()" class="h-12 w-12 flex items-center justify-center glass rounded-2xl hover:border-indigo-500 transition-all"><i class="fas fa-bars-staggered text-xl"></i></button>
+            <button onclick="toggleDrawer()" class="h-12 w-12 flex items-center justify-center glass rounded-2xl transition-all"><i class="fas fa-bars-staggered text-xl"></i></button>
         </header>
 
-        <div class="mt-28 grid grid-cols-2 gap-4">
-            <div class="upload-box"><input type="file" class="file-input" required><div class="btn-ui">Choose File</div><div class="box-label">4H Bias</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" class="file-input" required><div class="btn-ui">Choose File</div><div class="box-label">1H Structure</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" class="file-input" required><div class="btn-ui">Choose File</div><div class="box-label">M15 Execution</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" class="file-input" required><div class="btn-ui">Choose File</div><div class="box-label">DXY Overview</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="mt-20 grid grid-cols-2 gap-3">
+            <div class="upload-box">
+                <input type="file" class="file-input" required>
+                <div class="box-label">4H Bias Scan</div>
+                <div class="btn-ui">Choose File</div>
+                <i class="fas fa-check-circle tick"></i>
+            </div>
+            <div class="upload-box">
+                <input type="file" class="file-input" required>
+                <div class="box-label">1H Structure</div>
+                <div class="btn-ui">Choose File</div>
+                <i class="fas fa-check-circle tick"></i>
+            </div>
+            <div class="upload-box">
+                <input type="file" class="file-input" required>
+                <div class="box-label">M15 Entry</div>
+                <div class="btn-ui">Choose File</div>
+                <i class="fas fa-check-circle tick"></i>
+            </div>
+            <div class="upload-box">
+                <input type="file" class="file-input" required>
+                <div class="box-label">DXY Overview</div>
+                <div class="btn-ui">Choose File</div>
+                <i class="fas fa-check-circle tick"></i>
+            </div>
         </div>
 
-        <button onclick="run()" class="w-full mt-12 bg-indigo-600 py-6 rounded-2xl font-black uppercase text-sm tracking-[0.5em] active:scale-95 transition-all shadow-xl shadow-indigo-900/20">Execute Scan</button>
+        <button onclick="run()" class="w-full mt-12 bg-indigo-600 py-6 rounded-2xl font-black uppercase text-xs tracking-[0.4em] active:scale-95 transition-all shadow-xl">
+            Analyze the Chart
+        </button>
 
-        <div id="res" class="hidden mt-10 glass rounded-3xl p-8 border-t-2 border-indigo-500">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="rAct" class="text-5xl font-black italic uppercase">---</h2>
-                <div class="text-right"><span class="text-[9px] text-slate-500 font-black uppercase block">Lots</span><span id="rLot" class="text-3xl font-bold">0.00</span></div>
-            </div>
-            <div class="grid grid-cols-3 gap-2 py-6 border-y border-white/5">
-                <div class="text-center"><label class="text-[8px] text-slate-500 block">ENTRY</label><span id="rE" class="font-bold text-xs">---</span></div>
-                <div class="text-center"><label class="text-[8px] text-red-500 block">STOP</label><span id="rS" class="font-bold text-xs">---</span></div>
-                <div class="text-center"><label class="text-[8px] text-green-500 block">TARGET</label><span id="rT" class="font-bold text-xs">---</span></div>
+        <div id="res" class="hidden mt-8 glass rounded-3xl p-8 border-t-2 border-indigo-500">
+            <div class="flex justify-between items-center">
+                <h2 id="rAct" class="text-4xl font-black italic uppercase leading-none">---</h2>
+                <div class="text-right">
+                    <span class="text-[9px] text-slate-500 font-black uppercase block">Lots</span>
+                    <span id="rLot" class="text-2xl font-bold">0.00</span>
+                </div>
             </div>
         </div>
     </main>
@@ -171,9 +197,9 @@
         function toggleMode() {
             const isLive = document.getElementById('modeSw').checked;
             document.getElementById('modeLabel').innerText = isLive ? "LIVE" : "MANUAL";
-            document.getElementById('manArea').classList.toggle('hidden', isLive);
-            document.getElementById('liveArea').classList.toggle('hidden', !isLive);
-            document.getElementById('modeStatus').innerText = isLive ? "Live Sync Engine Active" : "Manual Engine Active";
+            document.getElementById('manFields').classList.toggle('hidden', isLive);
+            document.getElementById('liveFields').classList.toggle('hidden', !isLive);
+            document.getElementById('modeStatus').innerText = isLive ? "Live Mode" : "Manual Mode";
         }
 
         function toggleLock(type) {
@@ -181,21 +207,19 @@
             const locked = document.getElementById(type + 'Locked');
             const isHiding = !input.classList.contains('hidden');
             
-            if(type === 'man') document.getElementById('lockedBal').innerText = '$' + document.getElementById('bal').value;
+            if(type === 'acc') {
+                const isLive = document.getElementById('modeSw').checked;
+                document.getElementById('lockedAccInfo').innerText = isLive ? "Live Account Saved" : "$" + document.getElementById('bal').value + " Balance";
+            }
+            if(type === 'risk') {
+                document.getElementById('lockedRiskInfo').innerText = document.getElementById('riskPct').value + "% Risk | " + document.getElementById('rr1').value + ":" + document.getElementById('rr2').value + " RR";
+            }
 
             input.classList.toggle('hidden', isHiding);
             locked.classList.toggle('hidden', !isHiding);
         }
 
-        function run() {
-            document.getElementById('res').classList.remove('hidden');
-            const data = { act: "BUY", lot: "0.18", e: "88.13", s: "87.45", t: "90.05" };
-            document.getElementById('rAct').innerText = data.act;
-            document.getElementById('rLot').innerText = data.lot;
-            document.getElementById('rE').innerText = data.e;
-            document.getElementById('rS').innerText = data.s;
-            document.getElementById('rT').innerText = data.t;
-        }
+        function run() { document.getElementById('res').classList.remove('hidden'); document.getElementById('rAct').innerText = "BUY"; document.getElementById('rLot').innerText = "0.15"; }
     </script>
 </body>
 </html>

@@ -34,23 +34,23 @@
     <div class="grid grid-cols-2 gap-3 mb-6">
         <div id="box0" class="chart-box rounded-3xl flex flex-col items-center justify-center gap-2" onclick="document.getElementById('img0').click()">
             <input type="file" id="img0" accept="image/*" onchange="markFile(0)">
-            <span class="text-[8px] font-black uppercase text-slate-500">HTF Bias (1H)</span>
-            <div class="bg-indigo-600/20 p-3 rounded-xl text-indigo-400 text-xs font-bold uppercase">Load</div>
+            <span id="label0" class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Upload HTF (1H)</span>
+            <div id="icon0" class="hidden text-emerald-500 text-3xl"><i class="fa-solid fa-circle-check"></i></div>
         </div>
         <div id="box1" class="chart-box rounded-3xl flex flex-col items-center justify-center gap-2" onclick="document.getElementById('img1').click()">
             <input type="file" id="img1" accept="image/*" onchange="markFile(1)">
-            <span class="text-[8px] font-black uppercase text-slate-500">LTF Structure (15M)</span>
-            <div class="bg-indigo-600/20 p-3 rounded-xl text-indigo-400 text-xs font-bold uppercase">Load</div>
+            <span id="label1" class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Upload LTF (15M)</span>
+            <div id="icon1" class="hidden text-emerald-500 text-3xl"><i class="fa-solid fa-circle-check"></i></div>
         </div>
         <div id="box2" class="chart-box rounded-3xl flex flex-col items-center justify-center gap-2" onclick="document.getElementById('img2').click()">
             <input type="file" id="img2" accept="image/*" onchange="markFile(2)">
-            <span class="text-[8px] font-black uppercase text-slate-500">Entry Logic (1M)</span>
-            <div class="bg-indigo-600/20 p-3 rounded-xl text-indigo-400 text-xs font-bold uppercase">Load</div>
+            <span id="label2" class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Upload Entry (1M)</span>
+            <div id="icon2" class="hidden text-emerald-500 text-3xl"><i class="fa-solid fa-circle-check"></i></div>
         </div>
         <div id="box3" class="chart-box rounded-3xl flex flex-col items-center justify-center gap-2" onclick="document.getElementById('img3').click()">
             <input type="file" id="img3" accept="image/*" onchange="markFile(3)">
-            <span class="text-[8px] font-black uppercase text-slate-500">DXY / Data</span>
-            <div class="bg-indigo-600/20 p-3 rounded-xl text-indigo-400 text-xs font-bold uppercase">Load</div>
+            <span id="label3" class="text-[8px] font-black uppercase text-slate-500 tracking-widest">Upload DXY Data</span>
+            <div id="icon3" class="hidden text-emerald-500 text-3xl"><i class="fa-solid fa-circle-check"></i></div>
         </div>
     </div>
 
@@ -64,7 +64,7 @@
             <p id="logicText" class="text-[10px] text-right text-slate-400 italic max-w-[150px]">Waiting for analysis...</p>
         </div>
 
-        <h2 id="actionText" class="text-4xl font-black italic mb-8">---</h2>
+        <h2 id="actionText" class="text-4xl font-black italic mb-8 uppercase tracking-tighter">---</h2>
 
         <div class="grid grid-cols-3 gap-6 mb-8 border-y border-white/5 py-6">
             <div>
@@ -109,7 +109,7 @@
         
         <div class="space-y-4">
             <div class="glass p-4 rounded-2xl">
-                <label class="text-[9px] uppercase text-slate-500 mb-2 block font-bold">Security Key</label>
+                <label class="text-[9px] uppercase text-slate-500 mb-2 block font-bold tracking-widest">Security Key</label>
                 <div id="keyDisplay" class="flex flex-col gap-3">
                     <input type="password" id="apiInput" placeholder="Enter Gemini Key..." 
                         class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm focus:border-indigo-500 outline-none transition-all">
@@ -128,7 +128,7 @@
 
             <div class="glass p-4 rounded-2xl" onclick="openSub('riskMenu')">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-300">Risk Management</span>
+                    <span class="text-xs font-bold text-slate-300 tracking-wide">Risk Management</span>
                     <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>
                 </div>
             </div>

@@ -8,161 +8,135 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #05070a; color: #e2e8f0; margin: 0; padding: 12px; }
+        body { font-family: 'Inter', sans-serif; background: #05070a; color: #e2e8f0; margin: 0; overflow-x: hidden; }
         .glass { background: #0d1117; border: 1px solid #1f2937; }
         
-        /* WhatsApp Style Menu */
-        #historyMenu { position: absolute; right: 10px; top: 60px; width: 220px; z-index: 100; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
-        .menu-item { padding: 12px 16px; border-bottom: 1px solid #1f2937; cursor: pointer; transition: 0.2s; }
-        .menu-item:hover { background: #161b22; }
-
-        /* Switch Styling */
-        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1f2937; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #4f46e5; }
-        input:checked + .slider:before { transform: translateX(22px); }
-
-        /* File Button Styling */
-        input[type="file"]::file-selector-button {
-            background: #4f46e5; color: white; border: none; padding: 8px 12px;
-            border-radius: 6px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;
+        /* Pocket Option Style Sidebar Drawer */
+        #sideDrawer {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background: #0d1117; z-index: 1000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 1px solid #1f2937;
         }
-        .hidden { display: none !important; }
+        #sideDrawer.open { left: 0; }
+        .drawer-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
+            display: none; z-index: 999;
+        }
+        .drawer-overlay.active { display: block; }
+
+        /* Centered File Uploads */
+        .upload-box {
+            position: relative; height: 80px; display: flex; 
+            align-items: center; justify-content: center;
+            background: #0d1117; border: 1px dashed #1f2937; border-radius: 12px;
+        }
+        .file-input {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10;
+        }
+        .btn-label {
+            background: #4f46e5; color: white; padding: 8px 16px;
+            border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase;
+        }
+        .status-icon { display: none; color: #10b981; font-size: 18px; }
+        input:valid + .btn-label { display: none; }
+        input:valid ~ .status-icon { display: block; }
+
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background: #1f2937; border-radius: 20px; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background: #4f46e5; }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body>
 
-    <div class="max-w-md mx-auto relative">
-        <header class="flex justify-between items-center py-6 px-2">
-            <div class="flex items-center gap-4">
-                <div class="h-14 w-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-900/40">
-                    <i class="fas fa-bolt text-2xl text-white"></i>
-                </div>
-                <div>
-                    <h1 class="text-3xl font-black italic text-white tracking-tighter uppercase leading-none">OMNI-TRADER</h1>
-                    <p id="status" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Institutional Multi-Strategy</p>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="toggleMenu()" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-ellipsis-v text-xl"></i></button>
-                <button onclick="toggleTab('config')" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-cog text-xl"></i></button>
-            </div>
-        </header>
+    <div id="overlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
 
-        <div id="historyMenu" class="glass hidden animate-in slide-in-from-top-2">
-            <div class="p-3 bg-indigo-600/10 text-[10px] font-black uppercase text-indigo-400 border-b border-indigo-500/20">Analysis History</div>
-            <div id="historyList">
-                <div class="menu-item text-xs text-slate-400 italic">No recent analysis</div>
-            </div>
+    <div id="sideDrawer" class="p-6">
+        <div class="flex justify-between items-center mb-8">
+            <span class="text-xs font-black uppercase text-indigo-400">Trading Terminal</span>
+            <button onclick="toggleDrawer()"><i class="fas fa-times"></i></button>
         </div>
+        
+        <div class="space-y-6">
+            <div class="flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl cursor-pointer">
+                <i class="fas fa-clock text-indigo-500"></i>
+                <span class="text-sm font-bold">Analysis History</span>
+            </div>
+            
+            <div class="flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl cursor-pointer">
+                <i class="fas fa-cog text-slate-400"></i>
+                <span class="text-sm font-bold">System Settings</span>
+            </div>
 
-        <div id="config" class="hidden glass rounded-3xl p-6 mb-6">
-            <div class="flex justify-between items-center mb-6">
-                <span class="text-xs font-black uppercase tracking-widest text-indigo-400">System Config</span>
-                <div class="flex items-center gap-2">
-                    <span class="text-[9px] font-bold text-slate-500 uppercase">Live</span>
+            <hr class="border-slate-800">
+
+            <div class="p-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Live Engine</span>
                     <label class="switch">
-                        <input type="checkbox" id="modeSwitch" onchange="toggleMode()">
+                        <input type="checkbox" onchange="toggleMode()">
                         <span class="slider"></span>
                     </label>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <div id="manualInput">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">XM Balance ($)</label>
-                    <input type="number" id="bal" class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none focus:border-indigo-500 transition-all">
-                </div>
-                <div id="liveInput" class="hidden space-y-4">
-                    <input type="password" id="tok" placeholder="MetaApi Token" class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
-                    <input type="text" id="acc" placeholder="Account ID" class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="number" id="r" placeholder="Risk %" class="bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
-                    <input type="number" id="rr" placeholder="R:R Ratio" class="bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
-                </div>
-                <input type="password" id="gem" placeholder="Gemini API Key (Permanent)" class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
-            </div>
-        </div>
-
-        <div class="mt-8 grid grid-cols-2 gap-3 px-2">
-            <div class="glass p-4 rounded-2xl">
-                <span class="text-[9px] font-black text-slate-500 uppercase mb-2 block">4H Bias</span>
-                <input type="file" id="c1" class="w-full">
-            </div>
-            <div class="glass p-4 rounded-2xl">
-                <span class="text-[9px] font-black text-slate-500 uppercase mb-2 block">1H Struct</span>
-                <input type="file" id="c2" class="w-full">
-            </div>
-            <div class="glass p-4 rounded-2xl">
-                <span class="text-[9px] font-black text-slate-500 uppercase mb-2 block">Entry Flow</span>
-                <input type="file" id="c3" class="w-full">
-            </div>
-            <div class="glass p-4 rounded-2xl">
-                <span class="text-[9px] font-black text-slate-500 uppercase mb-2 block">DXY Context</span>
-                <input type="file" id="c4" class="w-full">
-            </div>
-        </div>
-
-        <div class="px-2 mt-6">
-            <button onclick="run()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black uppercase text-xs tracking-[0.3em] shadow-xl shadow-indigo-900/30 transition-all active:scale-95">
-                Run AI Analysis
-            </button>
-        </div>
-
-        <div id="results" class="hidden mt-8 px-2 animate-in fade-in zoom-in-95">
-            <div class="glass rounded-3xl p-8 border-t-4 border-indigo-500">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h2 id="resAction" class="text-4xl font-black italic uppercase text-white leading-none">---</h2>
-                        <span id="resStrat" class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">SMC ALGORITHM</span>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-[9px] font-black text-slate-500 uppercase">Lot Size</span>
-                        <p id="resLots" class="text-2xl font-bold text-white">0.00</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-3 gap-4 border-y border-white/5 py-6">
-                    <div><span class="text-[9px] text-slate-500 block font-black uppercase">Entry</span><span id="resEnt" class="font-bold text-xs italic">---</span></div>
-                    <div><span class="text-[9px] text-red-500 block font-black uppercase">SL</span><span id="resSl" class="font-bold text-xs italic">---</span></div>
-                    <div><span class="text-[9px] text-green-500 block font-black uppercase">TP</span><span id="resTp" class="font-bold text-xs italic">---</span></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="max-w-md mx-auto p-4">
+        <header class="flex justify-between items-center py-8">
+            <div class="flex items-center gap-4">
+                <div class="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl">
+                    <i class="fas fa-bolt text-3xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-black italic text-white tracking-tighter uppercase leading-none">OMNI-TRADER</h1>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Multi-Strategy Scan</p>
+                </div>
+            </div>
+            <button onclick="toggleDrawer()" class="h-10 w-10 flex items-center justify-center bg-white/5 rounded-lg">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </header>
+
+        <div class="mt-20 grid grid-cols-2 gap-4">
+            <div class="upload-box glass">
+                <input type="file" class="file-input" required>
+                <div class="btn-label">4H Bias</div>
+                <i class="fas fa-check-circle status-icon"></i>
+            </div>
+            <div class="upload-box glass">
+                <input type="file" class="file-input" required>
+                <div class="btn-label">1H Struct</div>
+                <i class="fas fa-check-circle status-icon"></i>
+            </div>
+            <div class="upload-box glass">
+                <input type="file" class="file-input" required>
+                <div class="btn-label">Entry Flow</div>
+                <i class="fas fa-check-circle status-icon"></i>
+            </div>
+            <div class="upload-box glass">
+                <input type="file" class="file-input" required>
+                <div class="btn-label">DXY Context</div>
+                <i class="fas fa-check-circle status-icon"></i>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <button class="w-full bg-indigo-600 py-5 rounded-2xl font-black uppercase text-xs tracking-[0.3em] shadow-xl shadow-indigo-900/30">
+                Run AI Analysis
+            </button>
+        </div>
+    </div>
+
     <script>
-        function toggleTab(id) { document.getElementById(id).classList.toggle('hidden'); }
-        function toggleMenu() { document.getElementById('historyMenu').classList.toggle('hidden'); }
-
+        function toggleDrawer() {
+            document.getElementById('sideDrawer').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('active');
+        }
         function toggleMode() {
-            const isLive = document.getElementById('modeSwitch').checked;
-            document.getElementById('manualInput').classList.toggle('hidden', isLive);
-            document.getElementById('liveInput').classList.toggle('hidden', !isLive);
-            document.getElementById('status').innerText = isLive ? "Live Data Engine Active" : "Manual Calculation Active";
-        }
-
-        function run() {
-            document.getElementById('results').classList.remove('hidden');
-            const mock = { action: "BUY", strat: "4H FVG + M15 BOS", lots: "0.25", ent: "88.13", sl: "87.40", tp: "90.00" };
-            document.getElementById('resAction').innerText = mock.action;
-            document.getElementById('resLots').innerText = mock.lots;
-            document.getElementById('resEnt').innerText = mock.ent;
-            document.getElementById('resSl').innerText = mock.sl;
-            document.getElementById('resTp').innerText = mock.tp;
-
-            updateHistory(mock);
-        }
-
-        function updateHistory(data) {
-            const list = document.getElementById('historyList');
-            if (list.innerHTML.includes("No recent")) list.innerHTML = "";
-            const div = document.createElement('div');
-            div.className = "menu-item text-[10px] font-bold text-slate-300";
-            div.innerHTML = `<span>${data.action}</span> - <span>${data.strat}</span>`;
-            list.prepend(div);
+            // Logic for switching between manual and live mode
         }
     </script>
 </body>

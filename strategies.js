@@ -1,16 +1,14 @@
 /**
- * OMNI-REAL ENGINE | BRAIN MODULE
- * Logic: SMC/ICT Multi-Confluence
+ * OMNI-REAL ENGINE | FLASH LITE 2.5
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-const MODEL = "gemini-2.5-flash-preview-09-2025";
+// Optimized for your confirmed Flash Lite logs
+const MODEL = "gemini-2.5-flash-lite"; 
 
-// Load masked key UI if it exists in memory
 window.onload = function() {
     if (API_KEY) {
         document.getElementById('apiInput').value = "********************";
-        console.log("Terminal: Security Key Synced.");
     }
 };
 
@@ -18,17 +16,14 @@ function saveApiKey() {
     const input = document.getElementById('apiInput');
     const keyValue = input.value.trim();
     
-    if (keyValue === "" || keyValue.includes("****")) return alert("Please enter a new Security Key.");
+    if (keyValue === "" || keyValue.includes("****")) return alert("Please enter a valid Security Key.");
     
-    // Save to browser memory
+    // Save locally
     localStorage.setItem('omni_api_v3', keyValue);
-    
-    // Update active variable WITHOUT refreshing
     API_KEY = keyValue;
     
-    alert("KEY LOCKED: Session is now live. Do not refresh to keep your charts.");
-    
-    // UI Update
+    // UI feedback without refreshing
+    alert("KEY LOCKED: Flash Lite Engine is now online.");
     input.value = "********************";
     toggleDrawer();
 }
@@ -54,13 +49,13 @@ async function fileToPart(file) {
 }
 
 async function executeScan() {
-    if (!API_KEY) return alert("Security Error: Key not found. Open Master Control to Sync Key.");
+    if (!API_KEY) return alert("Security Error: Key not found. Sync Key in Master Control.");
     
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
-    if (files.some(f => !f)) return alert("Upload all 4 chart tiers for institutional confluence.");
+    if (files.some(f => !f)) return alert("Upload all 4 chart tiers for analysis.");
 
     btn.innerText = "EXTRACTING PIXEL DATA...";
     btn.classList.add('scanning');
@@ -69,10 +64,9 @@ async function executeScan() {
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
         
-        const prompt = `Task: Professional Institutional Analysis. Analyze these 4 charts (HTF, LTF, Entry, Market Data). 
-        Identify the highest confluence strategy (SMC/ICT/Wyckoff). 
-        Provide exact price levels and risk parameters.
-        Output ONLY this JSON format:
+        const prompt = `Professional Institutional Analysis. Analyze HTF, LTF, Entry, and DXY. 
+        Determine strategy (SMC/ICT/Wyckoff) and bias.
+        Return ONLY this JSON:
         {"strategy":"SMC|WYCKOFF|ICT","bias":"BUY|SELL","entry":number,"sl":number,"support":number,"resistance":number,"logic":"10-word technical insight"}`;
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
@@ -92,7 +86,7 @@ async function executeScan() {
         const jsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         const res = JSON.parse(jsonStr);
 
-        // Institutional Risk Management Logic
+        // Position Sizing
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1.0;
         const riskAmt = bal * (risk / 100);
@@ -100,7 +94,7 @@ async function executeScan() {
         const lotSize = slDist > 0 ? (riskAmt / (slDist * 10)).toFixed(2) : "0.01";
         const tp = res.bias === 'BUY' ? (res.entry + (slDist * 3)) : (res.entry - (slDist * 3));
 
-        // UI Injection
+        // Update UI results
         document.getElementById('strategyType').innerText = `${res.strategy} ENGINE`;
         document.getElementById('actionText').innerText = res.bias;
         document.getElementById('actionText').className = `text-4xl font-black italic uppercase leading-none ${res.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}`;
@@ -117,7 +111,6 @@ async function executeScan() {
 
     } catch (e) {
         alert("TERMINAL ERROR: " + e.message);
-        console.error(e);
     } finally {
         btn.innerText = "PERFORM MULTI-CHART SCAN";
         btn.classList.remove('scanning');

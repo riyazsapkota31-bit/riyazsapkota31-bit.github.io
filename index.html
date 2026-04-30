@@ -71,10 +71,10 @@
     </header>
 
     <div class="upload-grid">
-        <div class="upload-box" id="box0"><input type="file" id="img0" onchange="markFile(0)" class="file-input"><span class="box-label">4H Bias</span><div class="btn-ui">Load</div></div>
-        <div class="upload-box" id="box1"><input type="file" id="img1" onchange="markFile(1)" class="file-input"><span class="box-label">1H Structure</span><div class="btn-ui">Load</div></div>
-        <div class="upload-box" id="box2"><input type="file" id="img2" onchange="markFile(2)" class="file-input"><span class="box-label">M15 Entry</span><div class="btn-ui">Load</div></div>
-        <div class="upload-box" id="box3"><input type="file" id="img3" onchange="markFile(3)" class="file-input"><span class="box-label">Market Data</span><div class="btn-ui">Load</div></div>
+        <div class="upload-box" id="box0"><input type="file" id="img0" onchange="markFile(0)" class="file-input"><span class="box-label">HTF Bias (4H)</span><div class="btn-ui">Load</div></div>
+        <div class="upload-box" id="box1"><input type="file" id="img1" onchange="markFile(1)" class="file-input"><span class="box-label">LTF Structure (1H)</span><div class="btn-ui">Load</div></div>
+        <div class="upload-box" id="box2"><input type="file" id="img2" onchange="markFile(2)" class="file-input"><span class="box-label">Entry Logic (M15)</span><div class="btn-ui">Load</div></div>
+        <div class="upload-box" id="box3"><input type="file" id="img3" onchange="markFile(3)" class="file-input"><span class="box-label">Market Data (DXY)</span><div class="btn-ui">Load</div></div>
     </div>
 
     <button id="scanBtn" onclick="executeScan()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black uppercase text-xs tracking-[2px] text-white transition-all shadow-xl active:scale-[0.98]">
@@ -83,8 +83,8 @@
 
     <div id="resultBox" class="hidden mt-6 glass rounded-3xl p-6 border-t-2 border-indigo-500 shadow-2xl">
         <div class="flex justify-between items-start mb-6 pb-6 border-b border-slate-800">
-            <div><span id="strategyType" class="strategy-badge">SMC ACTIVE</span><h2 id="actionText" class="text-4xl font-black italic uppercase leading-none">---</h2></div>
-            <p id="logicText" class="text-[10px] text-indigo-400 font-bold italic text-right max-w-[140px]">Analyzing...</p>
+            <div><span id="strategyType" class="strategy-badge">SMC ACTIVE</span><h2 id="actionText" class="text-4xl font-black italic uppercase leading-none text-indigo-400">---</h2></div>
+            <p id="logicText" class="text-[10px] text-indigo-400 font-bold italic text-right max-w-[140px]">Awaiting Scan...</p>
         </div>
         
         <div class="grid grid-cols-3 gap-y-6 gap-x-4">

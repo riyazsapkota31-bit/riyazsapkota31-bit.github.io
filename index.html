@@ -10,40 +10,36 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #05070a; color: #e2e8f0; margin: 0; overflow-x: hidden; }
         .glass { background: #0d1117; border: 1px solid #1f2937; }
-        
         .main-container { max-width: 480px; margin: 0 auto; padding: 20px; }
 
-        /* RIGHT-SIDE DRAWER */
+        /* SIDEBAR SYSTEM */
         #sideDrawer {
             position: fixed; top: 0; right: -320px; width: 320px; height: 100%;
             background: #0d1117; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 1px solid #1f2937; box-shadow: -20px 0 50px rgba(0,0,0,0.8);
+            border-left: 1px solid #1f2937;
         }
         #sideDrawer.open { right: 0; }
         .sub-panel { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; background: #0d1117; transition: 0.3s ease; z-index: 1001; padding: 24px; }
         .sub-panel.active { left: 0; }
 
-        /* Restored Indigo Blue for Upload Buttons */
-        .upload-box { position: relative; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, #0d1117, #161b22); border: 1px solid #1f2937; border-radius: 16px; transition: 0.3s; }
-        .box-label { font-size: 12px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
-        .btn-ui { background: #4f46e5; color: white; padding: 5px 12px; border-radius: 4px; font-size: 9px; font-weight: 800; pointer-events: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
-        
+        /* UPLOAD BOXES */
+        .upload-box { position: relative; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, #0d1117, #161b22); border: 1px solid #1f2937; border-radius: 16px; }
+        .box-label { font-size: 12px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 8px; }
+        .btn-ui { background: #4f46e5; color: white; padding: 5px 12px; border-radius: 4px; font-size: 9px; font-weight: 800; pointer-events: none; }
         .file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
         .tick { display: none; color: #10b981; font-size: 28px; }
         input:valid ~ .btn-ui, input:valid ~ .box-label { display: none; }
         input:valid ~ .tick { display: block; }
 
-        /* Switch & Utility */
+        /* UTILITY */
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .slider { position: absolute; cursor: pointer; inset: 0; background: #1f2937; border-radius: 34px; transition: .4s; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: .4s; }
         input:checked + .slider { background: #4f46e5; }
         input:checked + .slider:before { transform: translateX(24px); }
-
         .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 999; backdrop-filter: blur(4px); }
         .drawer-overlay.active { display: block; }
         .hidden { display: none !important; }
-        
         .lock-btn { width: 100%; background: #4f46e5; color: white; font-size: 9px; font-weight: bold; padding: 10px; border-radius: 8px; margin-top: 10px; text-transform: uppercase; }
         .edit-link { font-size: 9px; font-weight: 900; color: #6366f1; text-transform: uppercase; text-decoration: underline; cursor: pointer; }
     </style>
@@ -84,63 +80,49 @@
         </div>
 
         <div id="historyPanel" class="sub-panel">
-            <button onclick="closeSub('historyPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6 hover:translate-x-[-3px] transition-transform"><i class="fas fa-arrow-left"></i> BACK</button>
-            <h3 class="text-xs font-black uppercase mb-4 text-slate-300">Journal</h3>
-            <div class="space-y-3">
-                <div class="p-3 bg-black/40 rounded-xl border border-white/5 hover:border-indigo-500 transition-all cursor-pointer">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-black text-green-400">BUY - SOLUSDT</span>
-                        <span class="text-[8px] text-slate-600">APR 30</span>
-                    </div>
-                    <p class="text-[9px] text-slate-500">RR 1:3 | Risk 1% | TP Hit</p>
-                </div>
+            <button onclick="closeSub('historyPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
+            <h3 class="text-xs font-black uppercase mb-4 text-slate-300">Analysis Journal</h3>
+            <div id="historyList" class="space-y-3 overflow-y-auto max-h-[80vh]">
+                <p id="emptyMsg" class="text-[10px] text-slate-600 text-center mt-10">No recent analysis recorded.</p>
             </div>
         </div>
 
         <div id="settingsPanel" class="sub-panel">
             <button onclick="closeSub('settingsPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
-            
             <div class="flex justify-between items-center mb-8 bg-black/30 p-4 rounded-2xl">
                 <span id="modeLabel" class="text-[10px] font-black uppercase text-slate-400">MANUAL</span>
-                <label class="switch">
-                    <input type="checkbox" id="modeSw" onchange="toggleMode()">
-                    <span class="slider"></span>
-                </label>
+                <label class="switch"><input type="checkbox" id="modeSw" onchange="toggleMode()"><span class="slider"></span></label>
             </div>
             
-            <div class="space-y-4">
-                <div id="accInput">
-                    <div id="manFields" class="space-y-3">
-                        <input type="number" id="bal" placeholder="XM Balance ($)" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                    </div>
-                    <div id="liveFields" class="hidden space-y-3">
-                        <input type="password" id="tok" placeholder="MetaApi Token" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                        <input type="text" id="accId" placeholder="Account ID" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                    </div>
-                    <button onclick="toggleLock('acc')" class="lock-btn">Save Account</button>
+            <div id="accInput" class="space-y-4">
+                <div id="manFields" class="space-y-3">
+                    <input type="number" id="bal" placeholder="XM Balance ($)" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
                 </div>
-                <div id="accLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-                    <span id="lockedAccInfo" class="text-xs font-bold text-slate-400">Saved</span>
-                    <span onclick="toggleLock('acc')" class="edit-link">Edit</span>
+                <div id="liveFields" class="hidden space-y-3">
+                    <input type="password" id="tok" placeholder="MetaApi Token" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
+                    <input type="text" id="accId" placeholder="Account ID" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
                 </div>
+                <button onclick="toggleLock('acc')" class="lock-btn">Save Account</button>
+            </div>
+            <div id="accLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5 mb-4">
+                <span id="lockedAccInfo" class="text-xs font-bold text-slate-400">Account Ready</span>
+                <span onclick="toggleLock('acc')" class="edit-link">Edit</span>
             </div>
 
-            <div class="mt-6 space-y-4">
-                <div id="riskInput">
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <input type="number" id="riskPct" placeholder="Risk %" class="bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                        <div class="flex items-center gap-1 bg-black border border-slate-800 rounded-xl px-2">
-                            <input type="number" id="rr1" placeholder="R" class="w-full bg-transparent p-1 text-xs outline-none text-center">
-                            <span class="text-indigo-500 font-bold">:</span>
-                            <input type="number" id="rr2" placeholder="R" class="w-full bg-transparent p-1 text-xs outline-none text-center">
-                        </div>
+            <div id="riskInput" class="mt-6 space-y-4">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="riskPct" placeholder="Risk %" class="bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
+                    <div class="flex items-center gap-1 bg-black border border-slate-800 rounded-xl px-2">
+                        <input type="number" id="rr1" placeholder="R" class="w-full bg-transparent text-xs outline-none text-center">
+                        <span class="text-indigo-500 font-bold">:</span>
+                        <input type="number" id="rr2" placeholder="R" class="w-full bg-transparent text-xs outline-none text-center">
                     </div>
-                    <button onclick="toggleLock('risk')" class="lock-btn">Save Risk</button>
                 </div>
-                <div id="riskLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-                    <span id="lockedRiskInfo" class="text-xs font-bold text-slate-400">Parameters Set</span>
-                    <span onclick="toggleLock('risk')" class="edit-link">Edit</span>
-                </div>
+                <button onclick="toggleLock('risk')" class="lock-btn">Save Risk</button>
+            </div>
+            <div id="riskLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
+                <span id="lockedRiskInfo" class="text-xs font-bold text-slate-400">Risk Set</span>
+                <span onclick="toggleLock('risk')" class="edit-link">Edit</span>
             </div>
         </div>
     </div>
@@ -148,60 +130,40 @@
     <main class="main-container">
         <header class="flex justify-between items-center py-10">
             <div class="flex items-center gap-5">
-                <div class="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-indigo-900/40 shadow-xl">
+                <div class="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-900/40">
                     <i class="fas fa-chart-area text-3xl text-white"></i>
                 </div>
                 <div>
                     <h1 class="text-3xl font-black italic text-white tracking-tighter uppercase leading-none">OMNI-TRADER</h1>
-                    <p id="modeStatus" class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">Manual Engine Active</p>
+                    <p id="modeStatus" class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">Manual Mode Active</p>
                 </div>
             </div>
-            <button onclick="toggleDrawer()" class="h-12 w-12 flex items-center justify-center glass rounded-2xl hover:border-indigo-500"><i class="fas fa-bars-staggered text-xl"></i></button>
+            <button onclick="toggleDrawer()" class="h-12 w-12 flex items-center justify-center glass rounded-2xl"><i class="fas fa-bars-staggered text-xl"></i></button>
         </header>
 
-        <div class="mt-20 grid grid-cols-2 gap-4">
-            <div class="upload-box">
-                <input type="file" class="file-input" required>
-                <div class="box-label">4H Bias Scan</div>
-                <div class="btn-ui">Choose File</div>
-                <i class="fas fa-check-circle tick"></i>
-            </div>
-            <div class="upload-box">
-                <input type="file" class="file-input" required>
-                <div class="box-label">1H Structure</div>
-                <div class="btn-ui">Choose File</div>
-                <i class="fas fa-check-circle tick"></i>
-            </div>
-            <div class="upload-box">
-                <input type="file" class="file-input" required>
-                <div class="box-label">M15 Entry</div>
-                <div class="btn-ui">Choose File</div>
-                <i class="fas fa-check-circle tick"></i>
-            </div>
-            <div class="upload-box">
-                <input type="file" class="file-input" required>
-                <div class="box-label">DXY Overview</div>
-                <div class="btn-ui">Choose File</div>
-                <i class="fas fa-check-circle tick"></i>
-            </div>
+        <div class="grid grid-cols-2 gap-4 mt-16">
+            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">4H Bias</div><div class="btn-ui">Choose File</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">1H Structure</div><div class="btn-ui">Choose File</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">M15 Entry</div><div class="btn-ui">Choose File</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">DXY Context</div><div class="btn-ui">Choose File</div><i class="fas fa-check-circle tick"></i></div>
         </div>
 
-        <button onclick="run()" class="w-full mt-12 bg-indigo-600 py-6 rounded-2xl font-black uppercase text-xs tracking-[0.4em] active:scale-95 transition-all shadow-xl shadow-indigo-900/30">
+        <button onclick="runAnalysis()" class="w-full mt-10 bg-indigo-600 py-6 rounded-2xl font-black uppercase text-xs tracking-[0.4em] active:scale-95 transition-all">
             Analyze the Chart
         </button>
 
         <div id="res" class="hidden mt-8 glass rounded-3xl p-8 border-t-2 border-indigo-500">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="rAct" class="text-4xl font-black italic uppercase leading-none">---</h2>
-                <div class="text-right">
-                    <span class="text-[9px] text-slate-500 font-black uppercase block">Lots</span>
-                    <span id="rLot" class="text-2xl font-bold">0.00</span>
-                </div>
+            <div class="flex justify-between items-center">
+                <h2 id="rAct" class="text-4xl font-black italic uppercase">---</h2>
+                <div class="text-right"><span class="text-[9px] text-slate-500 font-black uppercase block">Lots</span><span id="rLot" class="text-2xl font-bold">0.00</span></div>
             </div>
         </div>
     </main>
 
     <script>
+        let analysisCount = 0;
+        const maxHistory = 10;
+
         function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
         function openSub(id) { document.getElementById(id).classList.add('active'); }
         function closeSub(id) { document.getElementById(id).classList.remove('active'); }
@@ -215,23 +177,48 @@
         }
 
         function toggleLock(type) {
-            const input = document.getElementById(type + 'Input');
+            const input = document.getElementById(type + (type === 'gem' ? 'Input' : 'Input'));
             const locked = document.getElementById(type + 'Locked');
             const isHiding = !input.classList.contains('hidden');
             
             if(type === 'acc') {
-                const isLive = document.getElementById('modeSw').checked;
-                document.getElementById('lockedAccInfo').innerText = isLive ? "Live Credentials Locked" : "$" + document.getElementById('bal').value + " Balance Set";
+                const val = document.getElementById('bal').value;
+                document.getElementById('lockedAccInfo').innerText = val ? `$${val} Balance Set` : "Account Linked";
             }
             if(type === 'risk') {
-                document.getElementById('lockedRiskInfo').innerText = document.getElementById('riskPct').value + "% Risk | " + document.getElementById('rr1').value + ":" + document.getElementById('rr2').value + " RR";
+                document.getElementById('lockedRiskInfo').innerText = `${document.getElementById('riskPct').value}% Risk | ${document.getElementById('rr1').value}:${document.getElementById('rr2').value} RR`;
             }
 
             input.classList.toggle('hidden', isHiding);
             locked.classList.toggle('hidden', !isHiding);
         }
 
-        function run() { document.getElementById('res').classList.remove('hidden'); document.getElementById('rAct').innerText = "BUY"; document.getElementById('rLot').innerText = "0.15"; }
+        function runAnalysis() {
+            const res = document.getElementById('res');
+            res.classList.remove('hidden');
+            const signal = { pair: "SOLUSDT", dir: "BUY", lot: "0.12", time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
+            
+            document.getElementById('rAct').innerText = signal.dir;
+            document.getElementById('rLot').innerText = signal.lot;
+
+            addToHistory(signal);
+        }
+
+        function addToHistory(s) {
+            const list = document.getElementById('historyList');
+            document.getElementById('emptyMsg').classList.add('hidden');
+            
+            const item = document.createElement('div');
+            item.className = "p-4 bg-black/40 rounded-xl border border-white/5 mb-2 hover:border-indigo-500 transition-all cursor-pointer";
+            item.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-black text-indigo-400">${s.dir} - ${s.pair}</span><span class="text-[8px] text-slate-600">${s.time}</span></div>`;
+            
+            list.prepend(item);
+            analysisCount++;
+
+            if (list.children.length > maxHistory) {
+                list.removeChild(list.lastChild);
+            }
+        }
     </script>
 </body>
 </html>

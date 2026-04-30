@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omni-Trader Elite | Multi-Chart Scan</title>
+    <title>Omni-Trader | Multi-Chart Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #05070a; color: #e2e8f0; margin: 0; overflow-x: hidden; }
         .glass { background: #0d1117; border: 1px solid #1f2937; }
-        .main-container { width: 95%; max-width: 1100px; margin: 0 auto; padding: 20px; }
-
-        /* SIDEBAR SYSTEM */
+        
+        /* SIDEBAR ARCHITECTURE */
         #sideDrawer {
             position: fixed; top: 0; right: -350px; width: 350px; height: 100%;
             background: #0d1117; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -22,48 +21,47 @@
         .sub-panel { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; background: #0d1117; transition: 0.3s ease; z-index: 1001; padding: 24px; }
         .sub-panel.active { left: 0; }
 
-        /* UPLOAD BOXES */
-        .upload-grid { display: grid; gap: 16px; margin-top: 40px; }
-        @media (min-width: 768px) { .upload-grid { grid-template-columns: repeat(4, 1fr); } }
-        @media (max-width: 767px) { .upload-grid { grid-template-columns: repeat(2, 1fr); } }
-
-        .upload-box { position: relative; height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, #0d1117, #161b22); border: 1px solid #1f2937; border-radius: 20px; transition: 0.3s; }
-        .upload-box:hover { border-color: #4f46e5; background: #0f172a; }
-        .box-label { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
-        .btn-ui { background: #4f46e5; color: white; padding: 6px 14px; border-radius: 6px; font-size: 10px; font-weight: 800; pointer-events: none; }
+        /* UPLOAD GRID */
+        .upload-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 24px; }
+        .upload-box { 
+            position: relative; height: 120px; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; background: #0d1117; border: 1px solid #1f2937; 
+            border-radius: 16px; transition: 0.3s;
+        }
+        .upload-box:hover { border-color: #4f46e5; }
+        .box-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
         .file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
-        .tick { display: none; color: #10b981; font-size: 32px; }
-        input:valid ~ .btn-ui, input:valid ~ .box-label { display: none; }
+        .tick { display: none; color: #10b981; font-size: 24px; }
+        input:valid ~ .box-label, input:valid ~ .btn-ui { display: none; }
         input:valid ~ .tick { display: block; }
+        .btn-ui { background: #4f46e5; color: white; padding: 4px 10px; border-radius: 4px; font-size: 9px; font-weight: 800; margin-top: 8px; }
 
-        /* RESULT LABELS */
-        .res-label { font-size: 9px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
-        .res-value { font-size: 16px; font-weight: 700; color: #f8fafc; }
+        /* DASHBOARD UI */
+        .res-label { font-size: 8px; font-weight: 900; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
+        .res-value { font-size: 14px; font-weight: 700; color: #f8fafc; }
         
-        /* HISTORY CARDS */
-        .history-card { background: #161b22; border: 1px solid #1f2937; border-radius: 12px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
-        .history-card:hover { border-color: #4f46e5; }
-        
+        /* HISTORY UI */
+        .history-item { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
+        .history-item:active { transform: scale(0.98); }
         .hidden { display: none !important; }
     </style>
 </head>
-<body>
-
+<body class="p-4">
     <div id="overlay" class="fixed inset-0 bg-black/80 hidden z-[999]" onclick="toggleDrawer()"></div>
 
     <div id="sideDrawer">
-        <div class="p-6 space-y-8">
+        <div class="p-6 space-y-6">
             <div class="flex justify-between items-center">
                 <button onclick="toggleDrawer()"><i class="fas fa-times text-slate-500"></i></button>
                 <span class="text-xs font-black uppercase text-indigo-500 tracking-widest">Master Terminal</span>
             </div>
             
-            <div onclick="openHistory()" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer hover:bg-white/5">
+            <div onclick="openHistory()" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer">
                 <div class="flex items-center gap-4"><i class="fas fa-clock-rotate-left text-slate-400"></i><span class="text-sm font-bold">Analysis History</span></div>
                 <i class="fas fa-chevron-right text-[10px] text-slate-600"></i>
             </div>
 
-            <div onclick="openSub('settingsPanel')" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer hover:bg-white/5">
+            <div onclick="openSub('settingsPanel')" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer">
                 <div class="flex items-center gap-4"><i class="fas fa-sliders-h text-slate-400"></i><span class="text-sm font-bold">Trade Configuration</span></div>
                 <i class="fas fa-chevron-right text-[10px] text-slate-600"></i>
             </div>
@@ -71,72 +69,60 @@
 
         <div id="historyPanel" class="sub-panel">
             <button onclick="closeSub('historyPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
-            <div id="historyList" class="space-y-3 overflow-y-auto max-h-[80vh]">
-                </div>
+            <div id="historyList" class="space-y-2 overflow-y-auto max-h-[85vh]"></div>
         </div>
 
         <div id="settingsPanel" class="sub-panel">
             <button onclick="closeSub('settingsPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
-            <div class="space-y-5">
-                <div class="space-y-3">
-                    <label class="text-[9px] font-black text-slate-500 uppercase">Account Balance ($)</label>
-                    <input type="number" id="bal" value="10058.73" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                </div>
+            <div class="space-y-4">
+                <label class="text-[9px] font-black text-slate-500 uppercase">Account Balance ($)</label>
+                <input type="number" id="bal" value="10000" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black text-slate-500 uppercase">Risk %</label>
-                        <input type="number" id="risk" value="0.5" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black text-slate-500 uppercase">R:R Ratio</label>
-                        <input type="number" id="ratio" value="3.0" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                    </div>
+                    <div><label class="text-[9px] font-black text-slate-500 uppercase">Risk %</label><input type="number" id="risk" value="0.5" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none"></div>
+                    <div><label class="text-[9px] font-black text-slate-500 uppercase">R:R Ratio</label><input type="number" id="ratio" value="3.0" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none"></div>
                 </div>
-                <button onclick="toggleDrawer()" class="w-full bg-indigo-600 text-white font-bold p-4 rounded-xl mt-4 uppercase text-[10px]">Save Configuration</button>
+                <button onclick="toggleDrawer()" class="w-full bg-indigo-600 text-white font-bold p-3 rounded-xl uppercase text-[10px] mt-4">Save</button>
             </div>
         </div>
     </div>
 
-    <main class="main-container">
-        <header class="flex justify-between items-center py-12">
-            <div class="flex items-center gap-6">
-                <div class="h-20 w-20 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl">
-                    <i class="fas fa-bolt text-4xl text-white"></i>
-                </div>
-                <div>
-                    <h1 class="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter">OMNI-TRADER</h1>
-                    <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.3em] mt-2">100% REAL-TIME CHART EXTRACTION</p>
-                </div>
-            </div>
-            <button onclick="toggleDrawer()" class="h-14 w-14 glass rounded-2xl flex items-center justify-center"><i class="fas fa-bars-staggered"></i></button>
-        </header>
-
-        <div class="upload-grid">
-            <div class="upload-box"><input type="file" id="img0" class="file-input" required><div class="box-label">4H Bias Scan</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" id="img1" class="file-input" required><div class="box-label">1H Structure</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" id="img2" class="file-input" required><div class="box-label">M15 Execution</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" id="img3" class="file-input" required><div class="box-label">DXY Overview</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-        </div>
-
-        <button id="scanBtn" onclick="executeScan()" class="w-full mt-12 bg-indigo-600 py-7 rounded-3xl font-black uppercase text-sm tracking-[0.5em] shadow-xl hover:bg-indigo-500 transition-all">
-            Analyze All Charts
-        </button>
-
-        <div id="resultBox" class="hidden mt-10 glass rounded-[40px] p-10 border-t-4 border-indigo-500">
-            <div class="flex flex-col md:flex-row justify-between border-b border-slate-800 pb-8 mb-8">
-                <div><span class="res-label">Live Signal</span><h2 id="actionText" class="text-6xl font-black italic uppercase">---</h2></div>
-                <div class="text-right md:max-w-md"><span class="res-label">Market Logic</span><p id="logicText" class="text-xs text-indigo-400 font-bold italic">Awaiting data...</p></div>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                <div><span class="res-label">Support</span><b id="supText" class="res-value">---</b></div>
-                <div><span class="res-label">Resistance</span><b id="resText" class="res-value">---</b></div>
-                <div><span class="res-label">Entry</span><b id="entText" class="res-value text-indigo-400">---</b></div>
-                <div><span class="res-label">TP Target</span><b id="tpText" class="res-value text-emerald-400">---</b></div>
-                <div><span class="res-label">Stop Loss</span><b id="slText" class="res-value text-rose-400">---</b></div>
-                <div><span class="res-label">Lots to Trade</span><b id="lotText" class="res-value text-yellow-500">0.00</b></div>
+    <header class="flex justify-between items-center mb-8">
+        <div class="flex items-center gap-4">
+            <div class="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center"><i class="fas fa-bolt text-2xl text-white"></i></div>
+            <div>
+                <h1 class="text-2xl font-black italic text-white uppercase tracking-tighter">OMNI-TRADER</h1>
+                <p class="text-[8px] font-bold text-indigo-500 uppercase tracking-widest">REAL-TIME MULTI-CHART ANALYST</p>
             </div>
         </div>
-    </main>
+        <button onclick="toggleDrawer()" class="h-10 w-10 glass rounded-xl flex items-center justify-center"><i class="fas fa-bars-staggered"></i></button>
+    </header>
+
+    <div class="upload-grid">
+        <div class="upload-box"><input type="file" id="img0" class="file-input" required><span class="box-label">4H Chart</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="upload-box"><input type="file" id="img1" class="file-input" required><span class="box-label">1H Chart</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="upload-box"><input type="file" id="img2" class="file-input" required><span class="box-label">M15 Chart</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="upload-box"><input type="file" id="img3" class="file-input" required><span class="box-label">DXY Index</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+    </div>
+
+    <button id="scanBtn" onclick="executeScan()" class="w-full mt-6 bg-indigo-600 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">
+        Perform Multi-Chart Scan
+    </button>
+
+    <div id="resultBox" class="hidden mt-6 glass rounded-3xl p-6 border-t-2 border-indigo-500">
+        <div class="flex justify-between items-start mb-6 pb-6 border-b border-slate-800">
+            <div><span class="res-label">Institutional Bias</span><h2 id="actionText" class="text-4xl font-black italic uppercase">---</h2></div>
+            <div class="text-right max-w-[150px]"><span class="res-label">Market Logic</span><p id="logicText" class="text-[9px] text-indigo-400 font-bold italic">Awaiting data...</p></div>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-4">
+            <div><span class="res-label">Support</span><p id="supText" class="res-value">---</p></div>
+            <div><span class="res-label">Resistance</span><p id="resText" class="res-value">---</p></div>
+            <div><span class="res-label">Entry</span><p id="entText" class="res-value text-indigo-400">---</p></div>
+            <div><span class="res-label">Take Profit</span><p id="tpText" class="res-value text-emerald-400">---</p></div>
+            <div><span class="res-label">Stop Loss</span><p id="slText" class="res-value text-rose-400">---</p></div>
+            <div><span class="res-label">Lots</span><p id="lotText" class="res-value text-yellow-500">0.00</p></div>
+        </div>
+    </div>
 
     <script src="strategies.js"></script>
     <script>
@@ -146,49 +132,6 @@
         function openSub(id) { document.getElementById(id).classList.add('active'); }
         function closeSub(id) { document.getElementById(id).classList.remove('active'); }
 
-        // --- HISTORY FEATURE ---
-        function openHistory() {
-            const list = document.getElementById('historyList');
-            const logs = JSON.parse(localStorage.getItem('omni_logs') || "[]");
-            list.innerHTML = logs.length ? "" : "<p class='text-[10px] text-slate-500'>No recent analysis.</p>";
-            
-            logs.forEach(log => {
-                const div = document.createElement('div');
-                div.className = "history-card";
-                div.onclick = () => loadHistoryItem(log);
-                div.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-black ${log.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}">${log.bias}</span>
-                        <span class="text-[8px] text-slate-500">${log.time}</span>
-                    </div>
-                    <p class="text-[9px] text-slate-400 truncate">${log.logic}</p>
-                `;
-                list.appendChild(div);
-            });
-            openSub('historyPanel');
-        }
-
-        function loadHistoryItem(log) {
-            document.getElementById('actionText').innerText = log.bias;
-            document.getElementById('entText').innerText = log.entry;
-            document.getElementById('slText').innerText = log.sl;
-            document.getElementById('supText').innerText = log.support;
-            document.getElementById('resText').innerText = log.resistance;
-            document.getElementById('tpText').innerText = log.tp;
-            document.getElementById('lotText').innerText = log.lots;
-            document.getElementById('logicText').innerText = log.logic;
-            document.getElementById('resultBox').classList.remove('hidden');
-            toggleDrawer();
-        }
-
-        function saveLog(data) {
-            let logs = JSON.parse(localStorage.getItem('omni_logs') || "[]");
-            logs.unshift({ ...data, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
-            if (logs.length > 10) logs.pop();
-            localStorage.setItem('omni_logs', JSON.stringify(logs));
-        }
-
-        // --- SCAN LOGIC ---
         async function fileToPart(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -197,12 +140,46 @@
             });
         }
 
+        // --- HISTORY STORAGE ---
+        function saveLog(data) {
+            let logs = JSON.parse(localStorage.getItem('trade_logs') || "[]");
+            logs.unshift({ ...data, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+            if (logs.length > 10) logs.pop();
+            localStorage.setItem('trade_logs', JSON.stringify(logs));
+        }
+
+        function openHistory() {
+            const list = document.getElementById('historyList');
+            const logs = JSON.parse(localStorage.getItem('trade_logs') || "[]");
+            list.innerHTML = logs.length ? "" : "<p class='text-[10px] text-slate-600'>No history.</p>";
+            logs.forEach(log => {
+                const div = document.createElement('div');
+                div.className = "history-item";
+                div.onclick = () => { updateUI(log); toggleDrawer(); };
+                div.innerHTML = `<div class="flex justify-between"><span class="text-[10px] font-black ${log.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}">${log.bias}</span><span class="text-[8px] text-slate-500">${log.time}</span></div><p class="text-[9px] text-slate-400 truncate mt-1">${log.logic}</p>`;
+                list.appendChild(div);
+            });
+            openSub('historyPanel');
+        }
+
+        function updateUI(data) {
+            document.getElementById('actionText').innerText = data.bias;
+            document.getElementById('entText').innerText = data.entry;
+            document.getElementById('slText').innerText = data.sl;
+            document.getElementById('supText').innerText = data.support;
+            document.getElementById('resText').innerText = data.resistance;
+            document.getElementById('tpText').innerText = data.tp;
+            document.getElementById('lotText').innerText = data.lots;
+            document.getElementById('logicText').innerText = data.logic;
+            document.getElementById('resultBox').classList.remove('hidden');
+        }
+
         async function executeScan() {
             const btn = document.getElementById('scanBtn');
             const files = [document.getElementById('img0').files[0], document.getElementById('img1').files[0], document.getElementById('img2').files[0], document.getElementById('img3').files[0]];
-            if (files.some(f => !f)) return alert("Upload all 4 charts.");
+            if (files.some(f => !f)) return alert("Upload all charts.");
 
-            btn.innerText = "EXTRACTING DATA...";
+            btn.innerText = "SCANNING PIXELS...";
             btn.disabled = true;
 
             try {
@@ -210,28 +187,25 @@
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Analyze charts. Return ONLY JSON: {entry: number, sl: number, support: number, resistance: number, bias: 'BUY/SELL', logic: 'short explanation'}" }, ...imageParts] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Analyze 4 charts. Return ONLY JSON: {bias:'BUY/SELL', entry:number, sl:number, support:number, resistance:number, logic:'string'}" }, ...imageParts] }] })
                 });
 
-                const data = await response.json();
-                const result = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json|```/g, ''));
+                const json = await response.json();
+                const result = JSON.parse(json.candidates[0].content.parts[0].text.replace(/```json|```/g, ""));
                 
                 const bal = parseFloat(document.getElementById('bal').value);
                 const risk = parseFloat(document.getElementById('risk').value);
                 const ratio = parseFloat(document.getElementById('ratio').value);
-                
-                // Use strategies.js accuracy
                 const lots = calculatePositionSize(bal, risk, result.entry, result.sl);
-                const tp = (result.entry + (Math.abs(result.entry - result.sl) * ratio)).toFixed(2);
+                const tp = (result.entry + (Math.abs(result.entry - result.sl) * (result.bias === 'BUY' ? ratio : -ratio))).toFixed(2);
 
                 const finalData = { ...result, tp, lots };
-                loadHistoryItem(finalData); // Updates UI
-                saveLog(finalData); // Saves History
-
+                updateUI(finalData);
+                saveLog(finalData);
             } catch (e) {
-                document.getElementById('logicText').innerText = "Sync Error: Check connection.";
+                document.getElementById('logicText').innerText = "Sync Error: Could not read chart pixels.";
             } finally {
-                btn.innerText = "Analyze All Charts";
+                btn.innerText = "Perform Multi-Chart Scan";
                 btn.disabled = false;
             }
         }

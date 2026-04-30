@@ -89,6 +89,7 @@
 
         <div id="settingsPanel" class="sub-panel">
             <button onclick="closeSub('settingsPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
+            
             <div class="flex justify-between items-center mb-8 bg-black/30 p-4 rounded-2xl">
                 <span id="modeLabel" class="text-[10px] font-black uppercase text-slate-400">MANUAL</span>
                 <label class="switch"><input type="checkbox" id="modeSw" onchange="toggleMode()"><span class="slider"></span></label>
@@ -110,20 +111,15 @@
             </div>
 
             <div id="riskInput" class="mt-6 space-y-4">
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" id="riskPct" placeholder="Risk %" class="bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                    <div class="flex items-center gap-1 bg-black border border-slate-800 rounded-xl px-2">
-                        <input type="number" id="rr1" placeholder="R" class="w-full bg-transparent text-xs outline-none text-center">
-                        <span class="text-indigo-500 font-bold">:</span>
-                        <input type="number" id="rr2" placeholder="R" class="w-full bg-transparent text-xs outline-none text-center">
-                    </div>
-                </div>
+                <label class="text-[9px] font-black text-indigo-400 uppercase block">Capital Risk (%)</label>
+                <input type="number" id="riskPct" placeholder="0.5" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
                 <button onclick="toggleLock('risk')" class="lock-btn">Save Risk</button>
             </div>
             <div id="riskLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-                <span id="lockedRiskInfo" class="text-xs font-bold text-slate-400">Risk Set</span>
+                <span id="lockedRiskInfo" class="text-xs font-bold text-slate-400">0.5% Risk Locked</span>
                 <span onclick="toggleLock('risk')" class="edit-link">Edit</span>
             </div>
+            <p class="text-[8px] text-slate-600 mt-4 leading-relaxed">System is hard-coded to prioritize setups with risk under 0.5% for maximum drawdown protection.</p>
         </div>
     </div>
 
@@ -177,7 +173,7 @@
         }
 
         function toggleLock(type) {
-            const input = document.getElementById(type + (type === 'gem' ? 'Input' : 'Input'));
+            const input = document.getElementById(type + 'Input');
             const locked = document.getElementById(type + 'Locked');
             const isHiding = !input.classList.contains('hidden');
             
@@ -186,7 +182,7 @@
                 document.getElementById('lockedAccInfo').innerText = val ? `$${val} Balance Set` : "Account Linked";
             }
             if(type === 'risk') {
-                document.getElementById('lockedRiskInfo').innerText = `${document.getElementById('riskPct').value}% Risk | ${document.getElementById('rr1').value}:${document.getElementById('rr2').value} RR`;
+                document.getElementById('lockedRiskInfo').innerText = `${document.getElementById('riskPct').value}% Risk Parameter Locked`;
             }
 
             input.classList.toggle('hidden', isHiding);
@@ -196,28 +192,20 @@
         function runAnalysis() {
             const res = document.getElementById('res');
             res.classList.remove('hidden');
-            const signal = { pair: "SOLUSDT", dir: "BUY", lot: "0.12", time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
-            
+            const signal = { pair: "CRIPTO", dir: "WAIT", lot: "0.00", time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
             document.getElementById('rAct').innerText = signal.dir;
             document.getElementById('rLot').innerText = signal.lot;
-
             addToHistory(signal);
         }
 
         function addToHistory(s) {
             const list = document.getElementById('historyList');
-            document.getElementById('emptyMsg').classList.add('hidden');
-            
+            if(document.getElementById('emptyMsg')) document.getElementById('emptyMsg').classList.add('hidden');
             const item = document.createElement('div');
             item.className = "p-4 bg-black/40 rounded-xl border border-white/5 mb-2 hover:border-indigo-500 transition-all cursor-pointer";
             item.innerHTML = `<div class="flex justify-between items-center"><span class="text-[10px] font-black text-indigo-400">${s.dir} - ${s.pair}</span><span class="text-[8px] text-slate-600">${s.time}</span></div>`;
-            
             list.prepend(item);
-            analysisCount++;
-
-            if (list.children.length > maxHistory) {
-                list.removeChild(list.lastChild);
-            }
+            if (list.children.length > maxHistory) list.removeChild(list.lastChild);
         }
     </script>
 </body>

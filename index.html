@@ -1,293 +1,96 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omni-Trader Elite | Real Setup Engine</title>
+    <title>Omni-Real | High-Accuracy Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #020408; color: #e2e8f0; margin: 0; overflow-x: hidden; }
         .glass { background: #0a0d14; border: 1px solid #1e293b; }
-        
-        #sideDrawer {
-            position: fixed; top: 0; right: -350px; width: 350px; height: 100%;
-            background: #0a0d14; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 1px solid #1e293b;
-        }
+        #sideDrawer { position: fixed; top: 0; right: -350px; width: 350px; height: 100%; background: #0a0d14; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-left: 1px solid #1e293b; }
         #sideDrawer.open { right: 0; }
         .sub-panel { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; background: #0a0d14; transition: 0.3s ease; z-index: 1001; padding: 24px; }
         .sub-panel.active { left: 0; }
-
         .upload-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 24px; }
-        .upload-box { 
-            position: relative; height: 120px; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; background: #0f172a; border: 2px dashed #334155; border-radius: 16px; 
-            transition: all 0.3s ease;
-        }
-        .upload-box:hover { border-color: #6366f1; background: #1e293b; }
+        .upload-box { position: relative; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0f172a; border: 2px dashed #334155; border-radius: 16px; transition: all 0.3s ease; }
         .upload-box.has-file { border-style: solid; border-color: #10b981; background: #064e3b33; }
-        
         .box-label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
         .file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
-        .tick { display: none; color: #10b981; font-size: 24px; }
-        
         .btn-ui { background: #6366f1; color: white; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 800; margin-top: 8px; }
-
         .res-label { font-size: 9px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; }
         .res-value { font-size: 16px; font-weight: 700; color: #f8fafc; }
-        
         .strategy-badge { font-size: 8px; padding: 2px 8px; border-radius: 99px; background: #312e81; color: #c7d2fe; font-weight: 900; margin-bottom: 4px; display: inline-block; }
-
         @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); } 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); } }
         .scanning { animation: pulse-border 2s infinite; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body class="p-4 max-w-lg mx-auto">
     <div id="overlay" class="fixed inset-0 bg-black/80 hidden z-[999]" onclick="toggleDrawer()"></div>
 
-    <!-- Sidebar for Configuration -->
     <div id="sideDrawer">
         <div class="p-6 space-y-6">
             <div class="flex justify-between items-center">
                 <button onclick="toggleDrawer()"><i class="fas fa-times text-slate-500"></i></button>
-                <span class="text-xs font-black uppercase text-indigo-500 tracking-widest">Configuration Panel</span>
+                <span class="text-xs font-black uppercase text-indigo-500 tracking-widest">Configuration</span>
             </div>
-            
             <div class="glass rounded-2xl p-4 border-l-4 border-emerald-500">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="text-[10px] font-black text-slate-500 uppercase">Gemini 2.5 Pro Key</span>
-                    <i id="lockStatus" class="fas fa-unlock text-slate-600 text-xs"></i>
-                </div>
-                <input type="password" id="apiInput" placeholder="Enter API Key..." 
-                    class="w-full bg-black/50 border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500">
-                <button onclick="saveApiKey()" id="saveKeyBtn" 
-                    class="w-full mt-3 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[10px] font-black py-3 rounded-lg transition-all">
-                    SAVE KEY
-                </button>
+                <input type="password" id="apiInput" placeholder="Enter API Key..." class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
+                <button onclick="saveApiKey()" class="w-full mt-3 bg-emerald-600 text-white text-[10px] font-black py-3 rounded-lg">SAVE KEY</button>
             </div>
-
-            <div onclick="openSub('settingsPanel')" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer hover:border-indigo-500">
-                <div class="flex items-center gap-4"><i class="fas fa-wallet text-indigo-400"></i><span class="text-sm font-bold text-white">Risk Management</span></div>
-                <i class="fas fa-chevron-right text-xs text-slate-600"></i>
+            <div onclick="openSub('settingsPanel')" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer">
+                <div class="flex items-center gap-4"><i class="fas fa-wallet text-indigo-400"></i><span class="text-sm font-bold">Risk Settings</span></div>
             </div>
         </div>
-
         <div id="settingsPanel" class="sub-panel">
-            <button onclick="closeSub('settingsPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[9px] font-black text-slate-500 uppercase">Live Account Balance ($)</label>
-                    <input type="number" id="bal" value="10000" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-sm text-white outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase">Risk Per Trade (%)</label><input type="number" id="risk" value="1.0" step="0.1" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-sm text-white outline-none"></div>
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase">Min R:R Ratio</label><input type="number" id="ratio" value="3.0" step="0.5" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-sm text-white outline-none"></div>
-                </div>
-                <p class="text-[8px] text-slate-500 italic mt-2">Calculations use standard lot sizing (1.00 = 100,000 units).</p>
-            </div>
+            <button onclick="closeSub('settingsPanel')" class="text-indigo-400 text-xs font-bold mb-6">BACK</button>
+            <label class="text-[9px] font-black text-slate-500 uppercase">Balance ($)</label>
+            <input type="number" id="bal" value="10000" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-sm text-white mb-4">
+            <label class="text-[9px] font-black text-slate-500 uppercase">Risk %</label>
+            <input type="number" id="risk" value="1.0" step="0.1" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-sm text-white">
         </div>
     </div>
 
-    <!-- Main Header -->
     <header class="flex justify-between items-center mb-6 pt-2">
-        <div class="flex items-center gap-3">
-            <div class="h-12 w-12 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.3)]">
-                <i class="fas fa-microchip text-2xl text-white"></i>
-            </div>
-            <div>
-                <h1 class="text-2xl font-black italic text-white uppercase leading-none tracking-tighter">OMNI-REAL</h1>
-                <p class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mt-1">Multi-Strategy Accuracy Engine</p>
-            </div>
+        <div>
+            <h1 class="text-2xl font-black italic text-white uppercase tracking-tighter">OMNI-REAL</h1>
+            <p class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mt-1">Multi-Strategy Engine</p>
         </div>
         <button onclick="toggleDrawer()" class="h-10 w-10 glass rounded-xl flex items-center justify-center text-slate-400"><i class="fas fa-cog"></i></button>
     </header>
 
-    <!-- Chart Upload Grid -->
     <div class="upload-grid">
-        <div class="upload-box" id="box0"><input type="file" id="img0" onchange="markFile(0)" class="file-input"><span class="box-label">HTF Bias (4H)</span><div class="btn-ui">Load</div><i class="fas fa-check-circle tick"></i></div>
-        <div class="upload-box" id="box1"><input type="file" id="img1" onchange="markFile(1)" class="file-input"><span class="box-label">LTF Structure (1H)</span><div class="btn-ui">Load</div><i class="fas fa-check-circle tick"></i></div>
-        <div class="upload-box" id="box2"><input type="file" id="img2" onchange="markFile(2)" class="file-input"><span class="box-label">Entry Logic (M15)</span><div class="btn-ui">Load</div><i class="fas fa-check-circle tick"></i></div>
-        <div class="upload-box" id="box3"><input type="file" id="img3" onchange="markFile(3)" class="file-input"><span class="box-label">Market Data (DXY)</span><div class="btn-ui">Load</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="upload-box" id="box0"><input type="file" id="img0" onchange="markFile(0)" class="file-input"><span class="box-label">4H Bias</span><div class="btn-ui">Load</div></div>
+        <div class="upload-box" id="box1"><input type="file" id="img1" onchange="markFile(1)" class="file-input"><span class="box-label">1H Structure</span><div class="btn-ui">Load</div></div>
+        <div class="upload-box" id="box2"><input type="file" id="img2" onchange="markFile(2)" class="file-input"><span class="box-label">M15 Entry</span><div class="btn-ui">Load</div></div>
+        <div class="upload-box" id="box3"><input type="file" id="img3" onchange="markFile(3)" class="file-input"><span class="box-label">DXY Data</span><div class="btn-ui">Load</div></div>
     </div>
 
-    <button id="scanBtn" onclick="executeScan()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black uppercase text-xs tracking-[2px] shadow-lg active:scale-[0.98] transition-all">
+    <button id="scanBtn" onclick="executeScan()" class="w-full mt-6 bg-indigo-600 py-5 rounded-2xl font-black uppercase text-xs tracking-[2px] text-white">
         Initiate Real-Time Analysis
     </button>
 
-    <!-- Results Section -->
-    <div id="resultBox" class="hidden mt-6 glass rounded-3xl p-6 border-t-2 border-indigo-500 shadow-2xl animate-result">
+    <div id="resultBox" class="hidden mt-6 glass rounded-3xl p-6 border-t-2 border-indigo-500">
         <div class="flex justify-between items-start mb-6 pb-6 border-b border-slate-800">
             <div>
-                <span id="strategyType" class="strategy-badge">SMC/ORDERBLOCK ENGINE</span>
-                <span class="res-label block">Setup Priority</span>
-                <h2 id="actionText" class="text-4xl font-black italic uppercase leading-none">---</h2>
+                <span id="strategyType" class="strategy-badge">ANALYZING...</span>
+                <h2 id="actionText" class="text-4xl font-black italic uppercase">---</h2>
             </div>
-            <div class="text-right max-w-[140px]">
-                <span class="res-label">Execution Logic</span>
-                <p id="logicText" class="text-[10px] text-indigo-400 font-bold italic leading-tight mt-1">Calculating...</p>
-            </div>
+            <p id="logicText" class="text-[10px] text-indigo-400 font-bold italic text-right max-w-[140px]">Ready.</p>
         </div>
-        
         <div class="grid grid-cols-3 gap-y-6 gap-x-4">
-            <div><span class="res-label">Entry Price</span><p id="entText" class="res-value text-indigo-400">---</p></div>
+            <div><span class="res-label">Entry</span><p id="entText" class="res-value text-indigo-400">---</p></div>
             <div><span class="res-label">Stop Loss</span><p id="slText" class="res-value text-rose-500">---</p></div>
             <div><span class="res-label">Target (TP)</span><p id="tpText" class="res-value text-emerald-400">---</p></div>
-            
-            <div class="col-span-3 h-px bg-slate-800 my-1"></div>
-            
-            <div><span class="res-label">Key Support</span><p id="supText" class="res-value">---</p></div>
-            <div><span class="res-label">Key Resistance</span><p id="resText" class="res-value">---</p></div>
-            <div><span class="res-label">Exact Lot Size</span><p id="lotText" class="res-value text-yellow-500 font-black">0.00</p></div>
-        </div>
-        
-        <div class="mt-6 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-            <p class="text-[9px] text-emerald-400 font-bold flex items-center gap-2">
-                <i class="fas fa-shield-alt"></i> ANALYST CONFIDENCE: HIGH ACCURACY (PIXEL ALIGNED)
-            </p>
+            <div><span class="res-label">Support</span><p id="supText" class="res-value">---</p></div>
+            <div><span class="res-label">Resistance</span><p id="resText" class="res-value">---</p></div>
+            <div><span class="res-label">Lot Size</span><p id="lotText" class="res-value text-yellow-500 font-black">0.00</p></div>
         </div>
     </div>
 
-    <script>
-        let API_KEY = localStorage.getItem('omni_api_v3') || "";
-        const MODEL = "gemini-2.5-flash-preview-09-2025";
-
-        function saveApiKey() {
-            const input = document.getElementById('apiInput');
-            if (input.value.trim().length < 10) return alert("Enter valid Gemini Key.");
-            localStorage.setItem('omni_api_v3', input.value.trim());
-            API_KEY = input.value.trim();
-            location.reload();
-        }
-
-        function markFile(idx) {
-            const box = document.getElementById(`box${idx}`);
-            box.classList.add('has-file');
-        }
-
-        window.onload = function() {
-            if (API_KEY) {
-                document.getElementById('apiInput').value = "********************";
-                document.getElementById('saveKeyBtn').innerText = "KEY VERIFIED";
-                document.getElementById('lockStatus').className = "fas fa-lock text-emerald-500 text-xs";
-            }
-        };
-
-        function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
-        function openSub(id) { document.getElementById(id).classList.add('active'); }
-        function closeSub(id) { document.getElementById(id).classList.remove('active'); }
-
-        async function fileToPart(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve({ inlineData: { mimeType: "image/jpeg", data: reader.result.split(',')[1] } });
-            });
-        }
-
-        async function fetchWithRetry(url, options, retries = 5, delay = 1000) {
-            try {
-                const response = await fetch(url, options);
-                if (!response.ok) throw new Error(`Status ${response.status}`);
-                return await response.json();
-            } catch (err) {
-                if (retries <= 0) throw err;
-                await new Promise(r => setTimeout(r, delay));
-                return fetchWithRetry(url, options, retries - 1, delay * 2);
-            }
-        }
-
-        async function executeScan() {
-            if (!API_KEY) return alert("Open sidebar to set API Key.");
-            
-            const btn = document.getElementById('scanBtn');
-            const resultBox = document.getElementById('resultBox');
-            
-            const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
-            if (files.some(f => !f)) return alert("Upload all 4 live charts.");
-
-            btn.innerText = "EXTRACTING PIXEL DATA...";
-            btn.classList.add('scanning');
-            btn.disabled = true;
-
-            try {
-                const imageParts = await Promise.all(files.map(fileToPart));
-                
-                const prompt = `Task: Professional Level Trade Execution Analysis.
-Analyze 4 charts for a high-probability real trading setup. 
-Logic:
-1. Run SMC (Order Blocks/CHoCH), Wyckoff (Schematics), and ICT (FVG/Power of 3) strategies.
-2. Select the strategy with the highest confluence.
-3. Identify exact entry and stop loss based on wick pixel levels.
-4. Output MUST be ONLY a JSON object.
-
-JSON Schema: 
-{
-  "strategy": "SMC | WYCKOFF | ICT",
-  "bias": "BUY | SELL",
-  "entry": number,
-  "sl": number,
-  "support": number,
-  "resistance": number,
-  "logic": "brief professional reasoning"
-}`;
-
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
-                
-                const data = await fetchWithRetry(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] 
-                    })
-                });
-
-                const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                const jsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-                const res = JSON.parse(jsonStr);
-
-                // REAL Calculations
-                const bal = parseFloat(document.getElementById('bal').value) || 10000;
-                const riskPercent = parseFloat(document.getElementById('risk').value) || 1.0;
-                const ratio = parseFloat(document.getElementById('ratio').value) || 3.0;
-                
-                const riskAmount = bal * (riskPercent / 100);
-                const pipDiff = Math.abs(res.entry - res.sl);
-                
-                // Lot Calculation (Assumes Standard Lot 100k, 1 pip = 0.0001 or 1.0 for indices)
-                // We use a generalized risk factor for accuracy
-                const lotSize = pipDiff > 0 ? (riskAmount / (pipDiff * 10)).toFixed(2) : "0.01";
-                
-                const targetDist = pipDiff * ratio;
-                const tp = res.bias === 'BUY' ? (res.entry + targetDist) : (res.entry - targetDist);
-
-                // Update UI
-                document.getElementById('strategyType').innerText = `${res.strategy} ENGINE ACTIVE`;
-                document.getElementById('actionText').innerText = res.bias;
-                document.getElementById('actionText').className = `text-4xl font-black italic uppercase ${res.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}`;
-                document.getElementById('entText').innerText = res.entry.toFixed(5);
-                document.getElementById('slText').innerText = res.sl.toFixed(5);
-                document.getElementById('tpText').innerText = tp.toFixed(5);
-                document.getElementById('supText').innerText = res.support.toFixed(5);
-                document.getElementById('resText').innerText = res.resistance.toFixed(5);
-                document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
-                document.getElementById('logicText').innerText = res.logic;
-
-                resultBox.classList.remove('hidden');
-                resultBox.scrollIntoView({ behavior: 'smooth' });
-
-            } catch (e) {
-                console.error(e);
-                alert("Technical Failure: Ensure charts are clear and API key is active.");
-            } finally {
-                btn.innerText = "Initiate Real-Time Analysis";
-                btn.classList.remove('scanning');
-                btn.disabled = false;
-            }
-        }
-    </script>
+    <script src="strategies.js"></script>
 </body>
 </html>
-

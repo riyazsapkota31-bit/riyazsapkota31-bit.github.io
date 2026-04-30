@@ -1,9 +1,9 @@
 /**
- * OMNI-REAL ENGINE | FLASH LITE 2.5
+ * OMNI-REAL ENGINE | FLASH LITE 2.5 STABLE
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// Optimized for your confirmed Flash Lite logs
+// This specific ID is confirmed in your AI Studio usage logs
 const MODEL = "gemini-2.5-flash-lite"; 
 
 window.onload = function() {
@@ -18,12 +18,10 @@ function saveApiKey() {
     
     if (keyValue === "" || keyValue.includes("****")) return alert("Please enter a valid Security Key.");
     
-    // Save locally
     localStorage.setItem('omni_api_v3', keyValue);
     API_KEY = keyValue;
     
-    // UI feedback without refreshing
-    alert("KEY LOCKED: Flash Lite Engine is now online.");
+    alert("KEY LOCKED: Flash Lite Engine is now active.");
     input.value = "********************";
     toggleDrawer();
 }
@@ -55,7 +53,7 @@ async function executeScan() {
     const resultBox = document.getElementById('resultBox');
     
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
-    if (files.some(f => !f)) return alert("Upload all 4 chart tiers for analysis.");
+    if (files.some(f => !f)) return alert("Please upload all 4 chart tiers.");
 
     btn.innerText = "EXTRACTING PIXEL DATA...";
     btn.classList.add('scanning');
@@ -64,10 +62,8 @@ async function executeScan() {
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
         
-        const prompt = `Professional Institutional Analysis. Analyze HTF, LTF, Entry, and DXY. 
-        Determine strategy (SMC/ICT/Wyckoff) and bias.
-        Return ONLY this JSON:
-        {"strategy":"SMC|WYCKOFF|ICT","bias":"BUY|SELL","entry":number,"sl":number,"support":number,"resistance":number,"logic":"10-word technical insight"}`;
+        const prompt = `Perform Professional Institutional Analysis. Return ONLY JSON:
+        {"strategy":"SMC|ICT|WYCKOFF","bias":"BUY|SELL","entry":number,"sl":number,"support":number,"resistance":number,"logic":"10-word technical insight"}`;
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
         
@@ -86,7 +82,6 @@ async function executeScan() {
         const jsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         const res = JSON.parse(jsonStr);
 
-        // Position Sizing
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1.0;
         const riskAmt = bal * (risk / 100);
@@ -94,8 +89,7 @@ async function executeScan() {
         const lotSize = slDist > 0 ? (riskAmt / (slDist * 10)).toFixed(2) : "0.01";
         const tp = res.bias === 'BUY' ? (res.entry + (slDist * 3)) : (res.entry - (slDist * 3));
 
-        // Update UI results
-        document.getElementById('strategyType').innerText = `${res.strategy} ENGINE`;
+        document.getElementById('strategyType').innerText = `${res.strategy} ACTIVE`;
         document.getElementById('actionText').innerText = res.bias;
         document.getElementById('actionText').className = `text-4xl font-black italic uppercase leading-none ${res.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}`;
         document.getElementById('entText').innerText = res.entry.toFixed(5);

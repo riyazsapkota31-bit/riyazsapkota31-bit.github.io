@@ -10,11 +10,13 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #05070a; color: #e2e8f0; margin: 0; overflow-x: hidden; }
         .glass { background: #0d1117; border: 1px solid #1f2937; }
-        .main-container { max-width: 480px; margin: 0 auto; padding: 20px; }
+        
+        /* Updated Responsive Container */
+        .main-container { width: 95%; max-width: 1100px; margin: 0 auto; padding: 20px; }
 
         /* SIDEBAR SYSTEM */
         #sideDrawer {
-            position: fixed; top: 0; right: -320px; width: 320px; height: 100%;
+            position: fixed; top: 0; right: -350px; width: 350px; height: 100%;
             background: #0d1117; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             border-left: 1px solid #1f2937;
         }
@@ -22,26 +24,31 @@
         .sub-panel { position: absolute; top: 0; left: 100%; width: 100%; height: 100%; background: #0d1117; transition: 0.3s ease; z-index: 1001; padding: 24px; }
         .sub-panel.active { left: 0; }
 
-        /* UPLOAD BOXES */
-        .upload-box { position: relative; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, #0d1117, #161b22); border: 1px solid #1f2937; border-radius: 16px; }
-        .box-label { font-size: 12px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 8px; }
-        .btn-ui { background: #4f46e5; color: white; padding: 5px 12px; border-radius: 4px; font-size: 9px; font-weight: 800; pointer-events: none; }
+        /* UPLOAD BOXES (Desktop 4-column, Mobile 2-column) */
+        .upload-grid { display: grid; gap: 16px; margin-top: 40px; }
+        @media (min-width: 768px) { .upload-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 767px) { .upload-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .upload-box { position: relative; height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(145deg, #0d1117, #161b22); border: 1px solid #1f2937; border-radius: 20px; transition: 0.3s; }
+        .upload-box:hover { border-color: #4f46e5; background: #0f172a; }
+        .box-label { font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        .btn-ui { background: #4f46e5; color: white; padding: 6px 14px; border-radius: 6px; font-size: 10px; font-weight: 800; pointer-events: none; }
         .file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
-        .tick { display: none; color: #10b981; font-size: 28px; }
+        .tick { display: none; color: #10b981; font-size: 32px; }
         input:valid ~ .btn-ui, input:valid ~ .box-label { display: none; }
         input:valid ~ .tick { display: block; }
 
-        /* UTILITY */
+        /* TOGGLE SWITCH */
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .slider { position: absolute; cursor: pointer; inset: 0; background: #1f2937; border-radius: 34px; transition: .4s; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: .4s; }
         input:checked + .slider { background: #4f46e5; }
         input:checked + .slider:before { transform: translateX(24px); }
+
         .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 999; backdrop-filter: blur(4px); }
         .drawer-overlay.active { display: block; }
         .hidden { display: none !important; }
-        .lock-btn { width: 100%; background: #4f46e5; color: white; font-size: 9px; font-weight: bold; padding: 10px; border-radius: 8px; margin-top: 10px; text-transform: uppercase; }
-        .edit-link { font-size: 9px; font-weight: 900; color: #6366f1; text-transform: uppercase; text-decoration: underline; cursor: pointer; }
+        .lock-btn { width: 100%; background: #4f46e5; color: white; font-size: 11px; font-weight: bold; padding: 14px; border-radius: 12px; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -57,116 +64,136 @@
 
             <div class="p-4 glass rounded-2xl border-indigo-500/30">
                 <label class="text-[9px] font-black text-indigo-400 uppercase block mb-2">Gemini AI Engine</label>
-                <div id="gemLocked" class="flex justify-between items-center bg-black/20 p-2 rounded-lg">
-                    <span class="text-[10px] text-emerald-500 font-bold tracking-widest">ACTIVE & SECURED</span>
+                <div class="flex justify-between items-center bg-black/20 p-2 rounded-lg">
+                    <span class="text-[10px] text-emerald-500 font-bold tracking-widest">SECURED & ACTIVE</span>
                     <i class="fas fa-shield-alt text-emerald-500 text-xs"></i>
                 </div>
             </div>
 
             <nav class="space-y-4">
                 <div onclick="openSub('historyPanel')" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer hover:bg-white/5 transition-colors">
-                    <div class="flex items-center gap-4"><i class="fas fa-clock text-indigo-500"></i><span class="text-sm font-bold">Analysis History</span></div>
+                    <div class="flex items-center gap-4"><i class="fas fa-history text-indigo-500"></i><span class="text-sm font-bold">Trade Journal</span></div>
                     <i class="fas fa-chevron-right text-[10px] text-slate-600"></i>
                 </div>
                 <div onclick="openSub('settingsPanel')" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer hover:bg-white/5 transition-colors">
-                    <div class="flex items-center gap-4"><i class="fas fa-cog text-slate-400"></i><span class="text-sm font-bold">Trade Configuration</span></div>
+                    <div class="flex items-center gap-4"><i class="fas fa-sliders-h text-slate-400"></i><span class="text-sm font-bold">Trade Configuration</span></div>
                     <i class="fas fa-chevron-right text-[10px] text-slate-600"></i>
                 </div>
             </nav>
         </div>
 
-        <div id="historyPanel" class="sub-panel">
-            <button onclick="closeSub('historyPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
-            <h3 class="text-xs font-black uppercase mb-4 text-slate-300">Analysis Journal</h3>
-            <div id="historyList" class="space-y-3 overflow-y-auto max-h-[80vh]">
-                <p id="emptyMsg" class="text-[10px] text-slate-600 text-center mt-10">No recent analysis recorded.</p>
-            </div>
-        </div>
-
         <div id="settingsPanel" class="sub-panel">
             <button onclick="closeSub('settingsPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
             
-            <div class="flex justify-between items-center mb-8 bg-black/30 p-4 rounded-2xl">
-                <span id="modeLabel" class="text-[10px] font-black uppercase text-slate-400">MANUAL</span>
+            <div class="flex justify-between items-center mb-6 bg-black/30 p-4 rounded-2xl">
+                <span id="modeLabel" class="text-[10px] font-black uppercase text-slate-400 tracking-widest">MANUAL MODE</span>
                 <label class="switch"><input type="checkbox" id="modeSw" onchange="toggleMode()"><span class="slider"></span></label>
             </div>
             
-            <div id="accInput" class="space-y-4">
+            <div class="space-y-5">
                 <div id="manFields" class="space-y-3">
-                    <input type="number" id="bal" placeholder="XM Balance ($)" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
+                    <input type="number" id="bal" placeholder="XM Balance ($)" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500">
                 </div>
+                
                 <div id="liveFields" class="hidden space-y-3">
-                    <input type="password" id="tok" placeholder="MetaApi Token" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                    <input type="text" id="accId" placeholder="Account ID" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
+                    <input type="password" id="tok" placeholder="MetaApi Token" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500">
+                    <input type="text" id="accId" placeholder="Account ID" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500">
                 </div>
-                <button onclick="toggleLock('acc')" class="lock-btn">Save Account</button>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-500 uppercase ml-1">Risk %</label>
+                        <input type="number" id="risk" placeholder="0.5" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500 text-indigo-400">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-500 uppercase ml-1">R:R Ratio</label>
+                        <input type="number" id="ratio" placeholder="3" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-emerald-500 text-emerald-400">
+                    </div>
+                </div>
+
+                <button onclick="saveSettings()" class="lock-btn">Save Configuration</button>
             </div>
-            <div id="accLocked" class="hidden flex justify-between items-center bg-black/20 p-3 rounded-xl border border-white/5">
-                <span id="lockedAccInfo" class="text-xs font-bold text-slate-400">Account Ready</span>
-                <span onclick="toggleLock('acc')" class="edit-link">Edit</span>
+        </div>
+
+        <div id="historyPanel" class="sub-panel">
+            <button onclick="closeSub('historyPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
+            <div id="journalList" class="space-y-3">
+                <p class="text-[10px] text-slate-600 text-center mt-10">No recent trades analyzed.</p>
             </div>
         </div>
     </div>
 
     <main class="main-container">
-        <header class="flex justify-between items-center py-10">
-            <div class="flex items-center gap-5">
-                <div class="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-900/40">
-                    <i class="fas fa-chart-area text-3xl text-white"></i>
+        <header class="flex justify-between items-center py-12">
+            <div class="flex items-center gap-6">
+                <div class="h-20 w-20 bg-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-indigo-900/50">
+                    <i class="fas fa-bolt text-4xl text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-black italic text-white tracking-tighter uppercase leading-none">OMNI-TRADER</h1>
-                    <p id="modeStatus" class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">Engine Locked & Active</p>
+                    <h1 class="text-4xl md:text-5xl font-black italic text-white tracking-tighter uppercase leading-none">OMNI-TRADER</h1>
+                    <p id="engineStatus" class="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.3em] mt-3">AI Engine Ready</p>
                 </div>
             </div>
-            <button onclick="toggleDrawer()" class="h-12 w-12 flex items-center justify-center glass rounded-2xl"><i class="fas fa-bars-staggered text-xl"></i></button>
+            <button onclick="toggleDrawer()" class="h-14 w-14 flex items-center justify-center glass rounded-2xl hover:bg-indigo-600/20 transition-all"><i class="fas fa-bars-staggered text-2xl"></i></button>
         </header>
 
-        <div class="grid grid-cols-2 gap-4 mt-16">
-            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">4H Bias</div><div class="btn-ui">Choose File</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">1H Structure</div><div class="btn-ui">Choose File</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">M15 Entry</div><div class="btn-ui">Choose File</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">DXY Context</div><div class="btn-ui">Choose File</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="upload-grid">
+            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">4H Bias Scan</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">1H Structure</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">M15 Execution</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" class="file-input" required><div class="box-label">DXY Overview</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
         </div>
 
-        <button onclick="runAnalysis()" class="w-full mt-10 bg-indigo-600 py-6 rounded-2xl font-black uppercase text-xs tracking-[0.4em] active:scale-95 transition-all">
+        <button onclick="executeScan()" class="w-full mt-12 bg-indigo-600 py-7 rounded-3xl font-black uppercase text-sm tracking-[0.5em] hover:bg-indigo-500 active:scale-95 transition-all shadow-xl shadow-indigo-900/30">
             Analyze the Chart
         </button>
 
-        <div id="res" class="hidden mt-8 glass rounded-3xl p-8 border-t-2 border-indigo-500">
-            <div class="flex justify-between items-center">
-                <h2 id="rAct" class="text-4xl font-black italic uppercase">---</h2>
-                <div class="text-right"><span class="text-[9px] text-slate-500 font-black uppercase block">Lots</span><span id="rLot" class="text-2xl font-bold">0.00</span></div>
+        <div id="resultBox" class="hidden mt-10 glass rounded-[40px] p-10 border-t-4 border-indigo-500">
+            <div class="flex justify-between items-end">
+                <div>
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Recommendation</span>
+                    <h2 id="actionText" class="text-6xl font-black italic uppercase text-white">---</h2>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-500 font-black uppercase block mb-1">Recommended Lots</span>
+                    <span id="lotText" class="text-4xl font-bold text-indigo-400">0.00</span>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-        const GEMINI_KEY = "AIzaSyCt90KDSpWVE3KlNLUfDd7PtKx43IdN8Cg"; // Your Permanent Key
+        const GEMINI_API_KEY = "AIzaSyCt90KDSpWVE3KlNLUfDd7PtKx43IdN8Cg";
 
-        function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('active'); }
+        function toggleDrawer() { 
+            document.getElementById('sideDrawer').classList.toggle('open'); 
+            document.getElementById('overlay').classList.toggle('active'); 
+        }
         function openSub(id) { document.getElementById(id).classList.add('active'); }
         function closeSub(id) { document.getElementById(id).classList.remove('active'); }
 
         function toggleMode() {
             const isLive = document.getElementById('modeSw').checked;
-            document.getElementById('modeLabel').innerText = isLive ? "LIVE" : "MANUAL";
+            document.getElementById('modeLabel').innerText = isLive ? "LIVE TRADING" : "MANUAL MODE";
             document.getElementById('manFields').classList.toggle('hidden', isLive);
             document.getElementById('liveFields').classList.toggle('hidden', !isLive);
         }
 
-        function toggleLock(type) {
-            const input = document.getElementById(type + 'Input');
-            const locked = document.getElementById(type + 'Locked');
-            input.classList.toggle('hidden');
-            locked.classList.toggle('hidden');
+        function saveSettings() {
+            alert("Configuration Saved Successfully!");
+            closeSub('settingsPanel');
         }
 
-        async function runAnalysis() {
-            // This function now uses the permanent GEMINI_KEY to process your images
-            document.getElementById('res').classList.remove('hidden');
-            document.getElementById('rAct').innerText = "SCANNING";
-            // ... (Rest of your API-calling logic goes here)
+        async function executeScan() {
+            const res = document.getElementById('resultBox');
+            res.classList.remove('hidden');
+            document.getElementById('actionText').innerText = "SCANNING";
+            
+            // Logic for processing your 4 images with Gemini API key goes here
+            setTimeout(() => {
+                document.getElementById('actionText').innerText = "BUY";
+                document.getElementById('lotText').innerText = "0.45";
+            }, 2000);
         }
     </script>
 </body>

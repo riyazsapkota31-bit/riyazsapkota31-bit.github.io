@@ -1,18 +1,16 @@
 /**
- * OMNI-TRADER RISK ENGINE
- * Ensures position sizing is 100% accurate based on entry/SL distance.
+ * Calculates the lot size based on account balance and risk percentage.
+ *
  */
 function calculatePositionSize(balance, riskPercent, entry, sl) {
     if (!entry || !sl || entry === sl) return "0.00";
-    
-    // Total USD amount willing to lose
+
     const riskAmount = balance * (riskPercent / 100);
+    const pipsAtRisk = Math.abs(entry - sl);
     
-    // Price distance between entry and stop loss
-    const distance = Math.abs(entry - sl);
+    // Simple lot calculation: Risk Amount / Distance
+    const rawLots = riskAmount / pipsAtRisk;
     
-    // Position size calculation
-    const lotSize = riskAmount / distance;
-    
-    return isFinite(lotSize) ? lotSize.toFixed(2) : "0.00";
+    // Return formatted to 2 decimal places for the UI
+    return isFinite(rawLots) ? rawLots.toFixed(2) : "0.00";
 }

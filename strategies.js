@@ -1,46 +1,14 @@
-/**
- * OMNI-REAL ENGINE | INFINITY SCALPER V7
- * Ratio: Dynamic (1.5 to 6.0+)
- */
-
-let API_KEY = localStorage.getItem('omni_api_v3') || "";
-const MODEL = "gemini-2.5-flash-lite"; 
-
-window.onload = function() {
-    if (API_KEY) { document.getElementById('apiInput').value = "********************"; }
-};
-
-function saveApiKey() {
-    const input = document.getElementById('apiInput');
-    const keyValue = input.value.trim();
-    if (keyValue === "" || keyValue.includes("****")) return alert("Invalid Key.");
-    localStorage.setItem('omni_api_v3', keyValue);
-    API_KEY = keyValue;
-    alert("INFINITY ENGINE SYNCED: Dynamic Ratio Active.");
-    input.value = "********************";
-    toggleDrawer();
-}
-
-function markFile(idx) { document.getElementById(`box${idx}`).classList.add('has-file'); }
-function toggleDrawer() { 
-    document.getElementById('sideDrawer').classList.toggle('open'); 
-    document.getElementById('overlay').classList.toggle('hidden'); 
-}
-
-async function fileToPart(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve({ inlineData: { mimeType: "image/jpeg", data: reader.result.split(',')[1] } });
-    });
-}
-
 async function executeScan() {
-    if (!API_KEY) return alert("Key Missing.");
+    if (!API_KEY) return alert("Security Error: Key not found.");
+    
+    // 1. CAPTURE USER DATA (YOUR $10,000 AND RISK %)
+    const userBalance = parseFloat(document.getElementById('bal').value) || 10000;
+    const userRiskPercent = parseFloat(document.getElementById('risk').value) || 1.0;
+    
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
-    if (files.some(f => !f)) return alert("Upload all 4 tiers.");
+    if (files.some(f => !f)) return alert("Please upload all 4 chart tiers.");
 
     btn.innerText = "SCALPING PIXELS...";
     btn.disabled = true;
@@ -48,7 +16,6 @@ async function executeScan() {
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
         
-        // AI PROMPT: Now tells the AI to pick its own TP based on major liquidity
         const prompt = `Act as an expert Institutional Scalper. Analyze these 4 charts for a high-confluence LTF setup. 
         Identify the primary Draw on Liquidity (major swing high/low) for the Target. 
         Ensure the Target provides at least a 1.5x expansion from entry.
@@ -63,38 +30,37 @@ async function executeScan() {
         });
 
         const data = await response.json();
-        const rawText = data.candidates[0].content.parts[0].text;
-        const res = JSON.parse(rawText.replace(/```json/g, '').replace(/```/g, '').trim());
+        const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
-        // DYNAMIC MATH WITH SAFETY FLOOR
-        const bal = parseFloat(document.getElementById('bal').value) || 10000;
-        const risk = parseFloat(document.getElementById('risk').value) || 1.0;
-        const riskAmt = bal * (risk / 100);
+        // 2. REAL-TIME RISK CALCULATION
         const slDist = Math.abs(res.entry - res.sl);
+        const riskAmountMoney = userBalance * (userRiskPercent / 100);
         
-        // Logic: Use the AI's suggested TP, but ensure it is MINIMUM 1.5x RR
+        // Target Logic (Greater than 1.5)
         let finalTp = res.tp;
         const minTpDist = slDist * 1.5;
-        const actualTpDist = Math.abs(res.entry - res.tp);
-
-        if (actualTpDist < minTpDist) {
-            // If AI is too conservative, force 1.8x as a solid baseline
-            finalTp = res.bias === 'BUY' ? (res.entry + (slDist * 1.8)) : (res.entry - (slDist * 1.8));
+        if (Math.abs(res.entry - res.tp) < minTpDist) {
+            finalTp = res.bias === 'BUY' ? (res.entry + (slDist * 1.9)) : (res.entry - (slDist * 1.9));
         }
 
-        const lotSize = slDist > 0 ? (riskAmt / (slDist * 10)).toFixed(2) : "0.10";
+        // 3. CALCULATE REAL LOT SIZE FOR SOL/USDT
+        // Formula: (Balance * Risk%) / (SL Distance * 10)
+        const calculatedLot = slDist > 0 ? (riskAmountMoney / (slDist * 10)).toFixed(2) : "0.10";
 
-        // UI Injection
+        // 4. UI INJECTION (This shows YOUR data)
         document.getElementById('strategyType').innerText = `INFINITY ${res.strategy}`;
         document.getElementById('actionText').innerText = res.bias;
         document.getElementById('actionText').className = `text-4xl font-black italic ${res.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}`;
         document.getElementById('entText').innerText = res.entry.toFixed(5);
         document.getElementById('slText').innerText = res.sl.toFixed(5);
         document.getElementById('tpText').innerText = finalTp.toFixed(5);
-        document.getElementById('lotText').innerText = lotSize;
+        
+        // This is the most important line for you:
+        document.getElementById('lotText').innerText = Math.max(calculatedLot, 0.01);
+        
         document.getElementById('logicText').innerText = res.logic;
-
         resultBox.classList.remove('hidden');
+
     } catch (e) {
         alert("ENGINE ERROR: " + e.message);
     } finally {

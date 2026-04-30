@@ -1,47 +1,36 @@
 /**
- * OMNI-REAL ENGINE | FULL INTERFACE + INFINITY SCALPER V7
+ * OMNI-REAL | INFINITY SCALPER V8 (STABLE)
+ * Features: Dynamic RR (1.5 - 6.0+), Auto-Risk Calc, Gemini 2.5 Flash Lite Fix
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
 const MODEL = "gemini-2.5-flash-lite"; 
 
-// --- 1. INTERFACE CONTROL (Restores your Menu/Drawer access) ---
-
+// --- INTERFACE CONTROLS ---
 function toggleDrawer() { 
     document.getElementById('sideDrawer').classList.toggle('open'); 
     document.getElementById('overlay').classList.toggle('hidden'); 
 }
 
-function openSub(id) { 
-    document.getElementById(id).classList.add('active'); 
-}
-
-function closeSub(id) { 
-    document.getElementById(id).classList.remove('active'); 
-}
+function openSub(id) { document.getElementById(id).classList.add('active'); }
+function closeSub(id) { document.getElementById(id).classList.remove('active'); }
 
 window.onload = function() {
-    if (API_KEY) { 
-        document.getElementById('apiInput').value = "********************"; 
-    }
+    if (API_KEY) document.getElementById('apiInput').value = "********************";
 };
 
 function saveApiKey() {
     const input = document.getElementById('apiInput');
-    const keyValue = input.value.trim();
-    if (keyValue === "" || keyValue.includes("****")) return alert("Invalid Key.");
-    localStorage.setItem('omni_api_v3', keyValue);
-    API_KEY = keyValue;
-    alert("KEY SYNCED: Scalper Engine Online.");
+    const val = input.value.trim();
+    if (val === "" || val.includes("****")) return alert("Please enter a valid key.");
+    localStorage.setItem('omni_api_v3', val);
+    API_KEY = val;
+    alert("SYSTEM SYNCED: Scalper Engine Online.");
     input.value = "********************";
     toggleDrawer();
 }
 
-function markFile(idx) { 
-    document.getElementById(`box${idx}`).classList.add('has-file'); 
-}
-
-// --- 2. CORE SCALPER ENGINE ---
+function markFile(idx) { document.getElementById(`box${idx}`).classList.add('has-file'); }
 
 async function fileToPart(file) {
     return new Promise((resolve) => {
@@ -51,17 +40,17 @@ async function fileToPart(file) {
     });
 }
 
+// --- ANALYSIS ENGINE ---
 async function executeScan() {
-    if (!API_KEY) return alert("Security Error: Key not found. Sync in Master Control.");
+    if (!API_KEY) return alert("Security Error: Sync Key in Master Control.");
     
-    // Capture LIVE data from your Risk Menu
-    const userBalance = parseFloat(document.getElementById('bal').value) || 10000;
-    const userRiskPercent = parseFloat(document.getElementById('risk').value) || 1.0;
+    // Capture Dynamic User Risk Data
+    const bal = parseFloat(document.getElementById('bal').value) || 10000;
+    const riskPercent = parseFloat(document.getElementById('risk').value) || 1.0;
     
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
-    
     if (files.some(f => !f)) return alert("Please upload all 4 chart tiers.");
 
     btn.innerText = "SCALPING PIXELS...";
@@ -85,28 +74,30 @@ async function executeScan() {
         const data = await response.json();
         const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
-        // Dynamic RR Math
+        // Dynamic Calculations
         const slDist = Math.abs(res.entry - res.sl);
-        const riskAmountMoney = userBalance * (userRiskPercent / 100);
+        const riskCash = bal * (riskPercent / 100);
         
+        // Ensure RR is 1.5 or above
         let finalTp = res.tp;
-        const minTpDist = slDist * 1.5;
-        if (Math.abs(res.entry - res.tp) < minTpDist) {
+        if (Math.abs(res.entry - res.tp) < (slDist * 1.5)) {
             finalTp = res.bias === 'BUY' ? (res.entry + (slDist * 1.9)) : (res.entry - (slDist * 1.9));
         }
 
-        const calculatedLot = slDist > 0 ? (riskAmountMoney / (slDist * 10)).toFixed(2) : "0.10";
+        const lotSize = slDist > 0 ? (riskCash / (slDist * 10)).toFixed(2) : "0.10";
 
-        // Display Results
+        // UI Injection
         document.getElementById('strategyType').innerText = `INFINITY ${res.strategy}`;
         document.getElementById('actionText').innerText = res.bias;
         document.getElementById('actionText').className = `text-4xl font-black italic ${res.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}`;
         document.getElementById('entText').innerText = res.entry.toFixed(5);
         document.getElementById('slText').innerText = res.sl.toFixed(5);
         document.getElementById('tpText').innerText = finalTp.toFixed(5);
-        document.getElementById('lotText').innerText = Math.max(calculatedLot, 0.01);
+        document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
         document.getElementById('logicText').innerText = res.logic;
-        
+        document.getElementById('supText').innerText = res.support.toFixed(2);
+        document.getElementById('resText').innerText = res.resistance.toFixed(2);
+
         resultBox.classList.remove('hidden');
         resultBox.scrollIntoView({ behavior: 'smooth' });
 

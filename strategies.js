@@ -1,16 +1,17 @@
 /**
- * Calculates the lot size based on account balance and risk percentage.
- *
+ * Calculates accurate Lot Size based on risk percentage and SL distance.
  */
 function calculatePositionSize(balance, riskPercent, entry, sl) {
     if (!entry || !sl || entry === sl) return "0.00";
-
+    
+    // Risk amount in USD
     const riskAmount = balance * (riskPercent / 100);
-    const pipsAtRisk = Math.abs(entry - sl);
     
-    // Simple lot calculation: Risk Amount / Distance
-    const rawLots = riskAmount / pipsAtRisk;
+    // Price distance
+    const distance = Math.abs(entry - sl);
     
-    // Return formatted to 2 decimal places for the UI
-    return isFinite(rawLots) ? rawLots.toFixed(2) : "0.00";
+    // Lot Size calculation
+    const lotSize = riskAmount / distance;
+    
+    return isFinite(lotSize) ? lotSize.toFixed(2) : "0.00";
 }

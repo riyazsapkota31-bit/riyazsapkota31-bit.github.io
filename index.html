@@ -5,50 +5,60 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="strategies.js"></script>
 </head>
-<body class="bg-black text-white p-5">
-    <div class="max-w-md mx-auto bg-gray-900 p-6 rounded-xl shadow-xl">
-        <h1 class="text-2xl font-bold mb-4 text-indigo-400">OMNI-TRADER AI</h1>
-        <input type="password" id="apiKey" class="w-full p-2 bg-black border border-gray-700 rounded mb-4" placeholder="Gemini API Key">
-        <div class="grid grid-cols-2 gap-2 mb-4">
-            <input type="file" id="img1" class="text-xs">
-            <input type="file" id="img2" class="text-xs">
+<body class="bg-[#0b0e14] text-white p-6 font-sans">
+    <div class="max-w-md mx-auto bg-[#161b22] p-8 rounded-3xl shadow-2xl border border-gray-800">
+        <h1 class="text-3xl font-black text-indigo-500 mb-6 italic text-center">OMNI-TRADER <span class="text-white not-italic text-xl">PRO</span></h1>
+        
+        <label class="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Step 1: AI Access</label>
+        <input type="password" id="key" class="w-full p-4 bg-black rounded-2xl mb-6 border border-gray-700 text-indigo-400" placeholder="Paste API Key">
+
+        <label class="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Step 2: Upload Charts (4H & 15M)</label>
+        <div class="grid grid-cols-1 gap-3 mb-6">
+            <input type="file" id="f1" class="bg-gray-800 p-2 rounded-lg text-xs">
+            <input type="file" id="f2" class="bg-gray-800 p-2 rounded-lg text-xs">
         </div>
-        <button onclick="analyze()" id="btn" class="w-full bg-indigo-600 py-3 rounded font-bold">ANALYZE CHARTS</button>
-        <div id="out" class="mt-4 p-3 bg-black rounded text-sm whitespace-pre-wrap min-h-[100px]"></div>
+
+        <button onclick="run()" id="btn" class="w-full bg-indigo-600 py-4 rounded-2xl font-bold hover:bg-indigo-500 transition-all">ANALYZE MARKET</button>
+        
+        <div id="out" class="mt-6 p-4 bg-black rounded-2xl text-sm whitespace-pre-wrap border border-gray-800 min-h-[100px] text-gray-300"></div>
     </div>
 
     <script>
         async function toB64(f) { return new Promise(r => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result.split(',')[1]); }); }
         
-        async function analyze() {
-            const key = document.getElementById('apiKey').value;
-            const files = [document.getElementById('img1').files[0], document.getElementById('img2').files[0]].filter(f => f);
+        async function run() {
+            const key = document.getElementById('key').value;
+            const files = [document.getElementById('f1').files[0], document.getElementById('f2').files[0]].filter(x => x);
             const out = document.getElementById('out');
-            if(!key || files.length < 1) return alert("API Key and at least 1 image required.");
+            if(!key || files.length < 1) return alert("Key and charts required!");
 
-            out.innerText = "Analyzing market structure...";
+            out.innerText = "Reading market structure...";
             try {
                 const b64 = await Promise.all(files.map(f => toB64(f)));
-                // Using the specific stable model name for April 2026
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [
-                            { text: "Analyze these trading charts for SMC/ICT setups. Provide Trade, Confidence, Entry, SL, and TP." },
-                            ...b64.map(data => ({ inline_data: { mime_type: "image/jpeg", data } }))
-                        ]}]
-                    })
-                });
+                // Automatic fallback: Tries Gemini 3 Flash, then 2.0, then 1.5
+                const models = ["gemini-3-flash-preview", "gemini-2.0-flash", "gemini-1.5-flash"];
+                let success = false;
 
-                const data = await response.json();
-                if (data.error) throw new Error(data.error.message);
-                out.innerText = data.candidates[0].content.parts[0].text;
-            } catch (e) {
-                out.innerText = "Error: " + e.message;
-            }
+                for (let m of models) {
+                    if (success) break;
+                    try {
+                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [
+                                { text: "Analyze these charts using SMC. Give Trade, Entry, SL, TP, and Logic." },
+                                ...b64.map(d => ({ inline_data: { mime_type: "image/jpeg", data: d } }))
+                            ]}]})
+                        });
+                        const data = await res.json();
+                        if (data.candidates) {
+                            out.innerText = data.candidates[0].content.parts[0].text;
+                            success = true;
+                        }
+                    } catch (e) { console.log(`Model ${m} failed, trying next...`); }
+                }
+                if (!success) out.innerText = "All models busy. Try again in 60 seconds.";
+            } catch (e) { out.innerText = "Error: " + e.message; }
         }
     </script>
 </body>

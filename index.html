@@ -35,29 +35,37 @@
         <div class="p-6 space-y-6">
             <div class="flex justify-between items-center">
                 <button onclick="toggleDrawer()"><i class="fas fa-times text-slate-500"></i></button>
-                <span class="text-xs font-black uppercase text-indigo-500 tracking-widest">Configuration</span>
+                <span class="text-xs font-black uppercase text-indigo-500 tracking-widest">Master Control</span>
             </div>
-            <div class="glass rounded-2xl p-4 border-l-4 border-emerald-500">
-                <input type="password" id="apiInput" placeholder="Enter API Key..." class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                <button onclick="saveApiKey()" class="w-full mt-3 bg-emerald-600 text-white text-[10px] font-black py-3 rounded-lg">SAVE KEY</button>
+            
+            <div class="glass rounded-2xl p-4 border-l-4 border-indigo-500">
+                <span class="text-[9px] font-black text-slate-500 uppercase block mb-2">Security Key</span>
+                <input type="password" id="apiInput" placeholder="Enter API Key..." class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500">
+                <button onclick="saveApiKey()" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black py-3 rounded-lg transition-all">LOCK & SYNC KEY</button>
             </div>
-            <div onclick="openSub('settingsPanel')" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer">
-                <div class="flex items-center gap-4"><i class="fas fa-wallet text-indigo-400"></i><span class="text-sm font-bold">Risk Settings</span></div>
+
+            <div onclick="openSub('settingsPanel')" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer hover:border-indigo-500">
+                <div class="flex items-center gap-4"><i class="fas fa-wallet text-indigo-400"></i><span class="text-sm font-bold">Risk Management</span></div>
+                <i class="fas fa-chevron-right text-xs text-slate-600"></i>
             </div>
         </div>
+
         <div id="settingsPanel" class="sub-panel">
-            <button onclick="closeSub('settingsPanel')" class="text-indigo-400 text-xs font-bold mb-6">BACK</button>
-            <label class="text-[9px] font-black text-slate-500 uppercase">Balance ($)</label>
-            <input type="number" id="bal" value="10000" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-sm text-white mb-4">
-            <label class="text-[9px] font-black text-slate-500 uppercase">Risk %</label>
-            <input type="number" id="risk" value="1.0" step="0.1" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-sm text-white">
+            <button onclick="closeSub('settingsPanel')" class="text-indigo-400 text-xs font-bold mb-6 flex items-center gap-2"><i class="fas fa-arrow-left"></i> BACK</button>
+            <div class="space-y-4">
+                <div><label class="text-[9px] font-black text-slate-500 uppercase">Balance ($)</label><input type="number" id="bal" value="10000" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-sm text-white"></div>
+                <div><label class="text-[9px] font-black text-slate-500 uppercase">Risk %</label><input type="number" id="risk" value="1.0" step="0.1" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-sm text-white"></div>
+            </div>
         </div>
     </div>
 
     <header class="flex justify-between items-center mb-6 pt-2">
-        <div>
-            <h1 class="text-2xl font-black italic text-white uppercase tracking-tighter">OMNI-REAL</h1>
-            <p class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mt-1">Multi-Strategy Engine</p>
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg"><i class="fas fa-bolt text-white"></i></div>
+            <div>
+                <h1 class="text-xl font-black italic text-white uppercase leading-none">OMNI-REAL</h1>
+                <p class="text-[8px] font-bold text-indigo-500 uppercase tracking-widest mt-1">Multi-Strategy Engine</p>
+            </div>
         </div>
         <button onclick="toggleDrawer()" class="h-10 w-10 glass rounded-xl flex items-center justify-center text-slate-400"><i class="fas fa-cog"></i></button>
     </header>
@@ -66,21 +74,19 @@
         <div class="upload-box" id="box0"><input type="file" id="img0" onchange="markFile(0)" class="file-input"><span class="box-label">4H Bias</span><div class="btn-ui">Load</div></div>
         <div class="upload-box" id="box1"><input type="file" id="img1" onchange="markFile(1)" class="file-input"><span class="box-label">1H Structure</span><div class="btn-ui">Load</div></div>
         <div class="upload-box" id="box2"><input type="file" id="img2" onchange="markFile(2)" class="file-input"><span class="box-label">M15 Entry</span><div class="btn-ui">Load</div></div>
-        <div class="upload-box" id="box3"><input type="file" id="img3" onchange="markFile(3)" class="file-input"><span class="box-label">DXY Data</span><div class="btn-ui">Load</div></div>
+        <div class="upload-box" id="box3"><input type="file" id="img3" onchange="markFile(3)" class="file-input"><span class="box-label">Market Data</span><div class="btn-ui">Load</div></div>
     </div>
 
-    <button id="scanBtn" onclick="executeScan()" class="w-full mt-6 bg-indigo-600 py-5 rounded-2xl font-black uppercase text-xs tracking-[2px] text-white">
-        Initiate Real-Time Analysis
+    <button id="scanBtn" onclick="executeScan()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black uppercase text-xs tracking-[2px] text-white transition-all shadow-xl active:scale-[0.98]">
+        PERFORM MULTI-CHART SCAN
     </button>
 
-    <div id="resultBox" class="hidden mt-6 glass rounded-3xl p-6 border-t-2 border-indigo-500">
+    <div id="resultBox" class="hidden mt-6 glass rounded-3xl p-6 border-t-2 border-indigo-500 shadow-2xl">
         <div class="flex justify-between items-start mb-6 pb-6 border-b border-slate-800">
-            <div>
-                <span id="strategyType" class="strategy-badge">ANALYZING...</span>
-                <h2 id="actionText" class="text-4xl font-black italic uppercase">---</h2>
-            </div>
-            <p id="logicText" class="text-[10px] text-indigo-400 font-bold italic text-right max-w-[140px]">Ready.</p>
+            <div><span id="strategyType" class="strategy-badge">SMC ACTIVE</span><h2 id="actionText" class="text-4xl font-black italic uppercase leading-none">---</h2></div>
+            <p id="logicText" class="text-[10px] text-indigo-400 font-bold italic text-right max-w-[140px]">Analyzing...</p>
         </div>
+        
         <div class="grid grid-cols-3 gap-y-6 gap-x-4">
             <div><span class="res-label">Entry</span><p id="entText" class="res-value text-indigo-400">---</p></div>
             <div><span class="res-label">Stop Loss</span><p id="slText" class="res-value text-rose-500">---</p></div>

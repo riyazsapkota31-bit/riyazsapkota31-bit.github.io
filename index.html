@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omni-Trader Terminal</title>
+    <title>Omni-Trader Elite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -11,7 +11,7 @@
         body { font-family: 'Inter', sans-serif; background: #05070a; color: #e2e8f0; margin: 0; overflow-x: hidden; }
         .glass { background: #0d1117; border: 1px solid #1f2937; }
         
-        /* SIDEBAR */
+        /* SIDEBAR SYSTEM */
         #sideDrawer {
             position: fixed; top: 0; right: -350px; width: 350px; height: 100%;
             background: #0d1117; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -34,10 +34,12 @@
         input:valid ~ .tick { display: block; }
         .btn-ui { background: #4f46e5; color: white; padding: 4px 10px; border-radius: 4px; font-size: 9px; font-weight: 800; margin-top: 8px; }
 
-        /* OUTPUT UI */
-        .res-label { font-size: 8px; font-weight: 900; color: #475569; text-transform: uppercase; }
+        /* OUTPUT LABELS */
+        .res-label { font-size: 8px; font-weight: 900; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
         .res-value { font-size: 14px; font-weight: 700; color: #f8fafc; }
-        .history-item { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 12px; margin-bottom: 8px; cursor: pointer; }
+        .history-item { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 12px; margin-bottom: 8px; cursor: pointer; border-left: 4px solid transparent; }
+        .history-item.buy { border-left-color: #10b981; }
+        .history-item.sell { border-left-color: #f43f5e; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -50,10 +52,27 @@
                 <button onclick="toggleDrawer()"><i class="fas fa-times text-slate-500"></i></button>
                 <span class="text-xs font-black uppercase text-indigo-500 tracking-widest">Master Terminal</span>
             </div>
-            <div onclick="openHistory()" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer">
-                <div class="flex items-center gap-4"><i class="fas fa-clock-rotate-left text-slate-400"></i><span class="text-sm font-bold">Analysis History</span></div>
+            
+            <div class="glass rounded-2xl p-4 border-l-4 border-emerald-500">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Secure Gemini API</span>
+                    <i id="lockStatus" class="fas fa-unlock text-slate-600 text-xs"></i>
+                </div>
+                <div class="relative">
+                    <input type="password" id="apiInput" placeholder="Paste Key Here..." 
+                        class="w-full bg-black/50 border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-emerald-500 transition-all">
+                    <button onclick="saveApiKey()" id="saveKeyBtn" 
+                        class="w-full mt-3 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[9px] font-black py-2 rounded-lg transition-all uppercase">
+                        Lock Key to Device
+                    </button>
+                </div>
+            </div>
+
+            <div onclick="openHistory()" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer hover:bg-indigo-500/10">
+                <div class="flex items-center gap-4"><i class="fas fa-clock-rotate-left text-indigo-400"></i><span class="text-sm font-bold">Analysis History</span></div>
                 <i class="fas fa-chevron-right text-[10px] text-slate-600"></i>
             </div>
+
             <div onclick="openSub('settingsPanel')" class="flex items-center justify-between p-4 glass rounded-xl cursor-pointer">
                 <div class="flex items-center gap-4"><i class="fas fa-sliders-h text-slate-400"></i><span class="text-sm font-bold">Trade Configuration</span></div>
                 <i class="fas fa-chevron-right text-[10px] text-slate-600"></i>
@@ -61,64 +80,102 @@
         </div>
 
         <div id="historyPanel" class="sub-panel">
-            <button onclick="closeSub('historyPanel')" class="text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left mr-2"></i>BACK</button>
-            <div id="historyList" class="space-y-2 overflow-y-auto max-h-[85vh]"></div>
+            <button onclick="closeSub('historyPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
+            <h3 class="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest">Last 10 Analyses</h3>
+            <div id="historyList" class="space-y-2 overflow-y-auto max-h-[80vh]"></div>
         </div>
 
         <div id="settingsPanel" class="sub-panel">
-            <button onclick="closeSub('settingsPanel')" class="text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left mr-2"></i>BACK</button>
+            <button onclick="closeSub('settingsPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
             <div class="space-y-4">
-                <label class="text-[9px] font-black text-slate-500 uppercase">Account Balance ($)</label>
-                <input type="number" id="bal" value="10058" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase">Risk %</label><input type="number" id="risk" value="0.5" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none"></div>
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase">R:R</label><input type="number" id="ratio" value="3.0" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none"></div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-500 uppercase">Account Balance</label>
+                    <input type="number" id="bal" value="10000" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none">
                 </div>
-                <button onclick="toggleDrawer()" class="w-full bg-indigo-600 text-white font-bold p-3 rounded-xl uppercase text-[10px] mt-4">Save</button>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="text-[9px] font-black text-slate-500 uppercase">Risk %</label><input type="number" id="risk" value="1.0" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none"></div>
+                    <div><label class="text-[9px] font-black text-slate-500 uppercase">R:R Ratio</label><input type="number" id="ratio" value="3.0" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none"></div>
+                </div>
+                <button onclick="toggleDrawer()" class="w-full bg-indigo-600 text-white font-bold p-3 rounded-xl uppercase text-[10px] mt-4">Save Configuration</button>
             </div>
         </div>
     </div>
 
     <header class="flex justify-between items-center mb-8">
         <div class="flex items-center gap-4">
-            <div class="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center"><i class="fas fa-bolt text-2xl text-white"></i></div>
+            <div class="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg"><i class="fas fa-bolt text-2xl text-white"></i></div>
             <div>
                 <h1 class="text-2xl font-black italic text-white uppercase tracking-tighter">OMNI-TRADER</h1>
-                <p class="text-[8px] font-bold text-indigo-500 uppercase tracking-widest">REAL-TIME MULTI-CHART ANALYST</p>
+                <p class="text-[8px] font-bold text-indigo-500 uppercase tracking-widest">PRO-TIER ANALYSIS TERMINAL</p>
             </div>
         </div>
         <button onclick="toggleDrawer()" class="h-10 w-10 glass rounded-xl flex items-center justify-center"><i class="fas fa-bars-staggered"></i></button>
     </header>
 
     <div class="upload-grid">
-        <div class="upload-box"><input type="file" id="img0" class="file-input" required><span class="box-label">4H Chart</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-        <div class="upload-box"><input type="file" id="img1" class="file-input" required><span class="box-label">1H Chart</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-        <div class="upload-box"><input type="file" id="img2" class="file-input" required><span class="box-label">M15 Chart</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-        <div class="upload-box"><input type="file" id="img3" class="file-input" required><span class="box-label">DXY Index</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="upload-box"><input type="file" id="img0" class="file-input" required><span class="box-label">4H BIAS</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="upload-box"><input type="file" id="img1" class="file-input" required><span class="box-label">1H STRUCTURE</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="upload-box"><input type="file" id="img2" class="file-input" required><span class="box-label">M15 EXECUTION</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+        <div class="upload-box"><input type="file" id="img3" class="file-input" required><span class="box-label">DXY INDEX</span><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
     </div>
 
-    <button id="scanBtn" onclick="executeScan()" class="w-full mt-6 bg-indigo-600 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl">
-        Perform Multi-Chart Scan
+    <button id="scanBtn" onclick="executeScan()" class="w-full mt-6 bg-indigo-600 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-[0.98] transition-transform">
+        Analyze All Charts
     </button>
 
     <div id="resultBox" class="hidden mt-6 glass rounded-3xl p-6 border-t-2 border-indigo-500">
         <div class="flex justify-between items-start mb-6 pb-6 border-b border-slate-800">
-            <div><span class="res-label">Institutional Bias</span><h2 id="actionText" class="text-4xl font-black italic uppercase">---</h2></div>
-            <div class="text-right max-w-[150px]"><span class="res-label">Market Logic</span><p id="logicText" class="text-[9px] text-indigo-400 font-bold italic">Awaiting data...</p></div>
+            <div><span class="res-label">Live Signal</span><h2 id="actionText" class="text-4xl font-black italic uppercase">---</h2></div>
+            <div class="text-right max-w-[160px]"><span class="res-label">Market Logic</span><p id="logicText" class="text-[9px] text-indigo-400 font-bold italic">Ready.</p></div>
         </div>
         <div class="grid grid-cols-3 gap-4">
             <div><span class="res-label">Support</span><p id="supText" class="res-value">---</p></div>
             <div><span class="res-label">Resistance</span><p id="resText" class="res-value">---</p></div>
-            <div><span class="res-label">Entry</span><p id="entText" class="res-value text-indigo-400">---</p></div>
-            <div><span class="res-label">TP</span><p id="tpText" class="res-value text-emerald-400">---</p></div>
-            <div><span class="res-label">SL</span><p id="slText" class="res-value text-rose-400">---</p></div>
+            <div><span class="res-label">Entry Price</span><p id="entText" class="res-value text-indigo-400">---</p></div>
+            <div><span class="res-label">Take Profit</span><p id="tpText" class="res-value text-emerald-400">---</p></div>
+            <div><span class="res-label">Stop Loss</span><p id="slText" class="res-value text-rose-400">---</p></div>
             <div><span class="res-label">Lots</span><p id="lotText" class="res-value text-yellow-500">0.00</p></div>
         </div>
     </div>
 
     <script src="strategies.js"></script>
     <script>
-        const API_KEY = "AIzaSyCt90KDSpWVE3KlNLUfDd7PtKx43IdN8Cg";
+        // API KEY MANAGEMENT
+        let API_KEY = localStorage.getItem('gemini_api_secure') || "";
+
+        function saveApiKey() {
+            const input = document.getElementById('apiInput');
+            const btn = document.getElementById('saveKeyBtn');
+            const icon = document.getElementById('lockStatus');
+
+            if (input.value.trim().length < 10) {
+                alert("Please enter a valid API key.");
+                return;
+            }
+
+            localStorage.setItem('gemini_api_secure', input.value.trim());
+            API_KEY = input.value.trim();
+            
+            input.value = "********************";
+            btn.innerText = "KEY LOCKED";
+            btn.classList.replace('bg-emerald-600/20', 'bg-emerald-600');
+            btn.classList.replace('text-emerald-400', 'text-white');
+            icon.classList.replace('fa-unlock', 'fa-lock');
+            icon.classList.replace('text-slate-600', 'text-emerald-500');
+        }
+
+        window.onload = function() {
+            const savedKey = localStorage.getItem('gemini_api_secure');
+            if (savedKey) {
+                document.getElementById('apiInput').value = "********************";
+                const btn = document.getElementById('saveKeyBtn');
+                btn.innerText = "KEY LOCKED";
+                btn.classList.replace('bg-emerald-600/20', 'bg-emerald-600');
+                btn.classList.replace('text-emerald-400', 'text-white');
+                document.getElementById('lockStatus').classList.replace('fa-unlock', 'fa-lock');
+                document.getElementById('lockStatus').classList.add('text-emerald-500');
+            }
+        };
 
         function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
         function openSub(id) { document.getElementById(id).classList.add('active'); }
@@ -132,28 +189,34 @@
             });
         }
 
-        function saveLog(data) {
-            let logs = JSON.parse(localStorage.getItem('trade_logs') || "[]");
+        function saveToHistory(data) {
+            let logs = JSON.parse(localStorage.getItem('omni_history') || "[]");
             logs.unshift({ ...data, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
             if (logs.length > 10) logs.pop();
-            localStorage.setItem('trade_logs', JSON.stringify(logs));
+            localStorage.setItem('omni_history', JSON.stringify(logs));
         }
 
         function openHistory() {
             const list = document.getElementById('historyList');
-            const logs = JSON.parse(localStorage.getItem('trade_logs') || "[]");
-            list.innerHTML = logs.length ? "" : "<p class='text-[10px] text-slate-600'>No history available.</p>";
+            const logs = JSON.parse(localStorage.getItem('omni_history') || "[]");
+            list.innerHTML = logs.length ? "" : "<p class='text-[10px] text-slate-600'>No history found.</p>";
             logs.forEach(log => {
                 const div = document.createElement('div');
-                div.className = "history-item";
-                div.onclick = () => { updateUI(log); toggleDrawer(); };
-                div.innerHTML = `<div class="flex justify-between"><span class="text-[10px] font-black ${log.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}">${log.bias}</span><span class="text-[8px] text-slate-500">${log.time}</span></div><p class="text-[9px] text-slate-400 truncate mt-1">${log.logic}</p>`;
+                div.className = `history-item ${log.bias.toLowerCase()}`;
+                div.onclick = () => { applyData(log); toggleDrawer(); };
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-black ${log.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}">${log.bias}</span>
+                        <span class="text-[8px] text-slate-500">${log.time}</span>
+                    </div>
+                    <p class="text-[9px] text-slate-400 truncate mt-1">${log.logic}</p>
+                `;
                 list.appendChild(div);
             });
             openSub('historyPanel');
         }
 
-        function updateUI(data) {
+        function applyData(data) {
             document.getElementById('actionText').innerText = data.bias;
             document.getElementById('entText').innerText = data.entry;
             document.getElementById('slText').innerText = data.sl;
@@ -166,9 +229,13 @@
         }
 
         async function executeScan() {
+            if (!API_KEY) return alert("Please lock your API Key in the settings sidebar first.");
+            
             const btn = document.getElementById('scanBtn');
+            const logicTxt = document.getElementById('logicText');
             const files = [document.getElementById('img0').files[0], document.getElementById('img1').files[0], document.getElementById('img2').files[0], document.getElementById('img3').files[0]];
-            if (files.some(f => !f)) return alert("Upload all charts.");
+            
+            if (files.some(f => !f)) return alert("Please upload all 4 chart screenshots.");
 
             btn.innerText = "EXTRACTING PIXELS...";
             btn.disabled = true;
@@ -178,13 +245,21 @@
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Identify Bias and key levels. Return ONLY raw JSON: {bias:'BUY/SELL', entry:number, sl:number, support:number, resistance:number, logic:'string'}" }, ...imageParts] }] })
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: "Analyze 4 charts. Return ONLY a valid JSON object. No other text. Schema: {bias:'BUY/SELL', entry:number, sl:number, support:number, resistance:number, logic:'string'}" },
+                                ...imageParts
+                            ]
+                        }]
+                    })
                 });
 
                 const json = await response.json();
-                const rawText = json.candidates[0].content.parts[0].text;
-                const result = JSON.parse(rawText.replace(/```json|```/g, "").trim());
-                
+                const raw = json.candidates[0].content.parts[0].text;
+                const cleaned = raw.replace(/```json|```/g, "").trim();
+                const result = JSON.parse(cleaned);
+
                 const bal = parseFloat(document.getElementById('bal').value);
                 const risk = parseFloat(document.getElementById('risk').value);
                 const ratio = parseFloat(document.getElementById('ratio').value);
@@ -193,12 +268,14 @@
                 const tp = (result.entry + (Math.abs(result.entry - result.sl) * (result.bias === 'BUY' ? ratio : -ratio))).toFixed(2);
 
                 const finalData = { ...result, tp, lots };
-                updateUI(finalData);
-                saveLog(finalData);
+                applyData(finalData);
+                saveToHistory(finalData);
+
             } catch (e) {
-                document.getElementById('logicText').innerText = "Sync Error: Could not read chart pixels.";
+                console.error(e);
+                logicTxt.innerText = "Sync Error: Check API Key or Image Quality.";
             } finally {
-                btn.innerText = "Perform Multi-Chart Scan";
+                btn.innerText = "Analyze All Charts";
                 btn.disabled = false;
             }
         }

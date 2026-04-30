@@ -1,22 +1,34 @@
 const TRADING_BRAIN = [
     {
-        category: "Institutional Order Flow (SMC/ICT)",
-        logic: "Analyze 4H for Market Structure. Identify Break of Structure (BOS) and Change of Character (CHoCH). Look for unmitigated Order Blocks (OB) and Fair Value Gaps (FVG). On 1H, identify liquidity sweeps (Buy-side/Sell-side). On 15M, wait for a displacement away from the 1H FVG and enter on the retest of the new 15M FVG."
+        category: "Institutional SMC (Smart Money Concepts)",
+        logic: "Identify 4H Trend Direction using Market Structure (HH/HL or LH/LL). Look for 'Break of Structure' (BOS) indicating trend continuation. Locate 'Fair Value Gaps' (FVG) and 'Order Blocks' (OB) on 1H. Entry on 15M requires a 'Change of Character' (CHoCH) and a return to a 15M FVG/OB within the 1H zone."
     },
     {
-        category: "ICT Power of 3 (Accumulation/Manipulation/Distribution)",
-        logic: "Identify the Asian Range consolidation (Accumulation). Look for the London Session 'Judas Swing' sweep below/above the Asian range (Manipulation). Use the NY Session to trade the true trend direction (Distribution). Only enter when 15M shows a Market Structure Shift (MSS) after the sweep."
-    },
-    {
-        category: "Supply & Demand Zone Flipping",
-        logic: "Mark 4H 'Rally-Base-Drop' or 'Drop-Base-Rally' zones. On 1H, check if a Supply zone has failed and 'flipped' into a Demand zone (S/D Flip). Entry on 15M must show a rejection wick or an engulfing candle confirming the zone holds."
-    },
-    {
-        category: "Multi-Timeframe Trend Confluence",
-        logic: "4H must be trending (HL/HH). 1H must provide a pullback to the 0.5 - 0.618 Fibonacci 'Ote' (Optimal Trade Entry) zone. 15M must show a breakout of the counter-trend line with high volume/displacement."
+        category: "ICT Power of 3 & Judas Swing",
+        logic: "Analyze the 'Asian Range' for accumulation. Look for a 'Judas Swing' (false breakout) above or below the Asian high/low during London Open to sweep liquidity. Trade the 'Distribution' phase into the New York session. High accuracy occurs when the sweep hits a 4H PD Array."
     },
     {
         category: "Liquidity & Inducement",
-        logic: "Identify 'Equal Highs' or 'Equal Lows' on 1H as target liquidity. Identify the 'Inducement' high/low that traps retail traders before the real move. Only enter after the inducement has been cleared and the 15M timeframe shows a strong rejection."
+        logic: "Scan for 'Equal Highs' (EQH) and 'Equal Lows' (EQL) as magnets for price. Identify 'Retail Inducement'—minor breakouts that trap traders before a reversal. Only enter after liquidity has been grabbed and price shows strong 'Displacement' in the opposite direction."
+    },
+    {
+        category: "Supply & Demand Flip Zones",
+        logic: "Mark 4H zones where aggressive buying or selling started. Watch for a 'S/D Flip'—where a supply zone fails and becomes a demand zone. If 1H price retests this 'Flip' level with decreasing volume, look for 15M bullish/bearish engulfing candles for entry."
+    },
+    {
+        category: "Wyckoff Schematic Analysis",
+        logic: "Determine if the 4H/1H is in an 'Accumulation' or 'Distribution' phase. Look for the 'Spring' (final stop hunt) or 'Upthrust' before the main move. Confirm the 'Sign of Strength' (SOS) on 15M before entering on the 'Last Point of Support' (LPS)."
+    },
+    {
+        category: "Fibonacci Optimal Trade Entry (OTE)",
+        logic: "Use the Fibonacci retracement tool from the 1H swing high to low. Focus on the 0.618, 0.705, and 0.79 levels as the 'Sweet Spot'. Entry must align with a 15M market structure shift at one of these levels."
+    },
+    {
+        category: "Correlation & Divergence (SMT)",
+        logic: "Compare related assets (e.g., BTC vs ETH or Gold vs DXY). Look for 'Smart Money Technique' (SMT) divergence—where one asset makes a lower low but the other fails to do so. This indicates institutional accumulation and a high-probability reversal."
+    },
+    {
+        category: "VSA (Volume Spread Analysis)",
+        logic: "Analyze candle spreads relative to volume. Look for 'Stopping Volume' or 'No Demand' bars on 1H at key levels. A massive volume spike on 15M with a small candle body (Churn) suggests a top or bottom is forming."
     }
 ];

@@ -48,6 +48,9 @@
         .drawer-overlay.active { display: block; }
         .hidden { display: none !important; }
         .lock-btn { width: 100%; background: #4f46e5; color: white; font-size: 11px; font-weight: bold; padding: 14px; border-radius: 12px; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .res-label { font-size: 9px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+        .res-value { font-size: 14px; font-weight: 700; color: #f8fafc; }
     </style>
 </head>
 <body>
@@ -83,22 +86,18 @@
 
         <div id="settingsPanel" class="sub-panel">
             <button onclick="closeSub('settingsPanel')" class="flex items-center gap-2 text-indigo-400 text-xs font-bold mb-6"><i class="fas fa-arrow-left"></i> BACK</button>
-            
             <div class="flex justify-between items-center mb-6 bg-black/30 p-4 rounded-2xl">
                 <span id="modeLabel" class="text-[10px] font-black uppercase text-slate-400 tracking-widest">MANUAL MODE</span>
                 <label class="switch"><input type="checkbox" id="modeSw" onchange="toggleMode()"><span class="slider"></span></label>
             </div>
-            
             <div class="space-y-5">
                 <div id="manFields" class="space-y-3">
                     <input type="number" id="bal" placeholder="XM Balance ($)" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500">
                 </div>
-                
                 <div id="liveFields" class="hidden space-y-3">
                     <input type="password" id="tok" placeholder="MetaApi Token" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500">
                     <input type="text" id="accId" placeholder="Account ID" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-indigo-500">
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <div class="space-y-1">
                         <label class="text-[9px] font-black text-slate-500 uppercase ml-1">Risk %</label>
@@ -109,7 +108,6 @@
                         <input type="number" id="ratio" placeholder="3" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-emerald-500 text-emerald-400">
                     </div>
                 </div>
-
                 <button onclick="saveSettings()" class="lock-btn">Save Configuration</button>
             </div>
         </div>
@@ -148,15 +146,23 @@
         </button>
 
         <div id="resultBox" class="hidden mt-10 glass rounded-[40px] p-10 border-t-4 border-indigo-500">
-            <div class="flex justify-between items-end">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 border-b border-slate-800 pb-8">
                 <div>
-                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Recommendation</span>
+                    <span class="res-label">Trade Signal</span>
                     <h2 id="actionText" class="text-6xl font-black italic uppercase text-white">---</h2>
                 </div>
                 <div class="text-right">
-                    <span class="text-[10px] text-slate-500 font-black uppercase block mb-1">Recommended Lots</span>
-                    <span id="lotText" class="text-4xl font-bold text-indigo-400">0.00</span>
+                    <span class="res-label">Trade Logic</span>
+                    <p id="logicText" class="text-xs text-indigo-400 italic font-bold max-w-md">Scanning market structure...</p>
                 </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                <div><span class="res-label">Support</span><b id="supText" class="res-value">---</b></div>
+                <div><span class="res-label">Resistance</span><b id="resText" class="res-value">---</b></div>
+                <div><span class="res-label">Entry</span><b id="entText" class="res-value text-indigo-400">---</b></div>
+                <div><span class="res-label">TP Target</span><b id="tpText" class="res-value text-emerald-400">---</b></div>
+                <div><span class="res-label">Stop Loss</span><b id="slText" class="res-value text-rose-400">---</b></div>
             </div>
         </div>
     </main>
@@ -188,10 +194,40 @@
             res.classList.remove('hidden');
             document.getElementById('actionText').innerText = "SCANNING";
             
+            // Simulation of thorough AI analysis based on the 4 images
             setTimeout(() => {
-                document.getElementById('actionText').innerText = "BUY";
-                document.getElementById('lotText').innerText = "0.45";
-            }, 2000);
+                const results = {
+                    trade: "BUY",
+                    support: "75,800.50",
+                    resistance: "78,500.00",
+                    entry: "76,491.65 (Market)",
+                    tp: "77,875.00",
+                    sl: "75,800.00",
+                    logic: "M15 Break of Structure + Bullish DXY Rejection at 4H Demand Zone."
+                };
+
+                document.getElementById('actionText').innerText = results.trade;
+                document.getElementById('supText').innerText = results.support;
+                document.getElementById('resText').innerText = results.resistance;
+                document.getElementById('entText').innerText = results.entry;
+                document.getElementById('tpText').innerText = results.tp;
+                document.getElementById('slText').innerText = results.sl;
+                document.getElementById('logicText').innerText = results.logic;
+                
+                addToJournal(results);
+            }, 2500);
+        }
+
+        function addToJournal(data) {
+            const list = document.getElementById('journalList');
+            const item = document.createElement('div');
+            item.className = "p-4 glass rounded-xl flex justify-between items-center border-l-2 " + (data.trade === 'BUY' ? 'border-emerald-500' : 'border-rose-500');
+            item.innerHTML = `
+                <div><b class="text-xs uppercase">${data.trade} - BTC/USD</b><span class="block text-[8px] text-slate-500">Entry: ${data.entry}</span></div>
+                <div class="text-right"><b class="text-xs text-indigo-400">TP: ${data.tp}</b></div>
+            `;
+            list.prepend(item);
+            if(list.querySelector('p')) list.querySelector('p').remove();
         }
     </script>
 </body>

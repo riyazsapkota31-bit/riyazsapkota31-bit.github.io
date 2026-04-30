@@ -3,174 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omni-Trader Pro | v3.0</title>
+    <title>Omni-Trader Elite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #080a0f; color: #e2e8f0; padding: 10px; margin: 0; }
-        .glass { background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .input-box { background: #030712; border: 1px solid #1f2937; border-radius: 6px; padding: 8px; color: white; width: 100%; font-size: 11px; outline: none; }
+        body { font-family: 'Inter', sans-serif; background: #05070a; color: #e2e8f0; margin: 0; padding: 12px; }
+        .glass { background: #0d1117; border: 1px solid #1f2937; }
         
-        /* Compact 4-Grid Uploads */
-        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-        .upload-item { padding: 10px; border-radius: 12px; border: 1px dashed #374151; position: relative; }
-        input[type="file"] { font-size: 10px; width: 100%; color: #94a3b8; }
-        input[type="file"]::file-selector-button {
-            background: #4f46e5; color: white; border: none; padding: 6px 12px;
-            border-radius: 4px; font-weight: 900; font-size: 9px; cursor: pointer; text-transform: uppercase;
-        }
+        /* WhatsApp Style Menu */
+        #historyMenu { position: absolute; right: 10px; top: 60px; width: 220px; z-index: 100; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
+        .menu-item { padding: 12px 16px; border-bottom: 1px solid #1f2937; cursor: pointer; transition: 0.2s; }
+        .menu-item:hover { background: #161b22; }
 
+        /* Switch Styling */
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1f2937; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4f46e5; }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* File Button Styling */
+        input[type="file"]::file-selector-button {
+            background: #4f46e5; color: white; border: none; padding: 8px 12px;
+            border-radius: 6px; font-weight: 900; font-size: 10px; cursor: pointer; text-transform: uppercase;
+        }
         .hidden { display: none !important; }
-        .tab-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .tab-open { max-height: 500px; }
     </style>
 </head>
 <body>
 
-    <div class="max-w-md mx-auto">
-        <header class="flex justify-between items-center py-4 px-2">
-            <div>
-                <h1 class="text-sm font-black text-indigo-500 tracking-tighter uppercase italic">Omni-Trader Pro</h1>
-                <p id="subHeader" class="text-[8px] text-slate-500 font-bold uppercase">Manual Mode | Risk 1%</p>
+    <div class="max-w-md mx-auto relative">
+        <header class="flex justify-between items-center py-6 px-2">
+            <div class="flex items-center gap-4">
+                <div class="h-14 w-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-900/40">
+                    <i class="fas fa-bolt text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-black italic text-white tracking-tighter uppercase leading-none">OMNI-TRADER</h1>
+                    <p id="status" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Institutional Multi-Strategy</p>
+                </div>
             </div>
-            <div class="flex gap-2">
-                <button onclick="toggleTab('historyContainer')" class="w-8 h-8 glass rounded-lg flex items-center justify-center text-slate-400"><i class="fas fa-history text-xs"></i></button>
-                <button onclick="toggleTab('settingsContainer')" class="w-8 h-8 glass rounded-lg flex items-center justify-center text-slate-400"><i class="fas fa-cog text-xs"></i></button>
+            <div class="flex gap-3">
+                <button onclick="toggleMenu()" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-ellipsis-v text-xl"></i></button>
+                <button onclick="toggleTab('config')" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-cog text-xl"></i></button>
             </div>
         </header>
 
-        <div id="settingsContainer" class="tab-content glass rounded-xl mb-4 p-4">
-            <div class="flex justify-between items-center mb-3">
-                <span class="text-[9px] font-black uppercase text-indigo-400">System Configuration</span>
-                <div class="flex bg-black rounded-lg p-1 scale-90">
-                    <button onclick="switchMode('manual')" id="mBtn" class="px-3 py-1 rounded-md text-[8px] font-bold uppercase bg-indigo-600">Manual</button>
-                    <button onclick="switchMode('live')" id="lBtn" class="px-3 py-1 rounded-md text-[8px] font-bold uppercase text-slate-500">Live</button>
-                </div>
-            </div>
-            
-            <div class="space-y-2">
-                <div id="manualArea"><input type="number" id="bal" onchange="save()" placeholder="XM Balance ($)" class="input-box"></div>
-                <div id="liveArea" class="hidden space-y-2">
-                    <input type="password" id="tok" onchange="save()" placeholder="MetaApi Token" class="input-box">
-                    <input type="text" id="acc" onchange="save()" placeholder="Account ID" class="input-box">
-                </div>
-                <div class="flex gap-2">
-                    <input type="number" id="r" onchange="save()" placeholder="Risk %" class="input-box">
-                    <input type="number" id="rr" onchange="save()" placeholder="R:R" class="input-box">
-                </div>
-                <input type="password" id="gem" onchange="save()" placeholder="Gemini Key (Permanent)" class="input-box">
+        <div id="historyMenu" class="glass hidden animate-in slide-in-from-top-2">
+            <div class="p-3 bg-indigo-600/10 text-[10px] font-black uppercase text-indigo-400 border-b border-indigo-500/20">Analysis History</div>
+            <div id="historyList">
+                <div class="menu-item text-xs text-slate-400 italic">No recent analysis</div>
             </div>
         </div>
 
-        <div id="historyContainer" class="tab-content glass rounded-xl mb-4 overflow-hidden">
-            <div class="p-3 bg-black/40 text-[9px] font-black uppercase flex justify-between items-center">
-                <span>Analysis Journal</span>
-                <button onclick="clearHistory()" class="text-red-500">Clear</button>
-            </div>
-            <div id="histList" class="p-2 space-y-2 max-h-48 overflow-y-auto"></div>
-        </div>
-
-        <div class="upload-grid">
-            <div class="upload-item glass"><span class="text-[8px] font-bold text-slate-500 uppercase block mb-1">4H Bias</span><input type="file" id="f1"></div>
-            <div class="upload-item glass"><span class="text-[8px] font-bold text-slate-500 uppercase block mb-1">1H Struct</span><input type="file" id="f2"></div>
-            <div class="upload-item glass"><span class="text-[8px] font-bold text-slate-500 uppercase block mb-1">Entry Flow</span><input type="file" id="f3"></div>
-            <div class="upload-item glass"><span class="text-[8px] font-bold text-slate-500 uppercase block mb-1">DXY Context</span><input type="file" id="f4"></div>
-        </div>
-
-        <button onclick="runAnalysis()" class="w-full bg-indigo-600 py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-indigo-900/40 active:scale-95 transition-all">Execute Analysis</button>
-
-        <div id="results" class="hidden mt-6 p-6 glass rounded-2xl border-t-2 border-indigo-500">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h2 id="rAction" class="text-3xl font-black italic italic uppercase tracking-tighter text-white">---</h2>
-                    <span id="rStrat" class="text-[9px] font-bold text-indigo-400 uppercase">---</span>
-                </div>
-                <div class="text-right">
-                    <p class="text-[8px] text-slate-500 font-black uppercase">Recommended Lots</p>
-                    <p id="rLots" class="text-xl font-bold text-white">0.00</p>
+        <div id="config" class="hidden glass rounded-3xl p-6 mb-6">
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-xs font-black uppercase tracking-widest text-indigo-400">System Config</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-bold text-slate-500 uppercase">Live</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modeSwitch" onchange="toggleMode()">
+                        <span class="slider"></span>
+                    </label>
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-white/5">
-                <div><label class="text-[8px] text-slate-500 block">ENTRY</label><span id="rEnt" class="text-xs font-bold">---</span></div>
-                <div><label class="text-[8px] text-red-500 block">STOP</label><span id="rSl" class="text-xs font-bold">---</span></div>
-                <div><label class="text-[8px] text-green-500 block">TARGET</label><span id="rTp" class="text-xs font-bold">---</span></div>
+
+            <div class="space-y-4">
+                <div id="manualInput">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">XM Balance ($)</label>
+                    <input type="number" id="bal" class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none focus:border-indigo-500 transition-all">
+                </div>
+                <div id="liveInput" class="hidden space-y-4">
+                    <input type="password" id="tok" placeholder="MetaApi Token" class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
+                    <input type="text" id="acc" placeholder="Account ID" class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" id="r" placeholder="Risk %" class="bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
+                    <input type="number" id="rr" placeholder="R:R Ratio" class="bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
+                </div>
+                <input type="password" id="gem" placeholder="Gemini API Key (Permanent)" class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm outline-none">
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-2 gap-3 px-2">
+            <div class="glass p-4 rounded-2xl">
+                <span class="text-[9px] font-black text-slate-500 uppercase mb-2 block">4H Bias</span>
+                <input type="file" id="c1" class="w-full">
+            </div>
+            <div class="glass p-4 rounded-2xl">
+                <span class="text-[9px] font-black text-slate-500 uppercase mb-2 block">1H Struct</span>
+                <input type="file" id="c2" class="w-full">
+            </div>
+            <div class="glass p-4 rounded-2xl">
+                <span class="text-[9px] font-black text-slate-500 uppercase mb-2 block">Entry Flow</span>
+                <input type="file" id="c3" class="w-full">
+            </div>
+            <div class="glass p-4 rounded-2xl">
+                <span class="text-[9px] font-black text-slate-500 uppercase mb-2 block">DXY Context</span>
+                <input type="file" id="c4" class="w-full">
+            </div>
+        </div>
+
+        <div class="px-2 mt-6">
+            <button onclick="run()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-5 rounded-2xl font-black uppercase text-xs tracking-[0.3em] shadow-xl shadow-indigo-900/30 transition-all active:scale-95">
+                Run AI Analysis
+            </button>
+        </div>
+
+        <div id="results" class="hidden mt-8 px-2 animate-in fade-in zoom-in-95">
+            <div class="glass rounded-3xl p-8 border-t-4 border-indigo-500">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 id="resAction" class="text-4xl font-black italic uppercase text-white leading-none">---</h2>
+                        <span id="resStrat" class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">SMC ALGORITHM</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[9px] font-black text-slate-500 uppercase">Lot Size</span>
+                        <p id="resLots" class="text-2xl font-bold text-white">0.00</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 border-y border-white/5 py-6">
+                    <div><span class="text-[9px] text-slate-500 block font-black uppercase">Entry</span><span id="resEnt" class="font-bold text-xs italic">---</span></div>
+                    <div><span class="text-[9px] text-red-500 block font-black uppercase">SL</span><span id="resSl" class="font-bold text-xs italic">---</span></div>
+                    <div><span class="text-[9px] text-green-500 block font-black uppercase">TP</span><span id="resTp" class="font-bold text-xs italic">---</span></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        function toggleTab(id) { document.getElementById(id).classList.toggle('tab-open'); }
+        function toggleTab(id) { document.getElementById(id).classList.toggle('hidden'); }
+        function toggleMenu() { document.getElementById('historyMenu').classList.toggle('hidden'); }
 
-        function switchMode(mode) {
-            const isM = mode === 'manual';
-            document.getElementById('manualArea').classList.toggle('hidden', !isM);
-            document.getElementById('liveArea').classList.toggle('hidden', isM);
-            document.getElementById('mBtn').className = isM ? "px-3 py-1 rounded-md text-[8px] font-bold uppercase bg-indigo-600" : "px-3 py-1 rounded-md text-[8px] font-bold uppercase text-slate-500";
-            document.getElementById('lBtn').className = !isM ? "px-3 py-1 rounded-md text-[8px] font-bold uppercase bg-indigo-600" : "px-3 py-1 rounded-md text-[8px] font-bold uppercase text-slate-500";
-            localStorage.setItem('mode', mode);
-            updateHeader();
+        function toggleMode() {
+            const isLive = document.getElementById('modeSwitch').checked;
+            document.getElementById('manualInput').classList.toggle('hidden', isLive);
+            document.getElementById('liveInput').classList.toggle('hidden', !isLive);
+            document.getElementById('status').innerText = isLive ? "Live Data Engine Active" : "Manual Calculation Active";
         }
 
-        function save() {
-            localStorage.setItem('bal', document.getElementById('bal').value);
-            localStorage.setItem('risk', document.getElementById('r').value);
-            localStorage.setItem('rr', document.getElementById('rr').value);
-            localStorage.setItem('gem', document.getElementById('gem').value);
-            localStorage.setItem('mtok', document.getElementById('tok').value);
-            localStorage.setItem('macc', document.getElementById('acc').value);
-            updateHeader();
-        }
-
-        function updateHeader() {
-            const m = localStorage.getItem('mode') || 'manual';
-            document.getElementById('subHeader').innerText = `${m.toUpperCase()} MODE | RISK ${localStorage.getItem('risk') || 1}% | RR ${localStorage.getItem('rr') || 2.5}`;
-        }
-
-        function runAnalysis() {
+        function run() {
             document.getElementById('results').classList.remove('hidden');
-            // Simplified Simulation Logic
-            const mock = { action: "Long", strat: "SMC + FVG", lots: "0.15", ent: "88.13", sl: "87.50", tp: "90.20" };
-            document.getElementById('rAction').innerText = mock.action;
-            document.getElementById('rStrat').innerText = mock.strat;
-            document.getElementById('rLots').innerText = mock.lots;
-            document.getElementById('rEnt').innerText = mock.ent;
-            document.getElementById('rSl').innerText = mock.sl;
-            document.getElementById('rTp').innerText = mock.tp;
-            
-            saveToHistory(mock);
+            const mock = { action: "BUY", strat: "4H FVG + M15 BOS", lots: "0.25", ent: "88.13", sl: "87.40", tp: "90.00" };
+            document.getElementById('resAction').innerText = mock.action;
+            document.getElementById('resLots').innerText = mock.lots;
+            document.getElementById('resEnt').innerText = mock.ent;
+            document.getElementById('resSl').innerText = mock.sl;
+            document.getElementById('resTp').innerText = mock.tp;
+
+            updateHistory(mock);
         }
 
-        function saveToHistory(data) {
-            let h = JSON.parse(localStorage.getItem('trade_h') || '[]');
-            h.unshift({ ...data, date: new Date().toLocaleTimeString() });
-            localStorage.setItem('trade_h', JSON.stringify(h));
-            renderHistory();
+        function updateHistory(data) {
+            const list = document.getElementById('historyList');
+            if (list.innerHTML.includes("No recent")) list.innerHTML = "";
+            const div = document.createElement('div');
+            div.className = "menu-item text-[10px] font-bold text-slate-300";
+            div.innerHTML = `<span>${data.action}</span> - <span>${data.strat}</span>`;
+            list.prepend(div);
         }
-
-        function renderHistory() {
-            const list = document.getElementById('histList');
-            const h = JSON.parse(localStorage.getItem('trade_h') || '[]');
-            list.innerHTML = h.map(item => `
-                <div class="bg-black/20 p-2 rounded-lg border-l-2 border-indigo-600" onclick="this.nextElementSibling.classList.toggle('hidden')">
-                    <div class="flex justify-between text-[9px] font-bold"><span>${item.action} ${item.strat}</span><span>${item.date}</span></div>
-                </div>
-                <div class="hidden p-2 text-[8px] text-slate-400 border-b border-white/5 mb-2">
-                    Entry: ${item.ent} | SL: ${item.sl} | TP: ${item.tp} | Lots: ${item.lots}
-                </div>
-            `).join('');
-        }
-
-        window.onload = () => {
-            document.getElementById('bal').value = localStorage.getItem('bal') || 1000;
-            document.getElementById('r').value = localStorage.getItem('risk') || 1;
-            document.getElementById('rr').value = localStorage.getItem('rr') || 2.5;
-            document.getElementById('gem').value = localStorage.getItem('gem') || "";
-            document.getElementById('tok').value = localStorage.getItem('mtok') || "";
-            document.getElementById('acc').value = localStorage.getItem('macc') || "";
-            switchMode(localStorage.getItem('mode') || 'manual');
-            renderHistory();
-        };
     </script>
 </body>
 </html>

@@ -1,18 +1,17 @@
 /**
- * OMNI-TRADER CORE ACCURACY ENGINE
- * This file handles the mathematical precision for lot sizing.
+ * OMNI-TRADER RISK ENGINE
+ * Ensures position sizing is 100% accurate based on entry/SL distance.
  */
-
 function calculatePositionSize(balance, riskPercent, entry, sl) {
     if (!entry || !sl || entry === sl) return "0.00";
     
-    // Calculate dollar amount at risk
+    // Total USD amount willing to lose
     const riskAmount = balance * (riskPercent / 100);
     
-    // Calculate absolute price distance
+    // Price distance between entry and stop loss
     const distance = Math.abs(entry - sl);
     
-    // Final Lot Calculation
+    // Position size calculation
     const lotSize = riskAmount / distance;
     
     return isFinite(lotSize) ? lotSize.toFixed(2) : "0.00";

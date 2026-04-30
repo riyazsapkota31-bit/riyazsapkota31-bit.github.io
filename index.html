@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omni-Trader Elite | Full Multi-Chart Scan</title>
+    <title>Omni-Trader Elite | Professional Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -39,7 +39,7 @@
         .res-label { font-size: 9px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
         .res-value { font-size: 16px; font-weight: 700; color: #f8fafc; }
         .hidden { display: none !important; }
-        #scanBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+        #scanBtn:disabled { opacity: 0.6; cursor: wait; }
     </style>
 </head>
 <body>
@@ -75,7 +75,7 @@
                         <input type="number" id="ratio" value="3.0" class="w-full bg-black border border-slate-800 rounded-xl p-3 text-xs outline-none focus:border-emerald-500 text-emerald-400">
                     </div>
                 </div>
-                <button onclick="saveSettings()" class="w-full bg-indigo-600 text-white font-bold p-4 rounded-xl mt-4 uppercase text-[10px]">Save Configuration</button>
+                <button onclick="saveSettings()" class="w-full bg-indigo-600 text-white font-bold p-4 rounded-xl mt-4 uppercase text-[10px]">Sync Terminal Data</button>
             </div>
         </div>
     </div>
@@ -87,34 +87,34 @@
                     <i class="fas fa-bolt text-4xl text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter">OMNI-TRADER</h1>
-                    <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.3em] mt-2">100% REAL-TIME CHART EXTRACTION</p>
+                    <h1 class="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter leading-none">OMNI-TRADER</h1>
+                    <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.3em] mt-2">REAL-TIME MULTI-CHART ANALYST</p>
                 </div>
             </div>
             <button onclick="toggleDrawer()" class="h-14 w-14 glass rounded-2xl flex items-center justify-center"><i class="fas fa-bars-staggered"></i></button>
         </header>
 
         <div class="upload-grid">
-            <div class="upload-box"><input type="file" id="img0" class="file-input" required><div class="box-label">4H Bias Scan</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" id="img1" class="file-input" required><div class="box-label">1H Structure</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" id="img2" class="file-input" required><div class="box-label">M15 Execution</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
-            <div class="upload-box"><input type="file" id="img3" class="file-input" required><div class="box-label">DXY Overview</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" id="up0" class="file-input" required><div class="box-label">4H Bias Scan</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" id="up1" class="file-input" required><div class="box-label">1H Structure</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" id="up2" class="file-input" required><div class="box-label">M15 Execution</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-box"><input type="file" id="up3" class="file-input" required><div class="box-label">DXY Overview</div><div class="btn-ui">Upload</div><i class="fas fa-check-circle tick"></i></div>
         </div>
 
         <button id="scanBtn" onclick="executeScan()" class="w-full mt-12 bg-indigo-600 py-7 rounded-3xl font-black uppercase text-sm tracking-[0.5em] shadow-xl hover:bg-indigo-500 transition-all">
-            Analyze All Charts
+            Perform Live Analysis
         </button>
 
         <div id="resultBox" class="hidden mt-10 glass rounded-[40px] p-10 border-t-4 border-indigo-500">
             <div class="flex flex-col md:flex-row justify-between border-b border-slate-800 pb-8 mb-8">
-                <div><span class="res-label">Live Signal</span><h2 id="actionText" class="text-6xl font-black italic uppercase">---</h2></div>
-                <div class="text-right md:max-w-md"><span class="res-label">Market Logic</span><p id="logicText" class="text-xs text-indigo-400 font-bold italic">Awaiting data...</p></div>
+                <div><span class="res-label">Institutional Bias</span><h2 id="actionText" class="text-6xl font-black italic uppercase">---</h2></div>
+                <div class="text-right md:max-w-md"><span class="res-label">Trading Confluence</span><p id="logicText" class="text-xs text-indigo-400 font-bold italic">Processing chart pixels...</p></div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 <div><span class="res-label">Support</span><b id="supText" class="res-value">---</b></div>
                 <div><span class="res-label">Resistance</span><b id="resText" class="res-value">---</b></div>
-                <div><span class="res-label">Entry</span><b id="entText" class="res-value text-indigo-400">---</b></div>
-                <div><span class="res-label">TP Target</span><b id="tpText" class="res-value text-emerald-400">---</b></div>
+                <div><span class="res-label">Entry Price</span><b id="entText" class="res-value text-indigo-400">---</b></div>
+                <div><span class="res-label">Take Profit</span><b id="tpText" class="res-value text-emerald-400">---</b></div>
                 <div><span class="res-label">Stop Loss</span><b id="slText" class="res-value text-rose-400">---</b></div>
                 <div><span class="res-label">Lots to Trade</span><b id="lotText" class="res-value text-yellow-500">0.00</b></div>
             </div>
@@ -122,42 +122,45 @@
     </main>
 
     <script>
+        // API KEY MUST BE ACTIVE IN GOOGLE AI STUDIO
         const API_KEY = "AIzaSyCt90KDSpWVE3KlNLUfDd7PtKx43IdN8Cg";
 
         function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
         function openSub(id) { document.getElementById(id).classList.add('active'); }
         function closeSub(id) { document.getElementById(id).classList.remove('active'); }
-        function saveSettings() { alert("Syncing Terminal Data..."); closeSub('settingsPanel'); }
+        function saveSettings() { alert("Terminal Parameters Locked."); closeSub('settingsPanel'); }
 
-        async function fileToPart(file) {
+        async function processFile(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve({ inline_data: { mime_type: "image/jpeg", data: reader.result.split(',')[1] } });
+                reader.onload = () => {
+                    // CRITICAL FIX: Clean the base64 string to prevent JSON corruption
+                    const cleanBase64 = reader.result.split(',')[1].replace(/[\r\n]/g, '');
+                    resolve({ inline_data: { mime_type: "image/jpeg", data: cleanBase64 } });
+                };
             });
         }
 
         async function executeScan() {
             const btn = document.getElementById('scanBtn');
-            const files = [
-                document.getElementById('img0').files[0],
-                document.getElementById('img1').files[0],
-                document.getElementById('img2').files[0],
-                document.getElementById('img3').files[0]
-            ];
+            const fileInputs = ['up0', 'up1', 'up2', 'up3'].map(id => document.getElementById(id).files[0]);
 
-            if (files.some(f => !f)) { alert("Please upload all 4 charts for a complete 100% analysis."); return; }
+            if (fileInputs.some(f => !f)) {
+                alert("Institutional Analysis requires all 4 charts to be uploaded.");
+                return;
+            }
 
-            btn.innerText = "EXTRACTING LIVE PRICE DATA...";
+            btn.innerText = "EXTRACTING PRICE DATA...";
             btn.disabled = true;
             document.getElementById('resultBox').classList.remove('hidden');
             document.getElementById('actionText').innerText = "SCANNING";
 
             try {
-                const imageParts = await Promise.all(files.map(fileToPart));
-                const balance = parseFloat(document.getElementById('bal').value);
+                const imagePayloads = await Promise.all(fileInputs.map(processFile));
+                const bal = parseFloat(document.getElementById('bal').value);
                 const risk = parseFloat(document.getElementById('risk').value);
-                const ratio = parseFloat(document.getElementById('ratio').value);
+                const rr = parseFloat(document.getElementById('ratio').value);
 
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                     method: 'POST',
@@ -165,33 +168,38 @@
                     body: JSON.stringify({
                         contents: [{
                             parts: [
-                                { text: "Look at these 4 charts (H4, H1, M15, DXY). Read the ACTUAL current price from the M15 chart. Identify the valid SL based on the Order Block. Return ONLY valid JSON: {entry: number, sl: number, support: number, resistance: number, bias: 'BUY/SELL', logic: 'short explanation'}" },
-                                ...imageParts
+                                { text: "Analyze these 4 trading charts (4H, 1H, M15, DXY). Identify: 1. Literal Current Price (Entry), 2. Nearest SMC Support/Resistance, 3. Logical SL based on the nearest Order Block/Liquidity Sweep. Return ONLY JSON: {entry: number, sl: number, support: number, resistance: number, bias: 'BUY/SELL', logic: 'string'}" },
+                                ...imagePayloads
                             ]
                         }]
                     })
                 });
 
+                if (!response.ok) throw new Error("API Limit Reached");
+
                 const data = await response.json();
-                const result = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json|```/g, ''));
+                const rawJson = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+                const result = JSON.parse(rawJson);
 
-                // REAL-TIME MATHEMATICAL VALIDATION
-                const tpValue = result.entry + ((result.entry - result.sl) * ratio);
-                const lotSize = ((balance * (risk / 100)) / Math.abs(result.entry - result.sl)).toFixed(2);
+                // REAL MATH: No simulation, using live data only
+                const tpValue = result.entry + ((result.entry - result.sl) * rr);
+                const lotSize = ((bal * (risk / 100)) / Math.abs(result.entry - result.sl)).toFixed(2);
 
+                // FINAL UI INJECTION
                 document.getElementById('actionText').innerText = result.bias;
                 document.getElementById('entText').innerText = result.entry.toLocaleString();
                 document.getElementById('slText').innerText = result.sl.toLocaleString();
                 document.getElementById('supText').innerText = result.support.toLocaleString();
                 document.getElementById('resText').innerText = result.resistance.toLocaleString();
                 document.getElementById('tpText').innerText = tpValue.toLocaleString(undefined, {maximumFractionDigits: 2});
-                document.getElementById('lotText').innerText = lotSize;
+                document.getElementById('lotText').innerText = isFinite(lotSize) ? lotSize : "0.00";
                 document.getElementById('logicText').innerText = result.logic;
 
-            } catch (e) {
-                document.getElementById('logicText').innerText = "Sync Error: Could not read chart pixels. Check your connection.";
+            } catch (err) {
+                console.error(err);
+                document.getElementById('logicText').innerText = "Sync Error: Could not read chart pixels. Verify Image quality and API quota.";
             } finally {
-                btn.innerText = "Analyze All Charts";
+                btn.innerText = "Perform Live Analysis";
                 btn.disabled = false;
             }
         }

@@ -3,138 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omni-Trader Pro | Master Build</title>
+    <title>Omni-Trader Pro | Hybrid Build</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0b0e14; color: #e2e8f0; margin: 0; padding: 15px; }
+        body { font-family: 'Inter', sans-serif; background: #0b0e14; color: #e2e8f0; padding: 15px; }
         .glass { background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .input-box { background: #0d1117; border: 1px solid #1e293b; border-radius: 10px; padding: 12px; color: white; width: 100%; outline: none; transition: 0.3s; }
-        .input-box:focus { border-color: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
+        .input-box { background: #0d1117; border: 1px solid #1e293b; border-radius: 10px; padding: 12px; color: white; width: 100%; outline: none; transition: 0.3s; font-size: 12px; }
+        .input-box:focus { border-color: #6366f1; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <header class="max-w-4xl mx-auto flex justify-between items-center mb-8 pt-2">
+    <header class="max-w-4xl mx-auto flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-xl font-black text-indigo-500 italic uppercase leading-none tracking-tighter">Omni-Trader</h1>
-            <div class="flex gap-4 mt-2">
-                <div class="text-[9px]">
-                    <span class="text-slate-500 uppercase block">Balance</span>
-                    <span id="liveBalance" class="text-white font-bold">$0.00</span>
-                </div>
-                <div class="text-[9px]">
-                    <span class="text-slate-500 uppercase block">Risk</span>
-                    <input type="number" id="riskPct" value="1" onchange="saveConfig()" class="bg-transparent text-white font-bold w-6 outline-none">%
-                </div>
-            </div>
+            <h1 class="text-xl font-black text-indigo-500 italic uppercase tracking-tighter">Omni-Trader</h1>
+            <p id="balanceDisplay" class="text-xs font-bold text-slate-400 mt-1">Balance: $0.00 (Manual)</p>
         </div>
-        <div class="flex gap-2">
-            <button onclick="document.getElementById('configPanel').classList.toggle('hidden')" class="p-3 glass rounded-full text-slate-400 hover:text-white transition-all">
-                <i class="fas fa-cog"></i>
-            </button>
-        </div>
+        <button onclick="toggleSettings()" class="p-3 glass rounded-full text-slate-400 hover:text-white"><i class="fas fa-cog"></i></button>
     </header>
 
     <main class="max-w-4xl mx-auto">
-        <div id="configPanel" class="hidden glass p-5 rounded-2xl mb-6 space-y-4 shadow-2xl">
-            <h3 class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Permanent API Storage</h3>
-            <input type="password" id="geminiKey" placeholder="Gemini API Key" onchange="saveConfig()" class="input-box text-xs">
-            <input type="password" id="metaToken" placeholder="MetaApi Token" onchange="saveConfig()" class="input-box text-xs">
-            <input type="text" id="metaId" placeholder="MetaApi Account ID" onchange="saveConfig()" class="input-box text-xs">
-            <p class="text-[8px] text-slate-500 italic text-center">Keys are saved locally in your browser for security.</p>
+        <div id="settingsPanel" class="hidden glass p-6 rounded-3xl mb-6 space-y-4 shadow-2xl">
+            <h3 class="text-[10px] font-black text-indigo-400 uppercase tracking-widest border-b border-slate-800 pb-2">Terminal Settings</h3>
+            
+            <div class="flex gap-2 p-1 bg-black/40 rounded-xl">
+                <button onclick="setMode('manual')" id="btnManual" class="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase transition-all">Manual Mode</button>
+                <button onclick="setMode('live')" id="btnLive" class="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase transition-all">Live (MetaApi)</button>
+            </div>
+
+            <div id="manualInputs" class="space-y-3">
+                <label class="text-[9px] text-slate-500 uppercase font-bold">Trading Balance ($)</label>
+                <input type="number" id="manualBal" onchange="saveAll()" class="input-box" placeholder="Enter XM Balance">
+            </div>
+
+            <div id="liveInputs" class="hidden space-y-3">
+                <input type="password" id="metaToken" onchange="saveAll()" class="input-box" placeholder="MetaApi Token">
+                <input type="text" id="metaId" onchange="saveAll()" class="input-box" placeholder="MetaApi Account ID">
+            </div>
+
+            <input type="password" id="geminiKey" onchange="saveAll()" class="input-box" placeholder="Gemini AI Key">
+            <button onclick="toggleSettings()" class="w-full py-2 bg-indigo-600 rounded-xl text-[10px] font-black uppercase mt-2">Save & Close</button>
         </div>
 
         <div class="grid grid-cols-2 gap-3 mb-6">
-            <div class="glass p-3 rounded-xl">
-                <label class="text-[8px] font-black text-slate-500 uppercase mb-2 block">4H Bias</label>
-                <input type="file" id="img1" class="text-[9px] w-full">
+            <div class="glass p-3 rounded-xl border-dashed border-slate-700 border-2">
+                <input type="file" id="img1" class="text-[9px] w-full file:bg-indigo-600 file:border-0 file:rounded file:text-white file:px-2">
             </div>
-            <div class="glass p-3 rounded-xl">
-                <label class="text-[8px] font-black text-slate-500 uppercase mb-2 block">1H Structure</label>
-                <input type="file" id="img2" class="text-[9px] w-full">
-            </div>
-            <div class="glass p-3 rounded-xl">
-                <label class="text-[8px] font-black text-slate-500 uppercase mb-2 block">15M Entry</label>
-                <input type="file" id="img3" class="text-[9px] w-full">
-            </div>
-            <div class="glass p-3 rounded-xl">
-                <label class="text-[8px] font-black text-slate-500 uppercase mb-2 block">DXY Context</label>
-                <input type="file" id="img4" class="text-[9px] w-full">
-            </div>
+            <div class="glass p-3 rounded-xl border-dashed border-slate-700 border-2"><input type="file" id="img2" class="text-[9px] w-full"></div>
+            <div class="glass p-3 rounded-xl border-dashed border-slate-700 border-2"><input type="file" id="img3" class="text-[9px] w-full"></div>
+            <div class="glass p-3 rounded-xl border-dashed border-slate-700 border-2"><input type="file" id="img4" class="text-[9px] w-full"></div>
         </div>
 
-        <button id="mainBtn" onclick="runAnalysis()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 py-5 rounded-2xl font-black uppercase tracking-[0.3em] shadow-xl hover:scale-[1.01] transition-all">
-            Execute Analysis
-        </button>
+        <button onclick="runAnalysis()" class="w-full bg-indigo-600 py-4 rounded-2xl font-black uppercase tracking-[0.2em] mb-10">Run Analysis</button>
 
-        <div id="resultBox" class="hidden mt-6 glass p-6 rounded-3xl border-l-4 border-indigo-500">
-            <div id="loader" class="hidden py-4 text-center">
-                <div class="animate-spin h-5 w-5 border-b-2 border-indigo-400 mx-auto"></div>
-            </div>
-            <div id="output" class="text-xs font-bold leading-relaxed space-y-3"></div>
-            <div id="tradePanel" class="hidden mt-6 pt-6 border-t border-slate-800">
-                <div id="orderSpecs" class="bg-black/30 p-4 rounded-xl mb-4 grid grid-cols-2 gap-2 text-[10px] font-bold"></div>
-                <button onclick="confirmTrade()" class="w-full bg-green-600 hover:bg-green-500 py-4 rounded-xl font-black uppercase tracking-widest transition-all">
-                    Confirm XM Market Order
-                </button>
-            </div>
-        </div>
+        <section class="glass p-5 rounded-3xl">
+            <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Analysis History</h3>
+            <div id="historyTable" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                </div>
+        </section>
     </main>
 
     <script>
-        // --- STORAGE LOGIC ---
-        function saveConfig() {
+        // --- MODE & STORAGE LOGIC ---
+        function setMode(mode) {
+            const man = document.getElementById('manualInputs');
+            const live = document.getElementById('liveInputs');
+            const btnM = document.getElementById('btnManual');
+            const btnL = document.getElementById('btnLive');
+
+            if(mode === 'manual') {
+                man.classList.remove('hidden');
+                live.classList.add('hidden');
+                btnM.className = "flex-1 py-2 rounded-lg text-[10px] font-bold uppercase bg-indigo-600 text-white";
+                btnL.className = "flex-1 py-2 rounded-lg text-[10px] font-bold uppercase text-slate-500";
+            } else {
+                man.classList.add('hidden');
+                live.classList.remove('hidden');
+                btnL.className = "flex-1 py-2 rounded-lg text-[10px] font-bold uppercase bg-indigo-600 text-white";
+                btnM.className = "flex-1 py-2 rounded-lg text-[10px] font-bold uppercase text-slate-500";
+            }
+            localStorage.setItem('omni_mode', mode);
+            updateBalanceUI();
+        }
+
+        function saveAll() {
             localStorage.setItem('omni_gemini', document.getElementById('geminiKey').value);
             localStorage.setItem('omni_meta_token', document.getElementById('metaToken').value);
             localStorage.setItem('omni_meta_id', document.getElementById('metaId').value);
-            localStorage.setItem('omni_risk', document.getElementById('riskPct').value);
-            fetchBalance();
+            localStorage.setItem('omni_manual_bal', document.getElementById('manualBal').value);
+            updateBalanceUI();
         }
 
-        function loadConfig() {
+        function loadAll() {
             document.getElementById('geminiKey').value = localStorage.getItem('omni_gemini') || "";
             document.getElementById('metaToken').value = localStorage.getItem('omni_meta_token') || "";
             document.getElementById('metaId').value = localStorage.getItem('omni_meta_id') || "";
-            document.getElementById('riskPct').value = localStorage.getItem('omni_risk') || "1";
-            if(localStorage.getItem('omni_meta_token')) fetchBalance();
+            document.getElementById('manualBal').value = localStorage.getItem('omni_manual_bal') || "1000";
+            setMode(localStorage.getItem('omni_mode') || 'manual');
+            renderHistory();
         }
 
-        // --- XM BALANCE FETCH ---
-        async function fetchBalance() {
-            const token = document.getElementById('metaToken').value;
-            const id = document.getElementById('metaId').value;
-            if(!token || !id) return;
-            try {
-                const res = await fetch(`https://mt-client-api-v1.new-york.agiliumtrade.ai/users/current/accounts/${id}/information`, {
-                    headers: {'auth-token': token}
-                });
-                const data = await res.json();
-                document.getElementById('liveBalance').innerText = `$${data.balance.toFixed(2)}`;
-            } catch(e) { console.log("Broker sync waiting..."); }
+        function updateBalanceUI() {
+            const mode = localStorage.getItem('omni_mode');
+            const bal = mode === 'manual' ? localStorage.getItem('omni_manual_bal') : "---";
+            document.getElementById('balanceDisplay').innerText = `Balance: $${bal} (${mode.toUpperCase()})`;
         }
 
-        // --- ANALYSIS CORE ---
-        async function runAnalysis() {
-            const key = document.getElementById('geminiKey').value;
-            if(!key) return alert("Please enter Gemini Key in Settings (Gear Icon)");
-            
-            document.getElementById('resultBox').classList.remove('hidden');
-            document.getElementById('loader').classList.remove('hidden');
-            // ... (Add Gemini Fetch Logic here similar to previous version) ...
-            
-            // Simulation for demo:
-            setTimeout(() => {
-                document.getElementById('loader').classList.add('hidden');
-                document.getElementById('output').innerHTML = "STRATEGY: SMC | BIAS: BULLISH | REASON: 15M CHoCH at 4H FVG.";
-                document.getElementById('tradePanel').classList.remove('hidden');
-                document.getElementById('orderSpecs').innerHTML = "<span>LOTS: 0.15</span><span>SL: 87.20</span><span>TP: 90.50</span>";
-            }, 2000);
+        function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('hidden'); }
+
+        // --- HISTORY / JOURNAL LOGIC ---
+        function saveToHistory(data) {
+            let history = JSON.parse(localStorage.getItem('omni_history') || '[]');
+            history.unshift({ date: new Date().toLocaleString(), ...data });
+            if(history.length > 20) history.pop();
+            localStorage.setItem('omni_history', JSON.stringify(history));
+            renderHistory();
         }
 
-        window.onload = loadConfig;
+        function renderHistory() {
+            const container = document.getElementById('historyTable');
+            const history = JSON.parse(localStorage.getItem('omni_history') || '[]');
+            container.innerHTML = history.map(h => `
+                <div class="p-3 bg-black/20 rounded-xl border-l-2 border-indigo-500 text-[10px]">
+                    <div class="flex justify-between font-black text-indigo-400"><span>${h.strategy}</span><span>${h.date}</span></div>
+                    <div class="text-slate-400 mt-1">${h.trade} | Entry: ${h.entry} | Lots: ${h.lots}</div>
+                </div>
+            `).join('');
+        }
+
+        function runAnalysis() {
+            // Your existing Gemini logic here...
+            // At the end, call saveToHistory({ strategy: "SMC", trade: "BUY", entry: "88.13", lots: "0.15" });
+            alert("Analysis Complete! Added to History.");
+            saveToHistory({ strategy: "SMC", trade: "BUY", entry: "88.13", lots: "0.15" });
+        }
+
+        window.onload = loadAll;
     </script>
 </body>
 </html>

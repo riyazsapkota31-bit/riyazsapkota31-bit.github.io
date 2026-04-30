@@ -3,93 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMNI-REAL | INFINITY SCALPER</title>
+    <title>OMNI-REAL | INFINITY SCALPER V8</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #0a0b0d; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .drawer { position: fixed; top: 0; right: -100%; width: 85%; height: 100%; background: #111827; transition: 0.4s ease; z-index: 1000; }
+        body { background: #05070a; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .drawer { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #0f172a; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; border-left: 1px solid rgba(255,255,255,0.1); }
         .drawer.open { right: 0; }
-        .sub-menu { position: absolute; top: 0; right: -100%; width: 100%; height: 100%; background: #111827; transition: 0.3s ease; z-index: 1001; }
-        .sub-menu.active { right: 0; }
-        .has-file { border-color: #10b981 !important; background: rgba(16, 185, 129, 0.05); }
+        .sub-drawer { position: fixed; top: 0; right: -100%; width: 100%; height: 100%; background: #0f172a; transition: 0.3s ease; z-index: 1100; }
+        .sub-drawer.active { right: 0; }
+        .chart-box { aspect-ratio: 1/1; border: 2px dashed rgba(255,255,255,0.1); transition: 0.3s; position: relative; overflow: hidden; cursor: pointer; }
+        .chart-box:active { transform: scale(0.95); }
+        .chart-box.has-file { border: 2px solid #6366f1; background: rgba(99, 102, 241, 0.05); }
+        input[type="file"] { display: none; }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 pb-24">
 
-    <header class="flex justify-between items-center mb-6">
+    <header class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-2xl font-black italic text-white uppercase leading-none tracking-tighter">Omni-Real</h1>
-            <p class="text-[10px] uppercase text-indigo-400 font-bold tracking-[0.2em]">Infinity Scalper V8</p>
+            <h1 class="text-xl font-black italic tracking-tighter text-white">OMNI-REAL</h1>
+            <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Infinity Scalper V8</p>
         </div>
-        <button onclick="toggleDrawer()" class="w-10 h-10 glass rounded-xl flex items-center justify-center text-slate-400">
-            <i class="fa-solid fa-gear"></i>
+        <button onclick="toggleDrawer()" class="w-10 h-10 glass rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-gear text-slate-400"></i>
         </button>
     </header>
 
-    <div class="grid grid-cols-2 gap-3 mb-4">
-        <div id="box0" class="glass rounded-2xl p-4 flex flex-col items-center justify-center border-dashed border-2 border-slate-700 min-h-[140px]">
-            <span class="text-[9px] font-bold uppercase text-slate-500 mb-2">HTF Bias (1H)</span>
-            <label class="bg-indigo-600 px-4 py-1.5 rounded-lg text-[11px] font-bold"><input type="file" id="img0" class="hidden" onchange="markFile(0)">Load</label>
+    <div class="grid grid-cols-2 gap-3 mb-6">
+        <div id="box0" class="chart-box rounded-3xl flex flex-col items-center justify-center gap-2" onclick="document.getElementById('img0').click()">
+            <input type="file" id="img0" accept="image/*" onchange="markFile(0)">
+            <span class="text-[8px] font-black uppercase text-slate-500">HTF Bias (1H)</span>
+            <div class="bg-indigo-600/20 p-3 rounded-xl text-indigo-400 text-xs font-bold uppercase">Load</div>
         </div>
-        <div id="box1" class="glass rounded-2xl p-4 flex flex-col items-center justify-center border-dashed border-2 border-slate-700 min-h-[140px]">
-            <span class="text-[9px] font-bold uppercase text-slate-500 mb-2">LTF Structure (15M)</span>
-            <label class="bg-indigo-600 px-4 py-1.5 rounded-lg text-[11px] font-bold"><input type="file" id="img1" class="hidden" onchange="markFile(1)">Load</label>
+        <div id="box1" class="chart-box rounded-3xl flex flex-col items-center justify-center gap-2" onclick="document.getElementById('img1').click()">
+            <input type="file" id="img1" accept="image/*" onchange="markFile(1)">
+            <span class="text-[8px] font-black uppercase text-slate-500">LTF Structure (15M)</span>
+            <div class="bg-indigo-600/20 p-3 rounded-xl text-indigo-400 text-xs font-bold uppercase">Load</div>
         </div>
-        <div id="box2" class="glass rounded-2xl p-4 flex flex-col items-center justify-center border-dashed border-2 border-slate-700 min-h-[140px]">
-            <span class="text-[9px] font-bold uppercase text-slate-500 mb-2">Entry Logic (1M)</span>
-            <label class="bg-indigo-600 px-4 py-1.5 rounded-lg text-[11px] font-bold"><input type="file" id="img2" class="hidden" onchange="markFile(2)">Load</label>
+        <div id="box2" class="chart-box rounded-3xl flex flex-col items-center justify-center gap-2" onclick="document.getElementById('img2').click()">
+            <input type="file" id="img2" accept="image/*" onchange="markFile(2)">
+            <span class="text-[8px] font-black uppercase text-slate-500">Entry Logic (1M)</span>
+            <div class="bg-indigo-600/20 p-3 rounded-xl text-indigo-400 text-xs font-bold uppercase">Load</div>
         </div>
-        <div id="box3" class="glass rounded-2xl p-4 flex flex-col items-center justify-center border-dashed border-2 border-slate-700 min-h-[140px]">
-            <span class="text-[9px] font-bold uppercase text-slate-500 mb-2">DXY / Data</span>
-            <label class="bg-indigo-600 px-4 py-1.5 rounded-lg text-[11px] font-bold"><input type="file" id="img3" class="hidden" onchange="markFile(3)">Load</label>
+        <div id="box3" class="chart-box rounded-3xl flex flex-col items-center justify-center gap-2" onclick="document.getElementById('img3').click()">
+            <input type="file" id="img3" accept="image/*" onchange="markFile(3)">
+            <span class="text-[8px] font-black uppercase text-slate-500">DXY / Data</span>
+            <div class="bg-indigo-600/20 p-3 rounded-xl text-indigo-400 text-xs font-bold uppercase">Load</div>
         </div>
     </div>
 
-    <button id="scanBtn" onclick="executeScan()" class="w-full bg-indigo-500 py-4 rounded-2xl font-black text-sm uppercase shadow-lg mb-6">Perform Multi-Chart Scan</button>
+    <button id="scanBtn" onclick="executeScan()" class="w-full bg-indigo-600 py-6 rounded-3xl font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">
+        Perform Multi-Chart Scan
+    </button>
 
-    <div id="resultBox" class="hidden glass rounded-3xl p-6 border-t-4 border-indigo-500">
+    <div id="resultBox" class="hidden mt-6 glass rounded-[40px] p-8 border border-indigo-500/20">
         <div class="flex justify-between items-start mb-6">
-            <div><span id="strategyType" class="bg-indigo-500/20 text-indigo-300 text-[9px] px-2 py-1 rounded">SMC</span><h2 id="actionText" class="text-4xl font-black italic uppercase leading-none mt-2">---</h2></div>
-            <p id="logicText" class="text-[10px] text-slate-400 italic text-right max-w-[150px]">Waiting...</p>
+            <span id="strategyType" class="bg-slate-800 px-3 py-1 rounded-lg text-[9px] font-bold text-slate-400 uppercase tracking-tighter">INFINITY SMC</span>
+            <p id="logicText" class="text-[10px] text-right text-slate-400 italic max-w-[150px]">Waiting for analysis...</p>
         </div>
-        <div class="grid grid-cols-3 gap-4 mb-6">
-            <div><p class="text-[9px] text-slate-500 font-bold uppercase">Entry</p><p id="entText" class="text-sm font-black text-indigo-300">0.00</p></div>
-            <div><p class="text-[9px] text-rose-500 font-bold uppercase">SL</p><p id="slText" class="text-sm font-black text-rose-500">0.00</p></div>
-            <div><p class="text-[9px] text-emerald-500 font-bold uppercase">TP</p><p id="tpText" class="text-sm font-black text-emerald-500">0.00</p></div>
+
+        <h2 id="actionText" class="text-4xl font-black italic mb-8">---</h2>
+
+        <div class="grid grid-cols-3 gap-6 mb-8 border-y border-white/5 py-6">
+            <div>
+                <label class="text-[8px] uppercase text-slate-500 font-bold block mb-1">Entry</label>
+                <span id="entText" class="text-sm font-black text-white">0.00000</span>
+            </div>
+            <div>
+                <label class="text-[8px] uppercase text-rose-500/60 font-bold block mb-1">SL</label>
+                <span id="slText" class="text-sm font-black text-rose-500">0.00000</span>
+            </div>
+            <div>
+                <label class="text-[8px] uppercase text-emerald-500/60 font-bold block mb-1">TP</label>
+                <span id="tpText" class="text-sm font-black text-emerald-500">0.00000</span>
+            </div>
         </div>
-        <div class="grid grid-cols-3 gap-4 border-t border-slate-800 pt-6">
-            <div><p class="text-[9px] text-slate-500 uppercase">Sup</p><p id="supText" class="text-xs text-slate-300 font-bold">0.00</p></div>
-            <div><p class="text-[9px] text-slate-500 uppercase">Res</p><p id="resText" class="text-xs text-slate-300 font-bold">0.00</p></div>
-            <div><p class="text-[9px] text-yellow-500 uppercase font-bold">Lot Size</p><p id="lotText" class="text-sm font-black text-yellow-500">0.0</p></div>
+
+        <div class="flex justify-between items-center bg-black/40 p-4 rounded-2xl">
+            <div class="flex gap-4">
+                <div>
+                    <label class="text-[7px] uppercase text-slate-600 font-bold block">Sup</label>
+                    <span id="supText" class="text-[10px] font-bold text-slate-400">---</span>
+                </div>
+                <div>
+                    <label class="text-[7px] uppercase text-slate-600 font-bold block">Res</label>
+                    <span id="resText" class="text-[10px] font-bold text-slate-400">---</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <label class="text-[8px] uppercase text-amber-500 font-bold block">Lot Size</label>
+                <span id="lotText" class="text-xl font-black text-white">0.00</span>
+            </div>
         </div>
     </div>
 
+    <div id="overlay" class="hidden fixed inset-0 bg-black/80 z-[900]" onclick="toggleDrawer()"></div>
+    
     <div id="sideDrawer" class="drawer p-6">
-        <div class="flex justify-between items-center mb-8"><i class="fa-solid fa-xmark text-slate-500" onclick="toggleDrawer()"></i><h3 class="text-[10px] font-black uppercase text-indigo-400">Master Control</h3></div>
+        <div class="flex justify-between items-center mb-8">
+            <i class="fa-solid fa-xmark text-slate-500" onclick="toggleDrawer()"></i>
+            <h3 class="text-[10px] font-black uppercase text-indigo-400">Master Control</h3>
+        </div>
+        
         <div class="space-y-4">
             <div class="glass p-4 rounded-2xl">
-                <label class="text-[9px] uppercase text-slate-500 mb-2 block">Security Key</label>
-                <input type="password" id="apiInput" class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm mb-3">
-                <button onclick="saveApiKey()" class="w-full bg-indigo-600 py-3 rounded-xl font-bold text-[11px]">LOCK & SYNC KEY</button>
+                <label class="text-[9px] uppercase text-slate-500 mb-2 block font-bold">Security Key</label>
+                <div id="keyDisplay" class="flex flex-col gap-3">
+                    <input type="password" id="apiInput" placeholder="Enter Gemini Key..." 
+                        class="w-full bg-black/40 border border-slate-800 rounded-xl p-3 text-sm focus:border-indigo-500 outline-none transition-all">
+                    
+                    <button id="lockBtn" onclick="saveApiKey()" 
+                        class="w-full bg-indigo-600 py-3 rounded-xl font-bold text-[11px] uppercase tracking-wider">
+                        Lock & Sync Key
+                    </button>
+
+                    <button id="editBtn" onclick="enableEdit()" 
+                        class="hidden w-full bg-slate-800 py-3 rounded-xl font-bold text-[11px] uppercase tracking-wider text-slate-300">
+                        Edit Key
+                    </button>
+                </div>
             </div>
+
             <div class="glass p-4 rounded-2xl" onclick="openSub('riskMenu')">
-                <div class="flex justify-between items-center"><span class="text-xs font-bold">Risk Management</span><i class="fa-solid fa-chevron-right text-[10px]"></i></div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-300">Risk Management</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="riskMenu" class="sub-menu p-6">
-        <div class="flex items-center gap-4 mb-8" onclick="closeSub('riskMenu')"><i class="fa-solid fa-arrow-left text-slate-500"></i><h3 class="text-[10px] font-black uppercase">Risk Config</h3></div>
+    <div id="riskMenu" class="sub-drawer p-6">
+        <div class="flex items-center gap-4 mb-8">
+            <i class="fa-solid fa-chevron-left text-slate-500" onclick="closeSub('riskMenu')"></i>
+            <h3 class="text-[10px] font-black uppercase text-white">Risk Parameters</h3>
+        </div>
         <div class="space-y-6">
-            <div><label class="text-[9px] text-slate-500 uppercase block mb-2">Balance ($)</label><input type="number" id="bal" value="10000" class="w-full bg-black/40 border border-slate-800 rounded-xl p-4 text-xl font-black text-indigo-400"></div>
-            <div><label class="text-[9px] text-slate-500 uppercase block mb-2">Risk (%)</label><input type="number" id="risk" value="1.0" step="0.1" class="w-full bg-black/40 border border-slate-800 rounded-xl p-4 text-xl font-black text-yellow-500"></div>
-            <button onclick="closeSub('riskMenu')" class="w-full bg-slate-800 py-4 rounded-xl font-bold text-xs uppercase">Save & Exit</button>
+            <div>
+                <label class="text-[9px] uppercase text-slate-500 mb-2 block">Account Balance ($)</label>
+                <input type="number" id="bal" value="10000" class="w-full bg-slate-900 border border-white/5 rounded-xl p-4 text-sm font-bold">
+            </div>
+            <div>
+                <label class="text-[9px] uppercase text-slate-500 mb-2 block">Risk Per Trade (%)</label>
+                <input type="number" id="risk" value="1.0" step="0.1" class="w-full bg-slate-900 border border-white/5 rounded-xl p-4 text-sm font-bold">
+            </div>
         </div>
     </div>
 
-    <div id="overlay" class="fixed inset-0 bg-black/60 z-[999] hidden" onclick="toggleDrawer()"></div>
     <script src="strategies.js"></script>
 </body>
 </html>

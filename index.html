@@ -3,144 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Omni-Trader Pro</title>
+    <title>Omni-Trader Pro | Full Restore</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #06090f; color: #e2e8f0; margin: 0; height: 100vh; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; background: #05070a; color: #e2e8f0; margin: 0; padding-bottom: 40px; }
         
-        /* SIDEBAR HISTORY (Left) */
-        .sidebar { width: 300px; background: #0d1117; border-right: 1px solid #1f2937; display: flex; flex-direction: column; }
-        .history-item { background: #161b22; border: 1px solid #1f2937; padding: 12px; border-radius: 12px; margin-bottom: 8px; transition: 0.2s; }
-        .history-item:hover { border-color: #4f46e5; }
-
-        /* MAIN CONTENT (Right) */
-        .main-content { flex: 1; padding: 24px; display: flex; flex-direction: column; }
-
+        .glass-panel { background: #0d1117; border: 1px solid #1f2937; border-radius: 24px; }
+        
         /* POCKET OPTION TOGGLE */
-        .toggle-container { background: #161b22; padding: 4px; border-radius: 10px; display: flex; width: 130px; }
-        .toggle-btn { flex: 1; text-align: center; font-size: 9px; font-weight: 900; padding: 6px 0; border-radius: 8px; cursor: pointer; }
+        .toggle-container { background: #161b22; padding: 4px; border-radius: 12px; display: flex; width: 140px; }
+        .toggle-btn { flex: 1; text-align: center; font-size: 9px; font-weight: 900; padding: 8px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; }
         .toggle-btn.active { background: #4f46e5; color: white; }
 
-        /* UPLOAD GRID */
-        .upload-slot { position: relative; height: 100px; border: 2px dashed #1f2937; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0d1117; }
+        /* UPLOAD SLOTS */
+        .upload-slot { position: relative; height: 110px; border: 2px dashed #1f2937; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0d1117; transition: 0.3s; }
+        .upload-slot:hover { border-color: #4f46e5; }
         .file-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
-        .tick { display: none; color: #10b981; font-size: 20px; }
+        .tick { display: none; color: #10b981; font-size: 24px; }
         input:valid ~ .tick { display: block; }
         input:valid ~ span { display: none; }
 
-        /* SLIDE-UP POPUP */
-        #resultPopup { position: fixed; bottom: -100%; left: 0; width: 100%; background: #0d1117; border-top: 3px solid #4f46e5; border-radius: 30px 30px 0 0; z-index: 2000; transition: 0.6s cubic-bezier(0.22, 1, 0.36, 1); padding: 30px; box-shadow: 0 -20px 60px rgba(0,0,0,0.9); }
+        /* DYNAMIC HISTORY */
+        .history-item { background: #0d1117; border: 1px solid #1f2937; padding: 12px 16px; border-radius: 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* SLIDE-UP POPUP (Restored & Accurate) */
+        #resultPopup { position: fixed; bottom: -100%; left: 0; width: 100%; background: #0d1117; border-top: 3px solid #4f46e5; border-radius: 40px 40px 0 0; z-index: 2000; transition: 0.6s cubic-bezier(0.22, 1, 0.36, 1); padding: 40px 20px; box-shadow: 0 -25px 50px rgba(0,0,0,0.9); }
         #resultPopup.active { bottom: 0; }
     </style>
 </head>
-<body class="flex">
+<body class="p-4 md:p-10">
 
-    <aside class="sidebar p-4">
-        <div class="flex justify-between items-center mb-6">
-            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">History</span>
-            <button onclick="clearHistory()" class="text-[9px] text-indigo-400 font-bold uppercase">Clear</button>
-        </div>
-        <div id="historyList" class="flex-1 overflow-y-auto pr-1">
-            <p id="emptyMsg" class="text-[9px] text-slate-600 text-center mt-10 uppercase font-bold">No Records</p>
-        </div>
-    </aside>
-
-    <main class="main-content">
-        <header class="flex justify-between items-center mb-10">
-            <div class="toggle-container">
+    <header class="flex justify-between items-start mb-8 max-w-4xl mx-auto">
+        <div>
+            <div class="toggle-container mb-4">
                 <div id="mBtn" class="toggle-btn active" onclick="setMode('manual')">MANUAL</div>
                 <div id="lBtn" class="toggle-btn" onclick="setMode('live')">LIVE</div>
             </div>
-            <div class="text-right">
-                <span class="text-[8px] text-slate-500 font-black uppercase block">Account Balance</span>
-                <input type="text" id="balanceInput" value="$10,058.73" class="bg-transparent text-right text-xl font-black text-white focus:outline-none w-40 border-b border-slate-800">
-            </div>
-        </header>
-
-        <div class="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full">
-            <h1 class="text-4xl font-black italic tracking-tighter uppercase mb-2">OMNI-TRADER</h1>
-            <p class="text-[10px] text-indigo-500 font-bold tracking-[0.4em] uppercase mb-10">Institutional Accuracy Engine</p>
-
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="upload-slot"><input type="file" class="file-input" required><span class="text-[8px] font-black text-slate-500">4H TREND</span><i class="fas fa-check-circle tick"></i></div>
-                <div class="upload-slot"><input type="file" class="file-input" required><span class="text-[8px] font-black text-slate-500">1H STRUCTURE</span><i class="fas fa-check-circle tick"></i></div>
-                <div class="upload-slot"><input type="file" class="file-input" required><span class="text-[8px] font-black text-slate-500">M15 ENTRY</span><i class="fas fa-check-circle tick"></i></div>
-                <div class="upload-slot"><input type="file" class="file-input" required><span class="text-[8px] font-black text-slate-500">VOL/DXY</span><i class="fas fa-check-circle tick"></i></div>
-            </div>
-
-            <button onclick="analyze()" class="w-full bg-indigo-600 py-6 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-900/20 hover:bg-indigo-500 transition-all">
-                Run Deep Analysis
-            </button>
+            <h1 class="text-3xl font-black italic tracking-tighter uppercase leading-none">Omni-Trader</h1>
         </div>
+        <div class="text-right">
+            <span class="text-[8px] text-slate-500 font-black uppercase block mb-1">Set Account Balance</span>
+            <input type="text" id="balanceInput" value="$10,058.73" class="bg-transparent text-right text-xl font-black text-white focus:outline-none w-40 border-b border-slate-800 pb-1">
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <div class="upload-slot"><input type="file" class="file-input" required><span class="text-[9px] font-black text-slate-500 uppercase">4H Trend</span><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-slot"><input type="file" class="file-input" required><span class="text-[9px] font-black text-slate-500 uppercase">1H Structure</span><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-slot"><input type="file" class="file-input" required><span class="text-[9px] font-black text-slate-500 uppercase">M15 Setup</span><i class="fas fa-check-circle tick"></i></div>
+            <div class="upload-slot"><input type="file" class="file-input" required><span class="text-[9px] font-black text-slate-500 uppercase">DXY/VOL</span><i class="fas fa-check-circle tick"></i></div>
+        </div>
+
+        <button onclick="runDeepAnalysis()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-6 rounded-2xl font-black uppercase tracking-[0.4em] transition-all mb-10 shadow-xl shadow-indigo-900/20">
+            Analyze the Chart
+        </button>
+
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Trade Execution History</h3>
+                <button onclick="clearLogs()" class="text-[9px] text-indigo-400 font-bold uppercase">Clear History</button>
+            </div>
+            <div id="historyFeed" class="space-y-2">
+                <div class="text-center py-10 border border-dashed border-slate-900 rounded-2xl" id="noData">
+                    <p class="text-[10px] text-slate-600 font-bold uppercase">No Analysis Performed</p>
+                </div>
+            </div>
+        </section>
     </main>
 
     <div id="resultPopup">
-        <div class="max-w-xl mx-auto">
+        <div class="max-w-lg mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Signal Detected</span>
+                <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Deep Analysis Signal</span>
                 <button onclick="closePopup()" class="text-slate-500 text-[10px] font-black uppercase">Close</button>
             </div>
             
-            <h2 id="resTrade" class="text-6xl font-black italic uppercase text-white mb-6">BUY</h2>
+            <h2 id="resTrade" class="text-7xl font-black italic uppercase text-white mb-6">---</h2>
             
             <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
-                <div class="bg-black/40 p-4 rounded-xl border border-slate-800"><span class="text-[7px] text-slate-500 font-black uppercase block mb-1">Support</span><b id="resSup" class="text-xs">---</b></div>
-                <div class="bg-black/40 p-4 rounded-xl border border-slate-800"><span class="text-[7px] text-slate-500 font-black uppercase block mb-1">Resistance</span><b id="resRes" class="text-xs">---</b></div>
-                <div class="bg-black/40 p-4 rounded-xl border border-slate-800"><span class="text-[7px] text-slate-500 font-black uppercase block mb-1">Entry</span><b id="resEnt" class="text-xs text-indigo-400">---</b></div>
-                <div class="bg-black/40 p-4 rounded-xl border border-emerald-900/30"><span class="text-[7px] text-emerald-500 font-black uppercase block mb-1">TP (1:2)</span><b id="resTp" class="text-xs text-emerald-400">---</b></div>
-                <div class="bg-black/40 p-4 rounded-xl border border-rose-900/30"><span class="text-[7px] text-rose-500 font-black uppercase block mb-1">SL</span><b id="resSl" class="text-xs text-rose-400">---</b></div>
-                <div class="bg-black/40 p-4 rounded-xl border border-slate-800"><span class="text-[7px] text-slate-500 font-black uppercase block mb-1">Lots</span><b id="resLots" class="text-xs">---</b></div>
+                <div class="bg-black/40 p-4 rounded-xl border border-slate-800">
+                    <span class="text-[8px] text-slate-500 font-black uppercase block">Support</span>
+                    <b id="resSup" class="text-sm">---</b>
+                </div>
+                <div class="bg-black/40 p-4 rounded-xl border border-slate-800">
+                    <span class="text-[8px] text-slate-500 font-black uppercase block">Resistance</span>
+                    <b id="resRes" class="text-sm">---</b>
+                </div>
+                <div class="bg-black/40 p-4 rounded-xl border border-slate-800">
+                    <span class="text-[8px] text-slate-500 font-black uppercase block">Entry Point</span>
+                    <b id="resEnt" class="text-sm text-indigo-400">---</b>
+                </div>
+                <div class="bg-black/40 p-4 rounded-xl border border-emerald-900/30">
+                    <span class="text-[8px] text-emerald-500 font-black uppercase block">TP (1:2)</span>
+                    <b id="resTp" class="text-sm text-emerald-400">---</b>
+                </div>
+                <div class="bg-black/40 p-4 rounded-xl border border-rose-900/30">
+                    <span class="text-[8px] text-rose-500 font-black uppercase block">Stop Loss</span>
+                    <b id="resSl" class="text-sm text-rose-400">---</b>
+                </div>
+                <div class="bg-black/40 p-4 rounded-xl border border-slate-800">
+                    <span class="text-[8px] text-slate-500 font-black uppercase block">Lots</span>
+                    <b id="resLots" class="text-sm">---</b>
+                </div>
             </div>
 
-            <div class="bg-indigo-950/20 p-4 rounded-xl border border-indigo-500/20">
-                <span class="text-[8px] text-indigo-400 font-black uppercase block mb-1">Logic:</span>
-                <p id="resLogic" class="text-[10px] text-slate-400 italic leading-relaxed"></p>
+            <div class="bg-indigo-950/20 p-5 rounded-2xl border border-indigo-500/20">
+                <span class="text-[9px] text-indigo-400 font-black uppercase block mb-1">Trade Logic :</span>
+                <p id="resLogic" class="text-[11px] text-slate-400 italic leading-relaxed"></p>
             </div>
         </div>
     </div>
 
     <script>
-        function setMode(m) {
-            document.getElementById('mBtn').classList.toggle('active', m==='manual');
-            document.getElementById('lBtn').classList.toggle('active', m==='live');
+        function setMode(mode) {
+            document.getElementById('mBtn').classList.toggle('active', mode === 'manual');
+            document.getElementById('lBtn').classList.toggle('active', mode === 'live');
         }
 
-        function analyze() {
-            const data = {
-                type: "BUY", sup: "75,800", res: "78,500", ent: "76,491", tp: "77,875", sl: "75,800", lots: "0.45",
-                logic: "Price retested M15 liquidity. 4H trend is bullish. Entry confirmed at structural floor."
+        function runDeepAnalysis() {
+            // Data generation (Using your specific BTC trade values)
+            const trade = {
+                pair: "BTC/USD",
+                type: "BUY",
+                sup: "75,800.00",
+                res: "78,500.00",
+                ent: "76,491.65",
+                tp: "77,875.00",
+                sl: "75,800.00",
+                lots: "0.45",
+                logic: "Bullish 4H bias confirmed. Retesting M15 liquidity at 75,800. 1:2 RR ratio applied."
             };
-            
-            document.getElementById('resTrade').innerText = data.type;
-            document.getElementById('resSup').innerText = data.sup;
-            document.getElementById('resRes').innerText = data.res;
-            document.getElementById('resEnt').innerText = data.ent;
-            document.getElementById('resTp').innerText = data.tp;
-            document.getElementById('resSl').innerText = data.sl;
-            document.getElementById('resLots').innerText = data.lots;
-            document.getElementById('resLogic').innerText = data.logic;
 
+            // Update Popup
+            document.getElementById('resTrade').innerText = trade.type;
+            document.getElementById('resSup').innerText = trade.sup;
+            document.getElementById('resRes').innerText = trade.res;
+            document.getElementById('resEnt').innerText = trade.ent;
+            document.getElementById('resTp').innerText = trade.tp;
+            document.getElementById('resSl').innerText = trade.sl;
+            document.getElementById('resLots').innerText = trade.lots;
+            document.getElementById('resLogic').innerText = trade.logic;
+
+            // Show Popup
             document.getElementById('resultPopup').classList.add('active');
-            updateHistory(data);
+
+            // Log to History in Real-Time
+            updateHistory(trade);
         }
 
-        function updateHistory(d) {
-            const list = document.getElementById('historyList');
-            if(document.getElementById('emptyMsg')) document.getElementById('emptyMsg').remove();
-            
+        function updateHistory(data) {
+            const feed = document.getElementById('historyFeed');
+            const noData = document.getElementById('noData');
+            if(noData) noData.remove();
+
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const item = document.createElement('div');
-            item.className = "history-item flex justify-between items-center";
+            item.className = "history-item";
             item.innerHTML = `
-                <div><b class="text-[10px] text-white uppercase">BTC/USD</b><span class="block text-[8px] text-slate-500">Just Now</span></div>
-                <div class="text-right"><b class="text-[10px] ${d.type==='BUY'?'text-emerald-400':'text-rose-400'}">${d.type}</b><span class="block text-[8px] text-slate-500">${d.lots}</span></div>
+                <div><b class="text-xs text-white">${data.pair}</b><span class="block text-[9px] text-slate-500">${time}</span></div>
+                <div class="text-right"><b class="text-xs ${data.type === 'BUY' ? 'text-emerald-400' : 'text-rose-400'}">${data.type}</b><span class="block text-[9px] text-slate-500">${data.lots} Lots</span></div>
             `;
-            list.prepend(item);
+            feed.prepend(item);
         }
 
         function closePopup() { document.getElementById('resultPopup').classList.remove('active'); }
-        function clearHistory() { document.getElementById('historyList').innerHTML = '<p id="emptyMsg" class="text-[9px] text-slate-600 text-center mt-10 uppercase font-bold">No Records</p>'; }
+        function clearLogs() { document.getElementById('historyFeed').innerHTML = '<div class="text-center py-10 border border-dashed border-slate-900 rounded-2xl" id="noData"><p class="text-[10px] text-slate-600 font-bold uppercase">No Analysis Performed</p></div>'; }
     </script>
 </body>
 </html>

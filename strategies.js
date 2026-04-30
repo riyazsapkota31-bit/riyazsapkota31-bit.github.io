@@ -1,13 +1,36 @@
+/**
+ * OMNI-REAL CORE LOGIC
+ * Zero-Refresh Lock Engine
+ */
+
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
 const MODEL = "gemini-2.5-flash-preview-09-2025";
 
+// Check if key is already stored on load
+window.onload = function() {
+    if (API_KEY) {
+        document.getElementById('apiInput').value = "********************";
+        console.log("Key successfully loaded from secure storage.");
+    }
+};
+
 function saveApiKey() {
     const input = document.getElementById('apiInput');
-    if (input.value.trim().length < 10) return alert("Enter valid Gemini Key.");
-    localStorage.setItem('omni_api_v3', input.value.trim());
-    API_KEY = input.value.trim();
-    alert("Key Saved! Refreshing...");
-    location.reload();
+    const keyValue = input.value.trim();
+    
+    if (keyValue === "" || keyValue.includes("****")) return alert("Please enter a new key.");
+    
+    // Save to browser memory
+    localStorage.setItem('omni_api_v3', keyValue);
+    
+    // Update active variable WITHOUT refreshing the page
+    API_KEY = keyValue;
+    
+    alert("Key Locked & Active! The app will not refresh to preserve your charts.");
+    
+    // Mask UI and close drawer
+    document.getElementById('apiInput').value = "********************";
+    toggleDrawer();
 }
 
 function markFile(idx) {
@@ -30,28 +53,14 @@ async function fileToPart(file) {
     });
 }
 
-async function fetchWithRetry(url, options, retries = 5, delay = 1000) {
-    try {
-        const response = await fetch(url, options);
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.error?.message || `HTTP ${response.status}`);
-        }
-        return await response.json();
-    } catch (err) {
-        if (retries <= 0) throw err;
-        await new Promise(r => setTimeout(r, delay));
-        return fetchWithRetry(url, options, retries - 1, delay * 2);
-    }
-}
-
 async function executeScan() {
-    if (!API_KEY) return alert("Please set your API Key in the sidebar.");
+    if (!API_KEY) return alert("Open settings and enter your API Key first.");
+    
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
-    if (files.some(f => !f)) return alert("Please upload all 4 charts.");
+    if (files.some(f => !f)) return alert("Upload all 4 live charts before scanning.");
 
     btn.innerText = "EXTRACTING PIXEL DATA...";
     btn.classList.add('scanning');
@@ -59,20 +68,30 @@ async function executeScan() {
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
-        const prompt = "Analyze these 4 charts. Provide market bias and levels based on technical structure (SMC/ICT). Respond ONLY with JSON: {\"strategy\":\"string\",\"bias\":\"BUY/SELL\",\"entry\":number,\"sl\":number,\"support\":number,\"resistance\":number,\"logic\":\"string\"}";
+        
+        const prompt = `Act as a High-Accuracy Trading Engine. Analyze 4 charts for a high-confluence setup using SMC, Wyckoff, or ICT. Provide precise price levels. 
+        Output ONLY this JSON format:
+        {"strategy":"SMC|WYCKOFF|ICT","bias":"BUY|SELL","entry":number,"sl":number,"support":number,"resistance":number,"logic":"15-word professional insight"}`;
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
         
-        const data = await fetchWithRetry(url, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] })
+            body: JSON.stringify({ 
+                contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] 
+            })
         });
+
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error?.message || "AI Connection Failed");
 
         const rawText = data.candidates[0].content.parts[0].text;
         const jsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         const res = JSON.parse(jsonStr);
 
+        // Professional Risk Calculations
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1.0;
         const riskAmt = bal * (risk / 100);
@@ -80,6 +99,7 @@ async function executeScan() {
         const lotSize = slDist > 0 ? (riskAmt / (slDist * 10)).toFixed(2) : "0.01";
         const tp = res.bias === 'BUY' ? (res.entry + (slDist * 3)) : (res.entry - (slDist * 3));
 
+        // Update UI
         document.getElementById('strategyType').innerText = `${res.strategy} ENGINE`;
         document.getElementById('actionText').innerText = res.bias;
         document.getElementById('actionText').className = `text-4xl font-black italic uppercase ${res.bias === 'BUY' ? 'text-emerald-500' : 'text-rose-500'}`;
@@ -92,11 +112,13 @@ async function executeScan() {
         document.getElementById('logicText').innerText = res.logic;
 
         resultBox.classList.remove('hidden');
+        resultBox.scrollIntoView({ behavior: 'smooth' });
 
     } catch (e) {
-        alert("CRITICAL ERROR: " + e.message);
+        alert("ENGINE ERROR: " + e.message);
+        console.error(e);
     } finally {
-        btn.innerText = "Initiate Real-Time Analysis";
+        btn.innerText = "PERFORM MULTI-CHART SCAN";
         btn.classList.remove('scanning');
         btn.disabled = false;
     }

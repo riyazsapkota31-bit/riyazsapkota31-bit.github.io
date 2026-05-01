@@ -60,6 +60,7 @@ async function executeScan() {
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
+    
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
     btn.innerText = "CALIBRATING BREAKOUT LEVELS...";
@@ -67,9 +68,11 @@ async function executeScan() {
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
-        const prompt = `System: Institutional SMC Analyst. Analyze 4 charts for structural alignment. 
-        1. If market is sideways/consolidating, return bias "WAIT". Identify the Consolidation Range and specify the Price Level that must break to confirm a move.
-        2. If aligned, target logical liquidity pools. Min RR 1.5x.
+        
+        // REFINED PROMPT: Forces identification of breakout levels during consolidation
+        const prompt = `System: Institutional SMC Analyst. Analyze 4 charts (1H, 15M, 1M, DXY) for structural alignment. 
+        1. If market is sideways/consolidating, return bias "WAIT". You MUST identify the Consolidation High/Low and specify the exact Price Level (breakoutPoint) that must be broken to confirm a BUY or SELL move.
+        2. If aligned, target logical liquidity pools with a minimum 1.5x RR.
         Return ONLY JSON: {"strategy":"INFINITY-V11","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string","breakoutPoint":number}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -81,21 +84,33 @@ async function executeScan() {
         const data = await response.json();
         const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
+        // --- BREAKOUT FEATURE FOR CONSOLIDATION ---
         if (res.bias === "WAIT") {
             document.getElementById('actionText').innerText = "NO TRADE";
             document.getElementById('actionText').className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
+            
+            // Injects specific breakout target into Entry field
             document.getElementById('entText').innerText = res.breakoutPoint ? `WATCH ${res.breakoutPoint.toFixed(2)}` : "---";
+            
+            // Clear specific trade data while in wait state
             ['slText','tpText','lotText'].forEach(id => document.getElementById(id).innerText = "---");
-            document.getElementById('logicText').innerText = `CONSOLIDATION: ${res.logic}`;
+            
+            document.getElementById('logicText').innerText = `WATCH BREAKOUT: ${res.logic}`;
         } else {
+            // --- STANDARD TRADE CALCULATION ---
             const slDist = Math.abs(res.entry - res.sl);
-            const riskVal = (parseFloat(document.getElementById('bal').value) || 10000) * (parseFloat(document.getElementById('risk').value) / 100);
+            const bal = parseFloat(document.getElementById('bal').value) || 10000;
+            const riskVal = bal * (parseFloat(document.getElementById('risk').value) / 100);
+            
             let tpVal = res.tp;
+            // Ensures minimum 1.5x RR is maintained for scalping
             if (Math.abs(res.entry - tpVal) / slDist < 1.5) {
                 tpVal = res.bias === 'BUY' ? res.entry + (slDist * 1.5) : res.entry - (slDist * 1.5);
             }
+
             const lotSize = slDist > 0 ? (riskVal / (slDist * 10)).toFixed(2) : "0.10";
 
+            // Update UI for Active Trade
             document.getElementById('actionText').innerText = res.bias;
             document.getElementById('actionText').className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
             document.getElementById('entText').innerText = res.entry.toFixed(5);
@@ -105,8 +120,10 @@ async function executeScan() {
             document.getElementById('logicText').innerText = res.logic;
         }
 
+        // Keep structural levels visible regardless of bias
         document.getElementById('supText').innerText = res.support ? res.support.toFixed(2) : "---";
         document.getElementById('resText').innerText = res.resistance ? res.resistance.toFixed(2) : "---";
+        
         resultBox.classList.remove('hidden');
         resultBox.scrollIntoView({ behavior: 'smooth' });
 

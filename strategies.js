@@ -32,12 +32,14 @@ function lockUI() {
     document.getElementById('lockBtn').classList.add('hidden');
     document.getElementById('editBtn').classList.remove('hidden');
 }
+
 function enableEdit() {
     const input = document.getElementById('apiInput');
     input.value = ""; input.disabled = false;
     document.getElementById('lockBtn').classList.remove('hidden');
     document.getElementById('editBtn').classList.add('hidden');
 }
+
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
     if (!val || val.includes("•")) return alert("Invalid Key.");
@@ -45,7 +47,7 @@ function saveApiKey() {
     API_KEY = val; lockUI(); toggleDrawer();
 }
 
-// --- OPTIMIZED IMAGE COMPRESSION (Prevents Timeout) ---
+// --- LIGHTWEIGHT IMAGE PROCESSING ---
 async function processImage(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -55,21 +57,21 @@ async function processImage(file) {
             img.src = e.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                // Target 800px to ensure rapid API processing without losing candle detail
-                const scale = 800 / Math.max(img.width, img.height);
+                // 600px is the "Stability Sweet Spot" for 4-image mobile uploads
+                const scale = 600 / Math.max(img.width, img.height);
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                // Lower quality to 0.6 for maximum speed/stability
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                // Lowering to 0.5 quality for maximum speed while keeping candle shapes clear
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                 resolve({ inlineData: { mimeType: "image/jpeg", data: dataUrl.split(',')[1] } });
             };
         };
     });
 }
 
-// --- CORE AGGREGATOR ENGINE ---
+// --- SCAN ENGINE ---
 async function executeScan() {
     if (!API_KEY) return alert("Terminal Offline: Enter Key.");
     const btn = document.getElementById('scanBtn');
@@ -78,16 +80,16 @@ async function executeScan() {
     
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
-    btn.innerText = "RUNNING OMNI-STRATEGY SCAN...";
+    btn.innerText = "OMNI-STRATEGY AGGREGATION...";
     btn.disabled = true;
 
     try {
         const imageParts = await Promise.all(files.map(processImage));
         
-        const prompt = `Analyze these 4 market charts. 
-        Utilize: SMC/ICT, Trend Following, Price Action, Volatility (RSI/Bollinger), and Quant/DXY.
-        Identify the current regime and use the most effective strategy classification.
-        If consolidated, return "WAIT" with a breakoutPoint.
+        const prompt = `Act as an Institutional Quant Analyst. Analyze these 4 charts.
+        CLASSIFICATIONS: SMC/ICT, Trend/Pullbacks, Price Action, Mean Reversion, DXY Correlation.
+        1. Select the best strategy for current regime.
+        2. Return WAIT if consolidated.
         Return ONLY JSON: {"strategy":"string","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string","breakoutPoint":number}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -101,7 +103,7 @@ async function executeScan() {
 
         const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
-        // Update UI
+        // --- DASHBOARD RENDERING ---
         if (res.bias === "WAIT") {
             document.getElementById('actionText').innerText = "NO TRADE";
             document.getElementById('actionText').className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
@@ -126,11 +128,13 @@ async function executeScan() {
         document.getElementById('logicText').innerText = res.logic;
         document.getElementById('supText').innerText = res.support ? res.support.toFixed(2) : "---";
         document.getElementById('resText').innerText = res.resistance ? res.resistance.toFixed(2) : "---";
+        
         resultBox.classList.remove('hidden');
         resultBox.scrollIntoView({ behavior: 'smooth' });
 
     } catch (e) {
-        alert("TERMINAL ERROR: Connection timed out. Ensure API key is valid and internet is active.");
+        alert("TERMINAL RESET: Analysis took too long. Refreshing connection...");
+        location.reload(); // Hard reset if the connection hangs
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;

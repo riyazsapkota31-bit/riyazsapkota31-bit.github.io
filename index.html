@@ -8,32 +8,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
-        
         :root { --accent: #6366f1; --bg: #030508; }
         body { background: var(--bg); color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
-        
         .terminal-border { border: 1px solid rgba(255,255,255,0.08); background: rgba(10, 15, 25, 0.7); backdrop-filter: blur(20px); }
         .drawer { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #0a0f1b; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1000; border-left: 1px solid rgba(255,255,255,0.1); }
         .drawer.open { right: 0; box-shadow: -20px 0 50px rgba(0,0,0,0.5); }
-        
-        .chart-box { 
-            aspect-ratio: 1/1; border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 2rem; 
-            transition: all 0.4s ease; background: rgba(255,255,255,0.02); 
-        }
-        .chart-box:hover { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
+        .chart-box { aspect-ratio: 1/1; border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 2rem; transition: all 0.4s ease; background: rgba(255,255,255,0.02); cursor: pointer; }
         .chart-box.has-file { border: 2px solid var(--accent); background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%); border-style: solid; box-shadow: 0 0 20px rgba(99,102,241,0.2); }
-        
-        .scan-btn {
-            background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
-            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
-            transition: all 0.3s ease;
-        }
-        .scan-btn:active { transform: translateY(2px) scale(0.98); box-shadow: none; }
-        
+        .scan-btn { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4); transition: all 0.3s ease; }
+        .scan-btn:active { transform: translateY(2px) scale(0.98); }
         input[type="file"] { display: none; }
         .sub-drawer { position: fixed; top: 0; right: -100%; width: 100%; height: 100%; background: #0a0f1b; transition: 0.4s ease; z-index: 1100; }
         .sub-drawer.active { right: 0; }
-        
         .glow-text { text-shadow: 0 0 15px currentColor; }
     </style>
 </head>
@@ -47,42 +33,30 @@
                 <p class="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em]">Infinity Scalper V8</p>
             </div>
         </div>
-        <button onclick="toggleDrawer()" class="w-12 h-12 terminal-border rounded-2xl flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+        <button onclick="toggleDrawer()" class="w-12 h-12 terminal-border rounded-2xl flex items-center justify-center text-slate-400">
             <i class="fa-solid fa-sliders text-lg"></i>
         </button>
     </header>
 
     <div class="grid grid-cols-2 gap-4 mb-8">
-        <div id="box0" class="chart-box flex flex-col items-center justify-center group" onclick="document.getElementById('img0').click()">
+        <div id="box0" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img0').click()">
             <input type="file" id="img0" accept="image/*" onchange="markFile(0)">
-            <div id="label0" class="text-center space-y-2">
-                <i class="fa-solid fa-cloud-arrow-up text-slate-600 group-hover:text-indigo-400 transition-colors text-xl"></i>
-                <span class="text-[9px] font-bold uppercase text-slate-500 block">HTF Bias (1H)</span>
-            </div>
+            <div id="label0" class="text-center"><span class="text-[9px] font-bold uppercase text-slate-500 block">HTF Bias (1H)</span></div>
             <div id="icon0" class="hidden text-emerald-400 text-4xl glow-text"><i class="fa-solid fa-circle-check"></i></div>
         </div>
-        <div id="box1" class="chart-box flex flex-col items-center justify-center group" onclick="document.getElementById('img1').click()">
+        <div id="box1" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img1').click()">
             <input type="file" id="img1" accept="image/*" onchange="markFile(1)">
-            <div id="label1" class="text-center space-y-2">
-                <i class="fa-solid fa-cloud-arrow-up text-slate-600 group-hover:text-indigo-400 transition-colors text-xl"></i>
-                <span class="text-[9px] font-bold uppercase text-slate-500 block">LTF Struct (15M)</span>
-            </div>
+            <div id="label1" class="text-center"><span class="text-[9px] font-bold uppercase text-slate-500 block">LTF Struct (15M)</span></div>
             <div id="icon1" class="hidden text-emerald-400 text-4xl glow-text"><i class="fa-solid fa-circle-check"></i></div>
         </div>
-        <div id="box2" class="chart-box flex flex-col items-center justify-center group" onclick="document.getElementById('img2').click()">
+        <div id="box2" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img2').click()">
             <input type="file" id="img2" accept="image/*" onchange="markFile(2)">
-            <div id="label2" class="text-center space-y-2">
-                <i class="fa-solid fa-cloud-arrow-up text-slate-600 group-hover:text-indigo-400 transition-colors text-xl"></i>
-                <span class="text-[9px] font-bold uppercase text-slate-500 block">Entry (1M)</span>
-            </div>
+            <div id="label2" class="text-center"><span class="text-[9px] font-bold uppercase text-slate-500 block">Entry (1M)</span></div>
             <div id="icon2" class="hidden text-emerald-400 text-4xl glow-text"><i class="fa-solid fa-circle-check"></i></div>
         </div>
-        <div id="box3" class="chart-box flex flex-col items-center justify-center group" onclick="document.getElementById('img3').click()">
+        <div id="box3" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img3').click()">
             <input type="file" id="img3" accept="image/*" onchange="markFile(3)">
-            <div id="label3" class="text-center space-y-2">
-                <i class="fa-solid fa-cloud-arrow-up text-slate-600 group-hover:text-indigo-400 transition-colors text-xl"></i>
-                <span class="text-[9px] font-bold uppercase text-slate-500 block">DXY Data</span>
-            </div>
+            <div id="label3" class="text-center"><span class="text-[9px] font-bold uppercase text-slate-500 block">DXY Data</span></div>
             <div id="icon3" class="hidden text-emerald-400 text-4xl glow-text"><i class="fa-solid fa-circle-check"></i></div>
         </div>
     </div>
@@ -92,71 +66,55 @@
     </button>
 
     <div id="resultBox" class="hidden mt-8 terminal-border rounded-[2.5rem] p-8 relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-30"></div>
-        
         <div class="flex justify-between items-start mb-8">
-            <span id="strategyType" class="bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full text-[10px] font-black text-indigo-300 uppercase tracking-tighter">INFINITY V11</span>
-            <p id="logicText" class="text-[10px] text-right text-slate-400 italic max-w-[160px] leading-relaxed">System ready...</p>
+            <span id="strategyType" class="bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full text-[10px] font-black text-indigo-300 uppercase">INFINITY V11</span>
+            <p id="logicText" class="text-[10px] text-right text-slate-400 italic max-w-[160px]">Ready</p>
         </div>
-
         <h2 id="actionText" class="text-5xl font-extrabold italic mb-10 uppercase tracking-tighter glow-text">---</h2>
-
+        
         <div class="grid grid-cols-3 gap-4 mb-8 border-y border-white/5 py-8">
             <div class="space-y-1">
-                <label class="text-[9px] uppercase text-slate-500 font-extrabold tracking-widest">Entry</label>
-                <span id="entText" class="text-base font-extrabold text-white">0.00000</span>
+                <label class="text-[9px] uppercase text-slate-500 font-extrabold">Entry</label>
+                <span id="entText" class="text-xs font-extrabold text-white block">---</span>
             </div>
             <div class="space-y-1">
-                <label class="text-[9px] uppercase text-rose-500 font-extrabold tracking-widest">SL</label>
-                <span id="slText" class="text-base font-extrabold text-rose-500">0.00000</span>
+                <label class="text-[9px] uppercase text-rose-500 font-extrabold">SL</label>
+                <span id="slText" class="text-xs font-extrabold text-rose-500 block">---</span>
             </div>
             <div class="space-y-1">
-                <label class="text-[9px] uppercase text-emerald-500 font-extrabold tracking-widest">TP</label>
-                <span id="tpText" class="text-base font-extrabold text-emerald-500">0.00000</span>
+                <label class="text-[9px] uppercase text-emerald-500 font-extrabold">TP</label>
+                <span id="tpText" class="text-xs font-extrabold text-emerald-500 block">---</span>
             </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white/5 p-5 rounded-3xl flex flex-col justify-center">
-                <label class="text-[8px] uppercase text-amber-500 font-black mb-1">Recommended Lots</label>
-                <span id="lotText" class="text-3xl font-extrabold text-white">0.00</span>
+            <div class="bg-white/5 p-5 rounded-3xl">
+                <label class="text-[8px] uppercase text-amber-500 font-black">Recommended Lots</label>
+                <span id="lotText" class="text-3xl font-extrabold text-white block">---</span>
             </div>
-            <div class="space-y-3 px-2">
-                <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                    <span class="text-[9px] text-slate-500 uppercase font-bold">Support</span>
-                    <span id="supText" class="text-[11px] font-black text-slate-300 tracking-tight">---</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-[9px] text-slate-500 uppercase font-bold">Resistance</span>
-                    <span id="resText" class="text-[11px] font-black text-slate-300 tracking-tight">---</span>
-                </div>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold">Support</span><span id="supText" class="text-[10px] font-black text-slate-300 tracking-tight">---</span></div>
+                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold">Resistance</span><span id="resText" class="text-[10px] font-black text-slate-300 tracking-tight">---</span></div>
             </div>
         </div>
     </div>
 
     <div id="overlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[900]" onclick="toggleDrawer()"></div>
-    
     <div id="sideDrawer" class="drawer p-8">
         <div class="flex justify-between items-center mb-10">
             <h3 class="text-xs font-black uppercase text-indigo-400 tracking-widest">Master Control</h3>
             <i class="fa-solid fa-xmark text-slate-500 text-xl" onclick="toggleDrawer()"></i>
         </div>
-        
         <div class="space-y-6">
             <div class="bg-white/5 p-6 rounded-[2rem] border border-white/5">
                 <label class="text-[10px] uppercase text-slate-500 mb-4 block font-black tracking-widest">Security Link</label>
                 <div class="space-y-4">
-                    <input type="password" id="apiInput" placeholder="Enter Gemini Key..." 
-                        class="w-full bg-black/50 border border-white/10 rounded-2xl p-4 text-sm focus:border-indigo-500 outline-none transition-all">
+                    <input type="password" id="apiInput" placeholder="Enter Gemini Key..." class="w-full bg-black/50 border border-white/10 rounded-2xl p-4 text-sm outline-none">
                     <button id="lockBtn" onclick="saveApiKey()" class="scan-btn w-full py-4 rounded-2xl font-bold text-[11px] uppercase">Lock Terminal</button>
                     <button id="editBtn" onclick="enableEdit()" class="hidden w-full bg-slate-800 py-4 rounded-2xl font-bold text-[11px] uppercase text-slate-400">Unlock System</button>
                 </div>
             </div>
-
-            <button onclick="openSub('riskMenu')" class="w-full bg-white/5 p-6 rounded-[2rem] border border-white/5 flex justify-between items-center hover:bg-white/10 transition-all">
-                <span class="text-xs font-black text-slate-300 uppercase tracking-widest">Risk Mgmt</span>
-                <i class="fa-solid fa-chevron-right text-indigo-500"></i>
-            </button>
+            <button onclick="openSub('riskMenu')" class="w-full bg-white/5 p-6 rounded-[2rem] border border-white/5 flex justify-between items-center"><span class="text-xs font-black text-slate-300 uppercase tracking-widest">Risk Mgmt</span><i class="fa-solid fa-chevron-right text-indigo-500"></i></button>
         </div>
     </div>
 
@@ -166,14 +124,8 @@
             <h3 class="text-xs font-black uppercase text-white tracking-widest">Risk Parameters</h3>
         </div>
         <div class="space-y-8">
-            <div class="space-y-3">
-                <label class="text-[10px] uppercase text-slate-500 font-black tracking-widest">Account Balance (USD)</label>
-                <input type="number" id="bal" value="10000" class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-lg font-extrabold text-indigo-400">
-            </div>
-            <div class="space-y-3">
-                <label class="text-[10px] uppercase text-slate-500 font-black tracking-widest">Risk per Trade (%)</label>
-                <input type="number" id="risk" value="1.0" step="0.1" class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-lg font-extrabold text-indigo-400">
-            </div>
+            <div><label class="text-[10px] uppercase text-slate-500 font-black block mb-2">Account Balance (USD)</label><input type="number" id="bal" value="10000" class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-lg font-extrabold text-indigo-400"></div>
+            <div><label class="text-[10px] uppercase text-slate-500 font-black block mb-2">Risk per Trade (%)</label><input type="number" id="risk" value="1.0" step="0.1" class="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-lg font-extrabold text-indigo-400"></div>
         </div>
     </div>
 

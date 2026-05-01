@@ -1,17 +1,14 @@
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// FIX: Using the correct, most stable production string
-const MODEL = "gemini-1.5-flash"; 
+// UPDATED: Using the active model name to prevent 404 errors
+const MODEL = "gemini-2.5-flash"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- DRAWER & UI CONTROLS ---
 function toggleDrawer() {
     const d = document.getElementById('sideDrawer');
     const o = document.getElementById('overlay');
     if (d && o) { d.classList.toggle('open'); o.classList.toggle('hidden'); }
 }
-function openSub(id) { document.getElementById(id).classList.add('active'); }
-function closeSub(id) { document.getElementById(id).classList.remove('active'); }
 
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
@@ -24,7 +21,6 @@ function markFile(idx) {
     }
 }
 
-// --- SECURITY & API HANDLING ---
 function lockUI() {
     const input = document.getElementById('apiInput');
     input.value = "••••••••••••••••••••";
@@ -42,12 +38,12 @@ function enableEdit() {
 
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
-    if (!val || val.includes("•")) return alert("Invalid Key.");
+    if (!val) return alert("Enter key.");
     localStorage.setItem('omni_api_v3', val);
     API_KEY = val; lockUI(); toggleDrawer();
 }
 
-// --- NEW: IMAGE COMPRESSION ENGINE ---
+// --- IMAGE OPTIMIZER: Fixes the Timeout problem ---
 async function processImage(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -62,10 +58,7 @@ async function processImage(file) {
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
                 const ctx = canvas.getContext('2d');
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                // 0.5 quality is the "Sweet Spot" for chart clarity vs file size
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                 resolve({ inlineData: { mimeType: "image/jpeg", data: dataUrl.split(',')[1] } });
             };
@@ -73,28 +66,23 @@ async function processImage(file) {
     });
 }
 
-// --- EXECUTION ENGINE ---
 async function executeScan() {
-    if (!API_KEY) return alert("System Offline: Sync API Key.");
+    if (!API_KEY) return alert("Enter API Key in Settings.");
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
     
-    if (files.some(f => !f)) return alert("Data Gap: 4 Tiers Required.");
+    if (files.some(f => !f)) return alert("Upload all 4 charts.");
 
-    btn.innerText = "AGGREGATING ALL STRATEGIES...";
+    btn.innerText = "ANALYZING MARKET DATA...";
     btn.disabled = true;
 
     try {
-        // Optimize all 4 images simultaneously
         const imageParts = await Promise.all(files.map(processImage));
         
-        const prompt = `Senior Quant Analysis Required:
-        1. Review 4 chart timeframes provided.
-        2. Apply: SMC/ICT, Price Action, Trend Alignment, and DXY Correlation.
-        3. If market is consolidated, bias must be "WAIT".
-        4. If trending, provide precision BUY or SELL entry.
-        Return ONLY valid JSON: {"strategy":"string","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string","breakoutPoint":number}`;
+        const prompt = `Act as an expert Quant Analyst. Analyze these 4 charts (HTF, LTF, Entry, DXY). 
+        Determine bias (BUY, SELL, or WAIT) using SMC and Price Action.
+        Return ONLY valid JSON: {"strategy":"string","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -105,44 +93,24 @@ async function executeScan() {
         const data = await response.json();
         if (data.error) throw new Error(data.error.message);
 
-        // CLEAN AND PARSE
         let rawText = data.candidates[0].content.parts[0].text;
         const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         const res = JSON.parse(cleanJson);
 
-        // UI RENDERING
-        if (res.bias === "WAIT") {
-            document.getElementById('actionText').innerText = "NO TRADE";
-            document.getElementById('actionText').className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
-            document.getElementById('entText').innerText = res.breakoutPoint ? `WATCH ${res.breakoutPoint.toFixed(2)}` : "---";
-            ['slText','tpText','lotText'].forEach(id => document.getElementById(id).innerText = "---");
-            document.getElementById('strategyType').innerText = "FILTER: CONSOLIDATION";
-        } else {
-            // Risk Math
-            const slDist = Math.abs(res.entry - res.sl);
-            const bal = parseFloat(document.getElementById('bal').value) || 10000;
-            const riskVal = bal * (parseFloat(document.getElementById('risk').value) / 100);
-            const lotSize = slDist > 0 ? (riskVal / (slDist * 10)).toFixed(2) : "0.10";
-
-            document.getElementById('strategyType').innerText = res.strategy;
-            document.getElementById('actionText').innerText = res.bias;
-            document.getElementById('actionText').className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
-            document.getElementById('entText').innerText = res.entry.toFixed(5);
-            document.getElementById('slText').innerText = res.sl.toFixed(5);
-            document.getElementById('tpText').innerText = res.tp.toFixed(5);
-            document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
-        }
-
+        // Update UI
+        document.getElementById('actionText').innerText = res.bias;
+        document.getElementById('actionText').className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : (res.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500')}`;
+        document.getElementById('entText').innerText = res.entry || "---";
+        document.getElementById('slText').innerText = res.sl || "---";
+        document.getElementById('tpText').innerText = res.tp || "---";
         document.getElementById('logicText').innerText = res.logic;
-        document.getElementById('supText').innerText = res.support ? res.support.toFixed(2) : "---";
-        document.getElementById('resText').innerText = res.resistance ? res.resistance.toFixed(2) : "---";
-        
+
         resultBox.classList.remove('hidden');
         resultBox.scrollIntoView({ behavior: 'smooth' });
 
     } catch (e) {
+        alert("TERMINAL ERROR: " + e.message);
         console.error(e);
-        alert(`TERMINAL ERROR: ${e.message || "Connection timed out."}`);
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;

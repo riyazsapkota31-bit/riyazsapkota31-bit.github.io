@@ -1,33 +1,86 @@
-// --- OMNI-REAL HYBRID STRATEGY ENGINE ---
+let API_KEY = localStorage.getItem('omni_api_v3') || "";
+const MODEL = "gemini-2.0-flash-exp"; // Highest reasoning for multi-strategy
+
+window.onload = () => { if (API_KEY) lockUI(); };
+
+// --- DRAWER & UI CONTROLS ---
+function toggleDrawer() {
+    const drawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
+    if (drawer && overlay) {
+        drawer.classList.toggle('open');
+        overlay.classList.toggle('hidden');
+    }
+}
+
+function openSub(id) { document.getElementById(id).classList.add('active'); }
+function closeSub(id) { document.getElementById(id).classList.remove('active'); }
+
+function markFile(idx) {
+    const box = document.getElementById(`box${idx}`);
+    const label = document.getElementById(`label${idx}`);
+    const icon = document.getElementById(`icon${idx}`);
+    if (document.getElementById(`img${idx}`).files.length > 0) {
+        box.classList.add('has-file');
+        label.classList.add('hidden');
+        icon.classList.remove('hidden');
+    }
+}
+
+function lockUI() {
+    const input = document.getElementById('apiInput');
+    input.value = "••••••••••••••••••••";
+    input.disabled = true;
+    document.getElementById('lockBtn').classList.add('hidden');
+    document.getElementById('editBtn').classList.remove('hidden');
+}
+
+function enableEdit() {
+    const input = document.getElementById('apiInput');
+    input.value = "";
+    input.disabled = false;
+    document.getElementById('lockBtn').classList.remove('hidden');
+    document.getElementById('editBtn').classList.add('hidden');
+}
+
+function saveApiKey() {
+    const val = document.getElementById('apiInput').value.trim();
+    if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
+    localStorage.setItem('omni_api_v3', val);
+    API_KEY = val;
+    lockUI();
+    toggleDrawer();
+}
+
+async function fileToPart(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve({ inlineData: { mimeType: "image/jpeg", data: reader.result.split(',')[1] } });
+    });
+}
+
+// --- HYBRID ANALYSIS ENGINE ---
 async function executeScan() {
     if (!API_KEY) return alert("System Offline: Sync Terminal Key.");
-    
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
     
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
-    btn.innerText = "RUNNING MULTI-STRATEGY AGGREGATOR...";
+    btn.innerText = "AGGREGATING ALL STRATEGIES...";
     btn.disabled = true;
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
         
-        // DYNAMIC MULTI-STRATEGY PROMPT
-        const prompt = `System: Master Quant Analyst. 
-        Analyze the 4 provided charts using ALL relevant concepts: 
-        - SMC (Order Blocks, FVG, Liquidity Sweeps)
-        - Classic Price Action (Trendlines, Support/Resistance, Chart Patterns)
-        - Volume Profile (High Volume Nodes, Point of Control)
-        - Harmonics (Gartley, Bat, Butterfly patterns if visible)
-        - Elliot Wave (Cycle stages)
-
-        TASK: 
-        1. Identify the MOST suitable strategy for the current market condition. 
-        2. If market is sideways, return "WAIT" with a specific Breakout Point.
-        3. If a trend or reversal is confirmed, provide the trade setup.
-        Return ONLY JSON: {"strategy":"NAME_OF_CHOSEN_STRATEGY","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"Detailed explanation of why this strategy was chosen over others","breakoutPoint":number}`;
+        const prompt = `System: Master Quant Analyst. Analyze 4 charts for structural alignment. 
+        STRATEGIES TO CONSIDER: SMC/ICT, Trend Following, Classic Price Action, Mean Reversion/Volatility, and DXY Correlation.
+        1. Select the most effective strategy for the current market regime.
+        2. If sideways/consolidating, return "WAIT" with a breakoutPoint.
+        3. If trending/reversing, provide BUY/SELL with 1.5x+ RR.
+        Return ONLY JSON: {"strategy":"STRATEGY_NAME","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"Explanation of strategy choice","breakoutPoint":number}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -38,7 +91,6 @@ async function executeScan() {
         const data = await response.json();
         const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
-        // --- DYNAMIC UI UPDATE ---
         if (res.bias === "WAIT") {
             document.getElementById('actionText').innerText = "NO TRADE";
             document.getElementById('actionText').className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
@@ -73,7 +125,7 @@ async function executeScan() {
         resultBox.scrollIntoView({ behavior: 'smooth' });
 
     } catch (e) {
-        alert("TERMINAL ERROR: Ensure your charts are clear and API key is active.");
+        alert("TERMINAL ERROR: Connection timed out.");
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;

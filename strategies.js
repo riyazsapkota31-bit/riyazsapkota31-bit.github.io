@@ -1,9 +1,10 @@
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-const MODEL = "gemini-2.0-flash-exp"; 
+// FIX: Using the correct, most stable production string
+const MODEL = "gemini-1.5-flash"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI CONTROLS ---
+// --- DRAWER & UI CONTROLS ---
 function toggleDrawer() {
     const d = document.getElementById('sideDrawer');
     const o = document.getElementById('overlay');
@@ -23,7 +24,7 @@ function markFile(idx) {
     }
 }
 
-// --- SECURITY & KEYS ---
+// --- SECURITY & API HANDLING ---
 function lockUI() {
     const input = document.getElementById('apiInput');
     input.value = "••••••••••••••••••••";
@@ -31,12 +32,14 @@ function lockUI() {
     document.getElementById('lockBtn').classList.add('hidden');
     document.getElementById('editBtn').classList.remove('hidden');
 }
+
 function enableEdit() {
     const input = document.getElementById('apiInput');
     input.value = ""; input.disabled = false;
     document.getElementById('lockBtn').classList.remove('hidden');
     document.getElementById('editBtn').classList.add('hidden');
 }
+
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
     if (!val || val.includes("•")) return alert("Invalid Key.");
@@ -44,7 +47,7 @@ function saveApiKey() {
     API_KEY = val; lockUI(); toggleDrawer();
 }
 
-// --- LIGHTSPEED IMAGE OPTIMIZER ---
+// --- NEW: IMAGE COMPRESSION ENGINE ---
 async function processImage(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -54,7 +57,7 @@ async function processImage(file) {
             img.src = e.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                // Reduced to 700px for guaranteed mobile stability
+                // Downscale to 700px to ensure the connection doesn't time out
                 const scale = 700 / Math.max(img.width, img.height);
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
@@ -62,7 +65,7 @@ async function processImage(file) {
                 ctx.imageSmoothingEnabled = true;
                 ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                // 0.5 quality cut significantly reduces timeout risk
+                // 0.5 quality is the "Sweet Spot" for chart clarity vs file size
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                 resolve({ inlineData: { mimeType: "image/jpeg", data: dataUrl.split(',')[1] } });
             };
@@ -70,26 +73,28 @@ async function processImage(file) {
     });
 }
 
-// --- AGGREGATED SCAN ENGINE ---
+// --- EXECUTION ENGINE ---
 async function executeScan() {
     if (!API_KEY) return alert("System Offline: Sync API Key.");
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
     
-    if (files.some(f => !f)) return alert("Incomplete Data: Upload 4 Market Views.");
+    if (files.some(f => !f)) return alert("Data Gap: 4 Tiers Required.");
 
-    btn.innerText = "RUNNING OMNI-AGGREGATOR...";
+    btn.innerText = "AGGREGATING ALL STRATEGIES...";
     btn.disabled = true;
 
     try {
+        // Optimize all 4 images simultaneously
         const imageParts = await Promise.all(files.map(processImage));
         
-        const prompt = `System: Senior Quant Analyst. Perform structural alignment on 4 charts.
-        MODELS: SMC/ICT, Price Action, Trend Following, Volatility, DXY Correlation.
-        - Identify regime. If consolidated, return WAIT and breakoutPoint.
-        - If trending, return BUY/SELL and specific Entry/SL/TP (1.5x+ RR).
-        Return ONLY JSON: {"strategy":"string","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string","breakoutPoint":number}`;
+        const prompt = `Senior Quant Analysis Required:
+        1. Review 4 chart timeframes provided.
+        2. Apply: SMC/ICT, Price Action, Trend Alignment, and DXY Correlation.
+        3. If market is consolidated, bias must be "WAIT".
+        4. If trending, provide precision BUY or SELL entry.
+        Return ONLY valid JSON: {"strategy":"string","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string","breakoutPoint":number}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -100,9 +105,12 @@ async function executeScan() {
         const data = await response.json();
         if (data.error) throw new Error(data.error.message);
 
-        const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
+        // CLEAN AND PARSE
+        let rawText = data.candidates[0].content.parts[0].text;
+        const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const res = JSON.parse(cleanJson);
 
-        // --- DASHBOARD RENDER ---
+        // UI RENDERING
         if (res.bias === "WAIT") {
             document.getElementById('actionText').innerText = "NO TRADE";
             document.getElementById('actionText').className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
@@ -110,7 +118,7 @@ async function executeScan() {
             ['slText','tpText','lotText'].forEach(id => document.getElementById(id).innerText = "---");
             document.getElementById('strategyType').innerText = "FILTER: CONSOLIDATION";
         } else {
-            // RISK MGMT CALC
+            // Risk Math
             const slDist = Math.abs(res.entry - res.sl);
             const bal = parseFloat(document.getElementById('bal').value) || 10000;
             const riskVal = bal * (parseFloat(document.getElementById('risk').value) / 100);
@@ -133,8 +141,8 @@ async function executeScan() {
         resultBox.scrollIntoView({ behavior: 'smooth' });
 
     } catch (e) {
-        alert("TERMINAL ERROR: Connection timed out. Resetting session.");
-        location.reload(); // Automated recovery
+        console.error(e);
+        alert(`TERMINAL ERROR: ${e.message || "Connection timed out."}`);
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;

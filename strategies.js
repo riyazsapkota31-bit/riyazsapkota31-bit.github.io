@@ -3,22 +3,20 @@ const MODEL = "gemini-2.0-flash-exp";
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
+// --- DRAWER CONTROLS ---
 function toggleDrawer() {
-    const drawer = document.getElementById('sideDrawer');
-    const overlay = document.getElementById('overlay');
-    if (drawer && overlay) {
-        drawer.classList.toggle('open');
-        overlay.classList.toggle('hidden');
-    }
+    const d = document.getElementById('sideDrawer');
+    const o = document.getElementById('overlay');
+    if (d && o) { d.classList.toggle('open'); o.classList.toggle('hidden'); }
 }
-
 function openSub(id) { document.getElementById(id).classList.add('active'); }
 function closeSub(id) { document.getElementById(id).classList.remove('active'); }
 
+// --- UI FEEDBACK ---
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
-    const label = document.getElementById(`label${idx}`);
     const icon = document.getElementById(`icon${idx}`);
+    const label = document.getElementById(`label${idx}`);
     if (document.getElementById(`img${idx}`).files.length > 0) {
         box.classList.add('has-file');
         label.classList.add('hidden');
@@ -26,6 +24,7 @@ function markFile(idx) {
     }
 }
 
+// --- SECURITY ---
 function lockUI() {
     const input = document.getElementById('apiInput');
     input.value = "••••••••••••••••••••";
@@ -33,65 +32,62 @@ function lockUI() {
     document.getElementById('lockBtn').classList.add('hidden');
     document.getElementById('editBtn').classList.remove('hidden');
 }
-
 function enableEdit() {
     const input = document.getElementById('apiInput');
-    input.value = "";
-    input.disabled = false;
+    input.value = ""; input.disabled = false;
     document.getElementById('lockBtn').classList.remove('hidden');
     document.getElementById('editBtn').classList.add('hidden');
 }
-
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
-    if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
+    if (!val || val.includes("•")) return alert("Invalid Key.");
     localStorage.setItem('omni_api_v3', val);
-    API_KEY = val;
-    lockUI();
-    toggleDrawer();
+    API_KEY = val; lockUI(); toggleDrawer();
 }
 
-// --- NEW: IMAGE OPTIMIZATION (Fixes Timeout) ---
+// --- OPTIMIZED IMAGE COMPRESSION (Prevents Timeout) ---
 async function processImage(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = (event) => {
+        reader.onload = (e) => {
             const img = new Image();
-            img.src = event.target.result;
+            img.src = e.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                // Resizing to 1024px preserves technical chart details while cutting data size by 70%
-                const scale = 1024 / Math.max(img.width, img.height);
+                // Target 800px to ensure rapid API processing without losing candle detail
+                const scale = 800 / Math.max(img.width, img.height);
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                // Lower quality to 0.6 for maximum speed/stability
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                 resolve({ inlineData: { mimeType: "image/jpeg", data: dataUrl.split(',')[1] } });
             };
         };
     });
 }
 
+// --- CORE AGGREGATOR ENGINE ---
 async function executeScan() {
-    if (!API_KEY) return alert("System Offline: Sync Terminal Key.");
+    if (!API_KEY) return alert("Terminal Offline: Enter Key.");
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
     
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
-    btn.innerText = "AGGREGATING STRATEGIES...";
+    btn.innerText = "RUNNING OMNI-STRATEGY SCAN...";
     btn.disabled = true;
 
     try {
-        // Optimized processing to prevent AbortError
         const imageParts = await Promise.all(files.map(processImage));
         
-        const prompt = `Analyze these 4 market charts using SMC, Price Action, and Volatility models.
-        Select the best strategy for the current regime. 
-        If sideways, return "WAIT" with breakoutPoint.
+        const prompt = `Analyze these 4 market charts. 
+        Utilize: SMC/ICT, Trend Following, Price Action, Volatility (RSI/Bollinger), and Quant/DXY.
+        Identify the current regime and use the most effective strategy classification.
+        If consolidated, return "WAIT" with a breakoutPoint.
         Return ONLY JSON: {"strategy":"string","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string","breakoutPoint":number}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -101,9 +97,11 @@ async function executeScan() {
         });
 
         const data = await response.json();
+        if (data.error) throw new Error(data.error.message);
+
         const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
-        // Update Dashboard UI
+        // Update UI
         if (res.bias === "WAIT") {
             document.getElementById('actionText').innerText = "NO TRADE";
             document.getElementById('actionText').className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
@@ -128,12 +126,11 @@ async function executeScan() {
         document.getElementById('logicText').innerText = res.logic;
         document.getElementById('supText').innerText = res.support ? res.support.toFixed(2) : "---";
         document.getElementById('resText').innerText = res.resistance ? res.resistance.toFixed(2) : "---";
-        
         resultBox.classList.remove('hidden');
         resultBox.scrollIntoView({ behavior: 'smooth' });
 
     } catch (e) {
-        alert("TERMINAL ERROR: Connection timed out. Ensure your internet is stable.");
+        alert("TERMINAL ERROR: Connection timed out. Ensure API key is valid and internet is active.");
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;

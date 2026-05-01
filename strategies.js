@@ -43,7 +43,11 @@ function saveApiKey() {
     API_KEY = val; lockUI(); toggleDrawer();
 }
 
-// --- IMAGE OPTIMIZER: Fixes the Timeout problem ---
+/**
+ * IMAGE OPTIMIZER
+ * Downscales images to ensure the payload is small enough for a fast API response.
+ * Prevents "Connection timed out" errors.
+ */
 async function processImage(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -53,13 +57,12 @@ async function processImage(file) {
             img.src = e.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                // Downscale to 700px to ensure the connection doesn't time out
-                const scale = 700 / Math.max(img.width, img.height);
+                const scale = 800 / Math.max(img.width, img.height);
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                 resolve({ inlineData: { mimeType: "image/jpeg", data: dataUrl.split(',')[1] } });
             };
         };
@@ -72,17 +75,21 @@ async function executeScan() {
     const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
     
-    if (files.some(f => !f)) return alert("Upload all 4 charts.");
+    if (files.some(f => !f)) return alert("Please upload all 4 required charts.");
 
-    btn.innerText = "ANALYZING MARKET DATA...";
+    btn.innerText = "AGGREGATING ALL STRATEGIES...";
     btn.disabled = true;
 
     try {
         const imageParts = await Promise.all(files.map(processImage));
         
-        const prompt = `Act as an expert Quant Analyst. Analyze these 4 charts (HTF, LTF, Entry, DXY). 
-        Determine bias (BUY, SELL, or WAIT) using SMC and Price Action.
-        Return ONLY valid JSON: {"strategy":"string","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
+        // System prompt designed for human-like technical analysis
+        const prompt = `Act as an institutional Quant Analyst specializing in SMC (Smart Money Concepts). 
+        Analyze the 4 provided charts: 1H (HTF Bias), 15M (Structure), 1M (Entry), and DXY (Correlation).
+        Look for: Change of Character (CHoCH), Break of Structure (BOS), and Fair Value Gaps (FVG).
+        
+        Return ONLY valid JSON: 
+        {"strategy":"Infinity V8.2","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -97,12 +104,38 @@ async function executeScan() {
         const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         const res = JSON.parse(cleanJson);
 
-        // Update UI
+        /**
+         * HUMAN ACCURACY RISK MANAGEMENT
+         * Calculates lot size based on Balance, Risk %, and the distance to SL.
+         */
+        const balance = parseFloat(document.getElementById('bal').value) || 10000;
+        const riskPercent = parseFloat(document.getElementById('risk').value) || 1;
+        
+        const entryPrice = res.entry;
+        const stopLoss = res.sl;
+        
+        // Gold (XAUUSD) specific pip calculation (100 units per standard lot)
+        const pipsAtRisk = Math.abs(entryPrice - stopLoss);
+
+        let calculatedLot = 0;
+        if (pipsAtRisk > 0) {
+            const riskAmount = balance * (riskPercent / 100);
+            calculatedLot = riskAmount / (pipsAtRisk * 100);
+        }
+
+        // --- UPDATE UI WITH FORMATTING ---
         document.getElementById('actionText').innerText = res.bias;
-        document.getElementById('actionText').className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : (res.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500')}`;
-        document.getElementById('entText').innerText = res.entry || "---";
-        document.getElementById('slText').innerText = res.sl || "---";
-        document.getElementById('tpText').innerText = res.tp || "---";
+        document.getElementById('actionText').className = `text-5xl font-extrabold italic mb-10 glow-text ${
+            res.bias === 'BUY' ? 'text-emerald-400' : (res.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500')
+        }`;
+        
+        document.getElementById('entText').innerText = res.entry.toFixed(2);
+        document.getElementById('slText').innerText = res.sl.toFixed(2);
+        document.getElementById('tpText').innerText = res.tp.toFixed(2);
+        
+        // Fix for the 0.00 Lot Size error
+        document.getElementById('lotText').innerText = calculatedLot.toFixed(2);
+        
         document.getElementById('logicText').innerText = res.logic;
 
         resultBox.classList.remove('hidden');
@@ -110,7 +143,7 @@ async function executeScan() {
 
     } catch (e) {
         alert("TERMINAL ERROR: " + e.message);
-        console.error(e);
+        console.error("Analysis Failed:", e);
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;

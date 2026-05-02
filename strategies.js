@@ -1,7 +1,7 @@
 // --- OMNI-REAL | PRECISION V11 ---
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
 // STABLE MODEL: Confirmed to work with v1beta and multi-chart analysis
-const MODEL = "gemini-1.5-flash"; 
+const MODEL = "gemini-2.5-flash-lite"; 
 
 window.onload = () => { 
     if (API_KEY) lockUI(); 

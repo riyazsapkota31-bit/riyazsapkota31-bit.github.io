@@ -1,11 +1,10 @@
 /**
- * OMNI-REAL | PRECISION V11 (STABLE DEPLOY)
+ * OMNI-REAL | PRECISION V11 (ULTRA-DYNAMIC ENGINE)
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-
-// THE FIX: Using the '-latest' alias ensures the v1beta endpoint finds the model
-const MODEL = "gemini-1.5-flash-latest"; 
+// UPDATED MODEL: Using the experimental flash identifier for v1beta compatibility
+const MODEL = "gemini-2.0-flash-exp"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
@@ -15,14 +14,16 @@ function markFile(idx) {
     const fileInput = document.getElementById(`img${idx}`);
     
     if (fileInput && fileInput.files.length > 0) {
+        // Apply immediate visual feedback
         box.classList.add('has-file');
         box.style.border = "2px solid #10b981";
-        
-        // This manually injects the tick so it shows up instantly
+        box.style.background = "rgba(16, 185, 129, 0.1)";
+
+        // Force the checkmark to appear by overwriting the icon container
         const content = box.querySelector('center') || box;
         content.innerHTML = `
             <div style="font-size:2.5rem; color:#10b981; margin-bottom:10px;">✅</div>
-            <p style="color:#10b981; font-weight:bold; font-size:0.8rem;">CHART SYNCED</p>
+            <p style="color:#10b981; font-weight:bold; font-size:0.8rem;">CHART LOADED</p>
         `;
     }
 }
@@ -31,7 +32,7 @@ function toggleDrawer() {
     document.getElementById('sideDrawer').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('hidden');
     
-    // UNFREEZE: Ensures inputs are interactive
+    // Ensure all Master Control inputs remain interactive
     ['bal', 'risk', 'apiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -44,7 +45,7 @@ function toggleDrawer() {
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
     if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
-    localStorage.setItem('omni_api_v3', val); // PERSISTENCE
+    localStorage.setItem('omni_api_v3', val); // Save for refresh persistence
     API_KEY = val;
     lockUI();
     toggleDrawer();
@@ -76,15 +77,15 @@ async function executeScan() {
     
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
-    btn.innerText = "CALIBRATING CONFLUENCE...";
+    btn.innerText = "CALIBRATING INSTITUTIONAL BIAS...";
     btn.disabled = true;
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
         
-        // MULTI-STRATEGY PROMPT (SMC/ICT)
-        const prompt = `Act as an Institutional SMC/ICT Analyst. Analyze 4 charts. 
-        If HTF/LTF trend mismatch or consolidation, return bias 'WAIT'.
+        // Institutional Confluence Prompt
+        const prompt = `Act as an Institutional SMC/ICT Analyst. Analyze 4 charts for structural alignment. 
+        If mismatch found, return bias 'WAIT'. 
         Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -95,7 +96,7 @@ async function executeScan() {
 
         if (!response.ok) {
             const err = await response.json();
-            throw new Error(err.error.message); // CATCHES ERROR
+            throw new Error(err.error.message); // Explicitly handles the "Model Not Found"
         }
 
         const data = await response.json();
@@ -121,12 +122,16 @@ function renderOutput(res, resultBox) {
     if (res.bias === "WAIT") {
         actionTxt.innerText = "NO TRADE";
         actionTxt.className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
-        logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Pending"} | ${res.logic}`;
+        logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Pending Setup"} | ${res.logic}`;
+        ['entText','slText','tpText','lotText'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = "---";
+        });
     } else {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        // LOT SIZE CALCULATION
+        // Automatic Position Sizing Math
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1;
         const slDist = Math.abs(res.entry - res.sl);

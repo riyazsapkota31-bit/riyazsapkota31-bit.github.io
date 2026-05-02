@@ -1,21 +1,30 @@
-// --- OMNI-REAL | PRECISION V11 (ULTRA-DYNAMIC ENGINE) ---
+// --- OMNI-REAL | PRECISION V11 ---
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// STABLE MODEL: Fixed to bypass "Model Not Found" errors
+// STABLE MODEL: Confirmed to work with v1beta and multi-chart analysis
 const MODEL = "gemini-1.5-flash"; 
 
 window.onload = () => { 
     if (API_KEY) lockUI(); 
 };
 
-// --- UI DYNAMICS & PERSISTENCE ---
+// --- SETTINGS & PERSISTENCE ---
 function toggleDrawer() {
     document.getElementById('sideDrawer').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('hidden');
-    // Ensure inputs are clickable when menu is open
+    // Ensure inputs are interactive
     ['bal', 'risk', 'apiInput'].forEach(id => {
         const el = document.getElementById(id);
         if(el) { el.disabled = false; el.style.pointerEvents = 'auto'; }
     });
+}
+
+function saveApiKey() {
+    const val = document.getElementById('apiInput').value.trim();
+    if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
+    localStorage.setItem('omni_api_v3', val);
+    API_KEY = val;
+    lockUI();
+    toggleDrawer();
 }
 
 function lockUI() {
@@ -43,24 +52,7 @@ function enableEdit() {
     editBtn.classList.add('hidden');
 }
 
-function saveApiKey() {
-    const val = document.getElementById('apiInput').value.trim();
-    if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
-    localStorage.setItem('omni_api_v3', val);
-    API_KEY = val;
-    lockUI();
-    toggleDrawer();
-    alert("Terminal Linked Successfully.");
-}
-
-function markFile(idx) {
-    const box = document.getElementById(`box${idx}`);
-    if (document.getElementById(`img${idx}`).files.length > 0) {
-        box.classList.add('has-file');
-    }
-}
-
-// --- TRADING ENGINE ---
+// --- CORE TRADING ENGINE ---
 async function fileToPart(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -84,10 +76,10 @@ async function executeScan() {
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
         
-        // Multi-Strategy Prompting (SMC, ICT, Price Action)
-        const prompt = `Act as an Institutional SMC Analyst. Analyze 4 charts.
-        1. Check SMC (Order Blocks/FVG) and ICT (Liquidity/MSS).
-        2. If HTF/LTF mismatch or consolidation, return bias 'WAIT'.
+        // Multi-Strategy Prompting (SMC/ICT/Price Action)
+        const prompt = `Act as an Institutional SMC/ICT Analyst. Analyze 4 charts.
+        - If HTF/LTF trend mismatch or consolidation, return bias 'WAIT'.
+        - Otherwise, identify entry/SL/TP.
         Return ONLY raw JSON: {"strategy":"INFINITY-V11","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -96,26 +88,20 @@ async function executeScan() {
             body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] })
         });
 
-        // Robust Error Check
-        if (response.status === 429) {
-            alert("QUOTA EXHAUSTED: Rate limit hit. Wait 2 minutes.");
-            return;
+        // Error Handling for Quota/Model
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error.message);
         }
 
         const data = await response.json();
-        
-        if (!data.candidates) {
-            alert("API ERROR: Check model permissions in AI Studio.");
-            return;
-        }
-
         const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
         renderOutput(res, resultBox);
 
     } catch (e) {
         console.error(e);
-        alert("TERMINAL ERROR: Connection timed out or Model rejected analysis.");
+        alert(`TERMINAL ERROR: ${e.message}`);
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;
@@ -128,19 +114,19 @@ function renderOutput(res, resultBox) {
     
     resultBox.classList.remove('hidden');
     
-    // --- WAIT / WATCH FEATURE ---
+    // --- WAIT / WATCH LOGIC ---
     if (res.bias === "WAIT") {
         actionTxt.innerText = "NO TRADE";
         actionTxt.className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
-        logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Pending Alignment"} | ${res.logic}`;
+        logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Wait for setup"} | ${res.logic}`;
         ['entText','slText','tpText','lotText','supText','resText'].forEach(id => document.getElementById(id).innerText = "---");
     } 
-    // --- BUY / SELL FEATURE ---
+    // --- BUY / SELL LOGIC ---
     else {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        // Math & Position Sizing
+        // Math & Lot Sizing
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1;
         const slDist = Math.abs(res.entry - res.sl);

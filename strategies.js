@@ -1,10 +1,10 @@
 /** * OMNI-REAL | INFINITY SCALPER V8.2
- * CRITICAL FIX: Data Persistence & API Handshake
+ * CRITICAL FIX: Model Version & Endpoint Calibration
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-const MODEL = "gemini-1.5-flash-latest";
-// Master array to prevent "Data Gap" by holding files outside the DOM
+// Change: Switched to the standard model identifier
+const MODEL = "gemini-1.5-flash"; 
 let marketData = [null, null, null, null]; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
@@ -15,7 +15,6 @@ function markFile(idx) {
     const content = document.getElementById(`content${idx}`);
     
     if (input.files && input.files[0]) {
-        // Save file to master array before UI updates to prevent "Data Gap"
         marketData[idx] = input.files[0]; 
         box.classList.add('has-file');
         
@@ -29,7 +28,6 @@ function markFile(idx) {
     }
 }
 
-// --- API PROTOCOL FIX ---
 async function fileToPart(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -45,9 +43,8 @@ async function executeScan() {
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
 
-    // Verification from the master array (Fixes)
     if (marketData.some(f => f === null)) {
-        return alert("Data Gap: Upload all 4 Market Tiers.");
+        return alert("Data Gap: Upload all 4 Market Tiers."); //
     }
 
     btn.innerText = "CALIBRATING MULTI-STRATEGY...";
@@ -59,10 +56,10 @@ async function executeScan() {
         const prompt = `System: Expert SMC Analyst. Analyze 4 charts for structural confluence. 
         Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
-        // Enhanced fetch to prevent "Connection Failed"
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
+        // Change: Updated to v1 stable endpoint for better reliability
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
-            mode: 'cors', // Crucial for GitHub Pages
+            mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }, ...imageParts] }]
@@ -81,8 +78,7 @@ async function executeScan() {
         renderOutput(res, resultBox);
 
     } catch (e) {
-        // Detailed error alerting for debugging
-        alert("TERMINAL ERROR: " + e.message);
+        alert("TERMINAL ERROR: " + e.message); //
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;
@@ -101,9 +97,8 @@ function renderOutput(res, resultBox) {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        // Balance/Risk calculation
-        const bal = parseFloat(document.getElementById('bal').value) || 10000;
-        const risk = parseFloat(document.getElementById('risk').value) || 1;
+        const bal = parseFloat(document.getElementById('bal').value) || 10000; //
+        const risk = parseFloat(document.getElementById('risk').value) || 1; //
         const slDist = Math.abs(res.entry - res.sl);
         const lotSize = slDist > 0 ? ((bal * (risk/100)) / (slDist * 10)).toFixed(2) : "0.10";
 
@@ -118,7 +113,6 @@ function renderOutput(res, resultBox) {
     resultBox.scrollIntoView({ behavior: 'smooth' });
 }
 
-// --- TERMINAL CONTROLS ---
 function lockUI() {
     const apiInput = document.getElementById('apiInput');
     apiInput.value = "••••••••••••••••••••";

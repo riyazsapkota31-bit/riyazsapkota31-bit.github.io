@@ -21,7 +21,7 @@
 
     <div class="flex justify-between items-center mb-10 mt-4 px-2">
         <div>
-            <h1 class="text-3xl font-black tracking-tighter italic text-slate-100">OMNI–REAL</h1>
+            <h1 class="text-3xl font-black tracking-tighter italic text-slate-100 uppercase">OMNI–REAL</h1>
             <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-emerald-500 flex items-center">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
                 Infinity Scalper V8
@@ -33,7 +33,7 @@
     </div>
 
     <div class="grid grid-cols-2 gap-4 mb-10">
-        <div id="box0" onclick="document.getElementById('img0').click()" class="glass-card aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-800 relative">
+        <div id="box0" onclick="document.getElementById('img0').click()" class="glass-card aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-800 relative overflow-hidden group">
             <input type="file" id="img0" class="hidden" accept="image/*" onchange="markFile(0)">
             <i id="icon0" class="fa-solid fa-circle-check text-3xl text-emerald-500 hidden"></i>
             <span id="label0" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center px-2">HTF Bias (1H)</span>
@@ -55,56 +55,86 @@
         </div>
     </div>
 
-    <button id="scanBtn" onclick="executeScan()" class="w-full py-6 rounded-full bg-indigo-600 font-black uppercase tracking-widest text-sm shadow-2xl active:scale-95 transition-all mb-10">
+    <button id="scanBtn" onclick="executeScan()" class="w-full py-6 rounded-full bg-indigo-600 font-black uppercase tracking-widest text-sm shadow-2xl shadow-indigo-900/40 active:scale-95 transition-all mb-10">
         Perform Multi-Chart Scan
     </button>
 
-    <div id="resultBox" class="hidden space-y-4">
+    <div id="resultBox" class="hidden space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div class="glass-card p-8 text-center border-t-2 border-indigo-500/30">
-            <p id="strategyType" class="text-[10px] uppercase font-black tracking-[0.3em] text-indigo-400 mb-2">Quant Algorithm v8.2</p>
-            <h2 id="actionText" class="text-5xl font-extrabold italic mb-10 glow-text">---</h2>
+            <div class="mb-6">
+                <p id="strategyText" class="text-[10px] uppercase font-black tracking-[0.3em] text-indigo-400 mb-2">Analyzing Strategy...</p>
+                <div class="w-full h-1 bg-slate-800 rounded-full overflow-hidden mx-auto max-w-[150px]">
+                    <div id="scoreBar" class="h-full bg-indigo-500 transition-all duration-1000" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <h2 id="actionText" class="text-5xl font-extrabold italic mb-10 glow-text uppercase">---</h2>
             
             <div class="grid grid-cols-2 gap-6 text-left border-t border-slate-800 pt-8">
                 <div>
                     <p class="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-1">Execution</p>
-                    <p id="entText" class="font-mono text-xl text-slate-200">0.00000</p>
+                    <p id="entText" class="font-mono text-xl text-slate-200">---</p>
                 </div>
                 <div>
                     <p class="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-1">Hard Stop</p>
-                    <p id="slText" class="font-mono text-xl text-rose-400">0.00000</p>
+                    <p id="slText" class="font-mono text-xl text-rose-400">---</p>
                 </div>
                 <div>
                     <p class="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-1">Target</p>
-                    <p id="tpText" class="font-mono text-xl text-emerald-400">0.00000</p>
+                    <p id="tpText" class="font-mono text-xl text-emerald-400">---</p>
                 </div>
                 <div>
                     <p class="text-[9px] uppercase font-bold text-slate-500 tracking-widest mb-1">Lot Size</p>
-                    <p id="lotText" class="font-mono text-xl text-amber-400">0.00</p>
+                    <p id="lotText" class="font-mono text-xl text-amber-400">---</p>
                 </div>
             </div>
         </div>
 
         <div class="glass-card p-6">
-            <p id="logicText" class="text-xs leading-relaxed text-slate-400 italic text-center">Analysis pending...</p>
+            <p class="text-[10px] uppercase font-black text-indigo-400 mb-4 tracking-widest flex items-center">
+                <i class="fa-solid fa-microchip mr-2"></i> Logic Core Analysis
+            </p>
+            <p id="logicText" class="text-xs leading-relaxed text-slate-400 italic">Standby for data...</p>
         </div>
     </div>
 
     <div id="overlay" onclick="toggleDrawer()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden"></div>
     <div id="sideDrawer" class="fixed top-0 right-0 h-full w-[85%] bg-[#0a0a0f] border-l border-slate-800 p-6 transform translate-x-full overflow-hidden">
+        
         <div class="flex items-center justify-between mb-10">
-            <h3 class="text-xl font-black italic text-slate-300">MASTER CONTROL</h3>
-            <button onclick="toggleDrawer()"><i class="fa-solid fa-xmark text-xl text-slate-500"></i></button>
+            <h3 class="text-xl font-black italic tracking-tighter text-slate-300 uppercase">Master Control</h3>
+            <button onclick="toggleDrawer()" class="text-slate-500"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
-        <div class="glass-card p-5">
-            <input type="password" id="apiInput" placeholder="ENTER ACCESS KEY..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs outline-none mb-4">
-            <div class="flex gap-2">
-                <button id="lockBtn" onclick="saveApiKey()" class="flex-1 py-3 bg-indigo-600 rounded-xl text-[10px] font-bold uppercase">Sync Terminal</button>
-                <button id="editBtn" onclick="enableEdit()" class="hidden flex-1 py-3 bg-slate-800 rounded-xl text-[10px] font-bold uppercase">Edit Link</button>
+
+        <div class="space-y-6">
+            <div class="glass-card p-5">
+                <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-3">Terminal API</p>
+                <input type="password" id="apiInput" placeholder="ENTER ACCESS KEY..." 
+                    class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs font-mono outline-none mb-4">
+                <div class="flex gap-2">
+                    <button id="lockBtn" onclick="saveApiKey()" class="flex-1 py-3 bg-indigo-600 rounded-xl text-[10px] font-bold uppercase tracking-widest">Sync</button>
+                    <button id="editBtn" onclick="enableEdit()" class="hidden flex-1 py-3 bg-slate-800 rounded-xl text-[10px] font-bold uppercase">Edit</button>
+                </div>
             </div>
-        </div>
-        <div class="mt-6 space-y-4">
-            <input type="number" id="bal" value="10000" placeholder="Account Balance" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs outline-none">
-            <input type="number" id="risk" value="1" placeholder="Risk %" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs outline-none">
+
+            <div class="glass-card p-5 space-y-4">
+                <div>
+                    <label class="text-[9px] uppercase font-bold text-slate-500 tracking-widest block mb-2">Instrument Type</label>
+                    <select id="instrument" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs outline-none text-slate-300">
+                        <option value="GOLD">XAUUSD (GOLD)</option>
+                        <option value="BTC">BTCUSD (BITCOIN)</option>
+                        <option value="FOREX">FOREX PAIRS</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[9px] uppercase font-bold text-slate-500 tracking-widest block mb-2">Balance (USD)</label>
+                    <input type="number" id="bal" value="10000" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs outline-none">
+                </div>
+                <div>
+                    <label class="text-[9px] uppercase font-bold text-slate-500 tracking-widest block mb-2">Risk per Trade (%)</label>
+                    <input type="number" id="risk" value="1" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-xs outline-none">
+                </div>
+            </div>
         </div>
     </div>
 

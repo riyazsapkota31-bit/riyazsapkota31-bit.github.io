@@ -1,36 +1,40 @@
 /**
- * OMNI-REAL | INFINITY SCALPER V8.2
- * FEATURES: Multi-Strategy SMC, Watch Levels, DXY Correlation
+ * OMNI-REAL | INFINITY SCALPER V8.2 (CORE REPAIR)
+ * FIX: Data Gap Error & fileToPart undefined
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-const MODEL = "gemini-1.5-flash-latest"; // Stable version for v1beta
+const MODEL = "gemini-1.5-flash-latest"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI DYNAMICS (GREEN TICK SYNC) ---
+// --- FIXED UI DYNAMICS: PRESERVES INPUT DATA ---
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
     const input = document.getElementById(`img${idx}`);
     
     if (input.files && input.files[0]) {
         box.classList.add('has-file');
-        // Visual Sync from reference
-        box.innerHTML = `
-            <input type="file" id="img${idx}" accept="image/*" class="hidden" onchange="markFile(${idx})">
-            <div style="background:#10b981; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">
-                <span style="color:white; font-size:1.5rem; font-weight:bold;">✓</span>
-            </div>
-            <p style="color:#10b981; font-weight:bold; font-size:0.75rem; letter-spacing:1px;">CHART SYNCED</p>
-        `;
+        // We update only the UI display, NOT the input element itself
+        const contentDiv = document.getElementById(`content${idx}`);
+        if(contentDiv) {
+            contentDiv.innerHTML = `
+                <div style="background:#10b981; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 10px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">
+                    <span style="color:white; font-size:1.5rem; font-weight:bold;">✓</span>
+                </div>
+                <p style="color:#10b981; font-weight:bold; font-size:0.75rem; letter-spacing:1px;">CHART SYNCED</p>
+            `;
+        }
     }
 }
 
 // --- MASTER CONTROL & API ACCESS ---
 function lockUI() {
     const input = document.getElementById('apiInput');
-    document.getElementById('lockBtn').classList.add('hidden');
-    document.getElementById('editBtn').classList.remove('hidden');
+    const lockBtn = document.getElementById('lockBtn');
+    const editBtn = document.getElementById('editBtn');
+    if(lockBtn) lockBtn.classList.add('hidden');
+    if(editBtn) editBtn.classList.remove('hidden');
     input.value = "••••••••••••••••••••";
     input.disabled = true;
     input.classList.add('opacity-40');
@@ -60,9 +64,6 @@ function toggleDrawer() {
     document.getElementById('overlay').classList.toggle('hidden');
 }
 
-function openSub(id) { document.getElementById(id).classList.add('active'); }
-function closeSub(id) { document.getElementById(id).classList.remove('active'); }
-
 // --- TRADING ENGINE ---
 async function fileToPart(file) {
     return new Promise((resolve) => {
@@ -76,7 +77,14 @@ async function executeScan() {
     if (!API_KEY) return alert("System Offline: Sync Terminal Key.");
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
-    const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
+    
+    // Select the actual input elements directly
+    const files = [
+        document.getElementById('img0').files[0],
+        document.getElementById('img1').files[0],
+        document.getElementById('img2').files[0],
+        document.getElementById('img3').files[0]
+    ];
     
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
@@ -86,12 +94,9 @@ async function executeScan() {
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
         
-        // Multi-Strategy System Instruction
-        const prompt = `System: Expert SMC & Price Action Analyst. 
-        Analyze 4 charts (HTF, LTF, Entry, DXY). 
-        1. STRATEGY: Identify BOS, CHoCH, and FVG mitigation.
-        2. CONFLUENCE: If DXY opposes the trade or trend is unclear, BIAS must be 'WAIT'.
-        3. WATCH LEVEL: If bias is WAIT, identify the specific price level to monitor in logic.
+        const prompt = `System: Expert Multi-Strategy SMC Analyst. Analyze 4 charts for Confluence. 
+        If charts are unclear or DXY is conflicting, return bias "WAIT". 
+        If waiting, identify a "Watch Level" price.
         Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -100,14 +105,17 @@ async function executeScan() {
             body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] })
         });
 
-        if (!response.ok) throw new Error("API Connection Error");
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || "API Error");
+        }
 
         const data = await response.json();
         const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
         renderOutput(res, resultBox);
     } catch (e) {
-        alert("TERMINAL ERROR: Check Key & Connection.");
+        alert("TERMINAL ERROR: " + e.message);
         console.error(e);
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
@@ -123,17 +131,13 @@ function renderOutput(res, resultBox) {
     if (res.bias === "WAIT") {
         actionTxt.innerText = "WAIT & WATCH";
         actionTxt.className = "text-5xl font-extrabold italic mb-10 text-amber-500 glow-text";
-        logicTxt.innerText = `WATCH LEVEL: ${res.support || res.entry} | ${res.logic}`;
-        ['entText','slText','tpText','lotText','supText','resText'].forEach(id => {
-            document.getElementById(id).innerText = "---";
-        });
+        logicTxt.innerText = `WATCH LEVEL: ${res.support || "Pending"} | ${res.logic}`;
     } else {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        // Dynamic Risk Management
-        const bal = parseFloat(document.getElementById('bal').value) || 10000;
-        const risk = parseFloat(document.getElementById('risk').value) || 1.0;
+        const bal = parseFloat(document.getElementById('bal')?.value) || 10000;
+        const risk = parseFloat(document.getElementById('risk')?.value) || 1.0;
         const slDist = Math.abs(res.entry - res.sl);
         const lotSize = slDist > 0 ? ((bal * (risk/100)) / (slDist * 10)).toFixed(2) : "0.10";
 

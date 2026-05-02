@@ -3,155 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OMNI-CORE | SURGICAL</title>
+    <title>OMNI-BLACK | FINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #000; color: #fff; font-family: ui-sans-serif, system-ui; padding: 20px; -webkit-font-smoothing: antialiased; }
-        .tier-card { border: 1.5px solid #111; border-radius: 20px; min-height: 140px; background: #030303; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .has-file { border-color: #6366f1; background: #05050a; }
-        .glow-text { text-shadow: 0 0 35px currentColor; font-weight: 900; letter-spacing: -0.05em; font-style: italic; }
-        .btn-main { background: #fff; color: #000; border-radius: 18px; padding: 20px; font-weight: 800; text-transform: uppercase; }
-        .input-dark { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 12px; padding: 12px; font-size: 14px; outline: none; width: 100%; color: #6366f1; font-family: monospace; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #e11d48; }
-        .active-dot { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; padding: 20px; -webkit-font-smoothing: antialiased; }
+        .glass-panel { background: rgba(10, 10, 10, 0.9); border: 1px solid rgba(255,255,255,0.08); border-radius: 35px; backdrop-filter: blur(15px); }
+        .tier-card { border: 2px dashed #222; border-radius: 32px; min-height: 155px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; position: relative; }
+        .has-file { border: 2.5px solid #6366f1; background: rgba(99, 102, 241, 0.08); box-shadow: 0 0 40px rgba(99, 102, 241, 0.15); }
+        .glow-bias { text-shadow: 0 0 60px currentColor; font-size: clamp(5.5rem, 20vw, 9rem); font-weight: 900; letter-spacing: -0.06em; font-style: italic; line-height: 1; }
+        .btn-exec { background: #fff; color: #000; border-radius: 28px; padding: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; transition: 0.2s; box-shadow: 0 20px 40px rgba(255,255,255,0.1); }
+        .btn-exec:active { transform: scale(0.95); filter: brightness(0.9); }
+        .status-pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } }
     </style>
 </head>
 <body>
 
     <header class="flex justify-between items-center mb-8 px-2">
         <div>
-            <h1 class="text-xl font-black italic tracking-tighter">OMNI-BLACK</h1>
-            <p id="riskDisplay" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Risk: 1% | Bal: $1000</p>
+            <h1 class="text-3xl font-black italic tracking-tighter leading-none">OMNI-BLACK</h1>
+            <p id="riskHeader" class="text-[10px] font-bold text-indigo-500 uppercase tracking-[0.5em] mt-2">Tactical Link: Active</p>
         </div>
-        <div id="status" class="status-dot"></div>
+        <div id="statusDot" class="w-4 h-4 rounded-full bg-rose-600 shadow-[0_0_20px_#e11d48]"></div>
     </header>
 
-    <div class="mb-8 text-center py-4 border-y border-white/5">
-        <h2 id="assetDisp" class="text-lg font-black text-white italic">[ SYSTEM STANDBY ]</h2>
+    <div class="glass-panel p-6 mb-8 text-center border-l-8 border-indigo-600">
+        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Current Bias Matrix</p>
+        <h2 id="pairName" class="text-2xl font-black italic tracking-tighter text-white uppercase">[ System Standby ]</h2>
     </div>
 
-    <div class="grid grid-cols-2 gap-4 mb-8">
-        <div id="box0" class="tier-card">
-            <input type="file" id="i0" accept="image/*" onchange="sync(0)" class="absolute inset-0 opacity-0 z-30 cursor-pointer">
-            <i class="fa-solid fa-compass text-slate-800 text-xl mb-2" id="icon0"></i>
-            <p class="text-[9px] font-bold text-slate-600 uppercase">1H Bias</p>
+    <div class="grid grid-cols-2 gap-5 mb-8">
+        <div id="box0" class="tier-card" onclick="document.getElementById('i0').click()">
+            <input type="file" id="i0" hidden accept="image/*" onchange="sync(0)">
+            <i class="fa-solid fa-compass text-slate-700 text-3xl mb-2" id="ic0"></i>
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider">1H Context</p>
         </div>
-        <div id="box1" class="tier-card">
-            <input type="file" id="i1" accept="image/*" onchange="sync(1)" class="absolute inset-0 opacity-0 z-30 cursor-pointer">
-            <i class="fa-solid fa-layer-group text-slate-800 text-xl mb-2" id="icon1"></i>
-            <p class="text-[9px] font-bold text-slate-600 uppercase">15M Struct</p>
+        <div id="box1" class="tier-card" onclick="document.getElementById('i1').click()">
+            <input type="file" id="i1" hidden accept="image/*" onchange="sync(1)">
+            <i class="fa-solid fa-layer-group text-slate-700 text-3xl mb-2" id="ic1"></i>
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider">15M Struct</p>
         </div>
-        <div id="box2" class="tier-card">
-            <input type="file" id="i2" accept="image/*" onchange="sync(2)" class="absolute inset-0 opacity-0 z-30 cursor-pointer">
-            <i class="fa-solid fa-crosshairs text-slate-800 text-xl mb-2" id="icon2"></i>
-            <p class="text-[9px] font-bold text-slate-600 uppercase">1M Entry</p>
+        <div id="box2" class="tier-card" onclick="document.getElementById('i2').click()">
+            <input type="file" id="i2" hidden accept="image/*" onchange="sync(2)">
+            <i class="fa-solid fa-crosshairs text-slate-700 text-3xl mb-2" id="ic2"></i>
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider">1M Entry</p>
         </div>
-        <div id="box3" class="tier-card">
-            <input type="file" id="i3" accept="image/*" onchange="sync(3)" class="absolute inset-0 opacity-0 z-30 cursor-pointer">
-            <i class="fa-solid fa-chart-line text-slate-800 text-xl mb-2" id="icon3"></i>
-            <p class="text-[9px] font-bold text-slate-600 uppercase">DXY Matrix</p>
+        <div id="box3" class="tier-card" onclick="document.getElementById('i3').click()">
+            <input type="file" id="i3" hidden accept="image/*" onchange="sync(3)">
+            <i class="fa-solid fa-chart-line text-slate-700 text-3xl mb-2" id="ic3"></i>
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider">DXY Index</p>
         </div>
     </div>
 
-    <button id="go" onclick="analyze()" class="btn-main w-full mb-10">Execute Scan</button>
+    <button id="goBtn" onclick="executeSurgicalScan()" class="btn-exec w-full mb-10">Execute A+ Scan</button>
 
-    <div id="results" class="hidden space-y-10 pb-20">
-        <div id="wait" class="hidden py-4 border-b border-amber-500/30 text-center text-amber-500 font-black italic text-xl"></div>
-        <div class="text-center"><h2 id="bias" class="glow-text text-8xl uppercase"></h2></div>
-        <div class="grid grid-cols-2 gap-4 border-t border-white/5 pt-8 text-center">
-            <div><p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Entry</p><p id="ent" class="text-2xl font-mono">--</p></div>
-            <div><p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Lots</p><p id="lot" class="text-2xl font-mono text-indigo-400">--</p></div>
-            <div><p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Stop</p><p id="sl" class="text-2xl font-mono text-rose-500">--</p></div>
-            <div><p class="text-[9px] text-slate-500 font-bold uppercase mb-1">Target</p><p id="tp" class="text-2xl font-mono text-emerald-500">--</p></div>
+    <div id="outPanel" class="hidden space-y-10 pb-24 animate-in fade-in slide-in-from-bottom-5 duration-500">
+        <div id="waitMsg" class="hidden py-5 rounded-[30px] bg-amber-500/10 border-2 border-amber-500/20 text-center text-amber-500 font-black italic text-3xl tracking-tighter"></div>
+        <div class="text-center"><h2 id="biasTxt" class="glow-bias"></h2></div>
+        
+        <div class="grid grid-cols-2 gap-5 text-center border-y border-white/5 py-10">
+            <div><p class="text-[11px] text-slate-500 font-black uppercase mb-2">Entry</p><p id="entVal" class="text-4xl font-mono tracking-tighter">--</p></div>
+            <div><p class="text-[11px] text-slate-500 font-black uppercase mb-2">Lots</p><p id="lotVal" class="text-4xl font-mono tracking-tighter text-indigo-400">--</p></div>
+            <div><p class="text-[11px] text-slate-500 font-black uppercase mb-2">Stop</p><p id="slVal" class="text-4xl font-mono tracking-tighter text-rose-600">--</p></div>
+            <div><p class="text-[11px] text-slate-500 font-black uppercase mb-2">Target</p><p id="tpVal" class="text-4xl font-mono tracking-tighter text-emerald-500">--</p></div>
         </div>
-        <div class="pt-6 border-t border-white/5 text-slate-300 italic font-medium" id="logic"></div>
+
+        <div class="p-8 glass-panel border-t-4 border-indigo-600 shadow-2xl">
+            <p id="logicSummary" class="text-xl text-slate-200 leading-tight italic font-bold tracking-tight"></p>
+        </div>
     </div>
 
-    <div class="mt-20 p-6 border-t border-white/5 opacity-30 hover:opacity-100 transition-opacity">
-        <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4 text-center">System Configuration</p>
-        <div class="space-y-3">
-            <input type="password" id="apiKey" placeholder="Connect Gemini API Key" class="input-dark">
-            <div class="grid grid-cols-2 gap-3">
-                <input type="number" id="balance" placeholder="Balance ($)" class="input-dark">
-                <input type="number" id="risk" placeholder="Risk %" class="input-dark">
-            </div>
-            <button onclick="save()" class="w-full text-[10px] font-black uppercase text-indigo-500 tracking-widest pt-2">Sync Parameters</button>
+    <div class="mt-20 p-8 glass-panel opacity-10 hover:opacity-100 transition-all duration-300">
+        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] mb-6 text-center">System Parameters</p>
+        <input type="password" id="keyIn" placeholder="Gemini API Key" class="bg-black/40 border border-white/10 rounded-2xl w-full mb-4 p-4 text-sm outline-none text-indigo-400 font-mono text-center">
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <input type="number" id="balIn" placeholder="Balance ($)" class="bg-black/40 border border-white/10 rounded-2xl p-4 text-center text-sm outline-none">
+            <input type="number" id="rskIn" placeholder="Risk %" class="bg-black/40 border border-white/10 rounded-2xl p-4 text-center text-sm outline-none">
         </div>
+        <button onclick="commitConfig()" class="w-full text-[11px] font-black uppercase text-indigo-500 tracking-[0.3em] hover:text-white transition-colors">Sync Core Engine</button>
     </div>
 
     <script>
-        let KEY = localStorage.getItem('omni_key') || "";
-        let BAL = localStorage.getItem('omni_bal') || 1000;
-        let RSK = localStorage.getItem('omni_risk') || 1;
-        let files = [null, null, null, null];
+        let API_KEY = localStorage.getItem('omni_key_v11') || "";
+        let BALANCE = parseFloat(localStorage.getItem('omni_bal_v11')) || 1000;
+        let RISK_PCT = parseFloat(localStorage.getItem('omni_risk_v11')) || 1;
+        let dataTiers = [null, null, null, null];
 
-        document.getElementById('riskDisplay').innerText = `Risk: ${RSK}% | Bal: $${BAL}`;
+        document.getElementById('riskHeader').innerText = `Risk: ${RISK_PCT}% | Bal: $${BALANCE}`;
+        if (API_KEY) validateEngine(API_KEY);
 
-        if (KEY) validate(KEY);
-
-        async function validate(k) {
-            const s = document.getElementById('status');
-            const d = document.getElementById('assetDisp');
+        async function validateEngine(k) {
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${k}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${k}`, {
                     method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: 'ping' }] }] })
                 });
-                if (res.ok) { s.className = "status-dot active-dot"; d.innerText = "[ READY ]"; }
-            } catch (e) { d.innerText = "[ AUTH FAILED ]"; }
+                if (res.ok) { 
+                    document.getElementById('statusDot').className = "w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_20px_#10b981] status-pulse"; 
+                    document.getElementById('pairName').innerText = "[ ENGINE OPTIMIZED ]";
+                }
+            } catch (e) { document.getElementById('pairName').innerText = "[ AUTH FAILED ]"; }
         }
 
-        function save() {
-            localStorage.setItem('omni_key', document.getElementById('apiKey').value.trim());
-            localStorage.setItem('omni_bal', document.getElementById('balance').value || 1000);
-            localStorage.setItem('omni_risk', document.getElementById('risk').value || 1);
+        function commitConfig() {
+            localStorage.setItem('omni_key_v11', document.getElementById('keyIn').value.trim());
+            localStorage.setItem('omni_bal_v11', document.getElementById('balIn').value || 1000);
+            localStorage.setItem('omni_risk_v11', document.getElementById('rskIn').value || 1);
             location.reload();
         }
 
         function sync(i) {
-            files[i] = document.getElementById(`i${i}`).files[0];
+            dataTiers[i] = document.getElementById(`i${i}`).files[0];
             document.getElementById(`box${i}`).classList.add('has-file');
-            document.getElementById(`icon${i}`).className = "fa-solid fa-check text-indigo-500 text-xl mb-2";
+            document.getElementById(`ic${i}`).className = "fa-solid fa-circle-check text-indigo-500 text-4xl mb-2";
         }
 
-        async function analyze() {
-            if (!KEY || files.includes(null)) return alert("Data Void.");
-            const btn = document.getElementById('go'); btn.innerText = "Scanning...";
+        async function executeSurgicalScan() {
+            if (!API_KEY || dataTiers.includes(null)) return alert("Missing Tier Data.");
+            const btn = document.getElementById('goBtn'); btn.innerHTML = `<i class="fa-solid fa-microchip fa-spin"></i> CALCULATING...`;
+            
             try {
-                const parts = await Promise.all(files.map(f => {
+                const parts = await Promise.all(dataTiers.map(f => {
                     return new Promise(r => {
                         const rd = new FileReader(); rd.readAsDataURL(f);
                         rd.onload = () => r({ inlineData: { mimeType: f.type, data: rd.result.split(',')[1] } });
                     });
                 }));
-                const prompt = `Task: Einstein Scalper Analysis. Detect Asset. Confidence > 65% triggers BUY/SELL. RR > 1:2. Bullet format: CONTEXT, TRAP, TRIGGER. JSON ONLY: {"p": "PAIR", "b": "BUY|SELL|WAIT", "e": number, "s": number, "t": number, "tr": number, "l": "..."}`;
-                const req = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${KEY}`, {
+
+                const prompt = `Act as an Elite Real-Time Analyst. 
+                SMC Strategy: Sweep -> MSS -> Entry. 
+                Accuracy: A+ Precision (Verify Axis Prices).
+                Logic: Exactly 10-15 words. Format: C: [Info] T: [Info] Tr: [Info]
+                JSON ONLY: {"p": "PAIR", "b": "BUY|SELL|WAIT", "e": number, "s": number, "t": number, "tr": number, "l": "C: ... T: ... Tr: ..."}`;
+
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
                     method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...parts] }] })
                 });
+
                 const res = JSON.parse((await req.json()).candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/)[0]);
-                document.getElementById('assetDisp').innerText = res.p;
-                render(res);
-            } catch (e) { alert("Error."); } finally { btn.innerText = "Execute Scan"; }
+                document.getElementById('pairName').innerText = res.p;
+                renderFinalResults(res);
+            } catch (e) { alert("Matrix Error: Check API/Connection."); } finally { btn.innerText = "Execute A+ Scan"; }
         }
 
-        function render(d) {
-            document.getElementById('results').classList.remove('hidden');
-            const b = document.getElementById('bias'); const w = document.getElementById('wait');
-            b.innerText = d.b;
+        function renderFinalResults(d) {
+            document.getElementById('outPanel').classList.remove('hidden');
+            const bTxt = document.getElementById('biasTxt'); const wBox = document.getElementById('waitMsg');
+            bTxt.innerText = d.b;
             if (d.b === "WAIT") {
-                w.classList.remove('hidden'); w.innerText = `TRIGGER: ${d.tr || '--'}`;
-                b.className = "glow-text text-8xl uppercase text-amber-500";
+                wBox.classList.remove('hidden'); wBox.innerText = `TRIGGER: ${d.tr || '--'}`;
+                bTxt.className = "glow-bias text-amber-500";
             } else {
-                w.classList.add('hidden');
-                b.className = d.b === 'BUY' ? "glow-text text-8xl uppercase text-emerald-500" : "glow-text text-8xl uppercase text-rose-600";
+                wBox.classList.add('hidden');
+                bTxt.className = d.b === 'BUY' ? "glow-bias text-emerald-500" : "glow-bias text-rose-600";
             }
-            document.getElementById('ent').innerText = d.e || "--";
-            document.getElementById('sl').innerText = d.s || "--";
-            document.getElementById('tp').innerText = d.t || "--";
-            document.getElementById('logic').innerText = d.l;
+            document.getElementById('entVal').innerText = d.e || "--";
+            document.getElementById('slVal').innerText = d.s || "--";
+            document.getElementById('tpVal').innerText = d.t || "--";
+            document.getElementById('logicSummary').innerText = d.l;
+            
             const dist = Math.abs(d.e - d.s);
-            document.getElementById('lot').innerText = dist > 0 ? ((BAL * (RSK/100)) / (dist * 10)).toFixed(2) : "0.01";
-            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            const rVal = (BALANCE * (RISK_PCT/100));
+            document.getElementById('lotVal').innerText = dist > 0 ? (rVal / (dist * 10)).toFixed(2) : "0.01";
+            document.getElementById('outPanel').scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </body>

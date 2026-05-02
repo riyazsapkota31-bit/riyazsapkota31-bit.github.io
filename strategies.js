@@ -1,35 +1,56 @@
+// --- OMNI-REAL | PRECISION V11 (ULTRA-DYNAMIC ENGINE) ---
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// CRITICAL: Added '-exp' to match the experimental 2.5 series
-const MODEL = "gemini-2.5-flash-lite-exp"; 
+// STABLE MODEL: Fixed to bypass "Model Not Found" errors
+const MODEL = "gemini-1.5-flash"; 
 
-window.onload = () => { if (API_KEY) lockUI(); };
+window.onload = () => { 
+    if (API_KEY) lockUI(); 
+};
 
-// --- UI DYNAMICS ---
+// --- UI DYNAMICS & PERSISTENCE ---
 function toggleDrawer() {
     document.getElementById('sideDrawer').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('hidden');
-    // Ensure inputs are interactive
+    // Ensure inputs are clickable when menu is open
     ['bal', 'risk', 'apiInput'].forEach(id => {
         const el = document.getElementById(id);
         if(el) { el.disabled = false; el.style.pointerEvents = 'auto'; }
     });
 }
 
+function lockUI() {
+    const input = document.getElementById('apiInput');
+    const lockBtn = document.getElementById('lockBtn');
+    const editBtn = document.getElementById('editBtn');
+    if(input) {
+        input.value = "••••••••••••••••••••";
+        input.disabled = true;
+        input.classList.add('opacity-40');
+    }
+    if(lockBtn) lockBtn.classList.add('hidden');
+    if(editBtn) editBtn.classList.remove('hidden');
+}
+
+function enableEdit() {
+    const input = document.getElementById('apiInput');
+    const lockBtn = document.getElementById('lockBtn');
+    const editBtn = document.getElementById('editBtn');
+    input.value = "";
+    input.disabled = false;
+    input.classList.remove('opacity-40');
+    input.focus();
+    lockBtn.classList.remove('hidden');
+    editBtn.classList.add('hidden');
+}
+
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
-    if (!val || val.includes("•")) return alert("Enter a valid key.");
+    if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
     localStorage.setItem('omni_api_v3', val);
     API_KEY = val;
     lockUI();
     toggleDrawer();
-}
-
-function lockUI() {
-    const input = document.getElementById('apiInput');
-    if(input) {
-        input.value = "••••••••••••••••••••";
-        input.disabled = true;
-    }
+    alert("Terminal Linked Successfully.");
 }
 
 function markFile(idx) {
@@ -52,6 +73,7 @@ async function executeScan() {
     if (!API_KEY) return alert("System Offline: Sync Terminal Key.");
     
     const btn = document.getElementById('scanBtn');
+    const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
     
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
@@ -61,9 +83,12 @@ async function executeScan() {
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
-        const prompt = `Perform high-precision SMC/ICT analysis. 
-        If HTF/LTF trend mismatch or consolidation, return bias 'WAIT'.
-        Return ONLY raw JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"score":number,"logic":"string"}`;
+        
+        // Multi-Strategy Prompting (SMC, ICT, Price Action)
+        const prompt = `Act as an Institutional SMC Analyst. Analyze 4 charts.
+        1. Check SMC (Order Blocks/FVG) and ICT (Liquidity/MSS).
+        2. If HTF/LTF mismatch or consolidation, return bias 'WAIT'.
+        Return ONLY raw JSON: {"strategy":"INFINITY-V11","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -71,47 +96,51 @@ async function executeScan() {
             body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] })
         });
 
-        // ERROR-PROOFING: Handle the 429 error from your dashboard
+        // Robust Error Check
         if (response.status === 429) {
-            alert("QUOTA EXHAUSTED: Please wait 2-5 minutes for the API to reset.");
-            return;
-        }
-
-        if (!response.ok) {
-            const errData = await response.json();
-            alert(`API ERROR: ${errData.error.message}`);
+            alert("QUOTA EXHAUSTED: Rate limit hit. Wait 2 minutes.");
             return;
         }
 
         const data = await response.json();
+        
+        if (!data.candidates) {
+            alert("API ERROR: Check model permissions in AI Studio.");
+            return;
+        }
+
         const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
 
-        renderOutput(res);
+        renderOutput(res, resultBox);
 
     } catch (e) {
         console.error(e);
-        alert("ENGINE ERROR: Model output was unreadable. Check your internet.");
+        alert("TERMINAL ERROR: Connection timed out or Model rejected analysis.");
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;
     }
 }
 
-function renderOutput(res) {
-    const resultBox = document.getElementById('resultBox');
+function renderOutput(res, resultBox) {
     const actionTxt = document.getElementById('actionText');
+    const logicTxt = document.getElementById('logicText');
     
     resultBox.classList.remove('hidden');
-    actionTxt.innerText = res.bias === "WAIT" ? "NO TRADE" : res.bias;
-    document.getElementById('logicText').innerText = res.logic;
-
+    
+    // --- WAIT / WATCH FEATURE ---
     if (res.bias === "WAIT") {
+        actionTxt.innerText = "NO TRADE";
         actionTxt.className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
-        ['entText','slText','tpText','lotText'].forEach(id => document.getElementById(id).innerText = "---");
-    } else {
+        logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Pending Alignment"} | ${res.logic}`;
+        ['entText','slText','tpText','lotText','supText','resText'].forEach(id => document.getElementById(id).innerText = "---");
+    } 
+    // --- BUY / SELL FEATURE ---
+    else {
+        actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        // Dynamic Math
+        // Math & Position Sizing
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1;
         const slDist = Math.abs(res.entry - res.sl);
@@ -121,6 +150,10 @@ function renderOutput(res) {
         document.getElementById('slText').innerText = res.sl.toFixed(5);
         document.getElementById('tpText').innerText = res.tp.toFixed(5);
         document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
+        document.getElementById('supText').innerText = res.support?.toFixed(2) || "---";
+        document.getElementById('resText').innerText = res.resistance?.toFixed(2) || "---";
+        logicTxt.innerText = res.logic;
     }
+
     resultBox.scrollIntoView({ behavior: 'smooth' });
 }

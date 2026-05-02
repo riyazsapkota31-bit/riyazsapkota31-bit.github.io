@@ -1,142 +1,85 @@
-/** * OMNI-REAL INFINITY V9.0 | GLOBAL STRATEGY AGGREGATOR
- * MODELS: Gemini 2.5 Flash / Lite
- */
+let API = localStorage.getItem('omni_v10_final') || "";
+let data = [null, null, null, null];
 
-let API_KEY = localStorage.getItem('omni_api_v3') || "";
-let marketData = [null, null, null, null]; 
-const MODEL_POOL = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+if (API) document.getElementById('status').className = "w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]";
 
-window.onload = () => { 
-    if (API_KEY) {
-        lockUI(); 
-        document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]";
-    }
-};
-
-function markFile(idx) {
-    if (document.getElementById(`img${idx}`).files[0]) {
-        marketData[idx] = document.getElementById(`img${idx}`).files[0]; 
-        const box = document.getElementById(`box${idx}`);
-        box.classList.add('has-file');
-        document.getElementById(`content${idx}`).innerHTML = `
-            <div class="bg-emerald-500/20 w-12 h-12 rounded-full flex items-center justify-center mb-2 mx-auto">
-                <i class="fa-solid fa-check text-emerald-500 text-xl"></i>
-            </div>
-            <p class="text-[10px] font-black text-emerald-500 tracking-widest">SYNCED</p>
-        `;
-    }
+function save() {
+    const v = document.getElementById('key').value.trim();
+    if (v) { localStorage.setItem('omni_v10_final', v); location.reload(); }
 }
 
-async function fileToPart(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve({ inlineData: { mimeType: file.type, data: reader.result.split(',')[1] } });
-    });
+function sync(i) {
+    data[i] = document.getElementById(`img${i}`).files[0];
+    document.getElementById(`box${i}`).classList.add('has-file');
+    document.getElementById(`c${i}`).innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500 text-3xl"></i><p class="text-[10px] font-black text-emerald-500 mt-2 uppercase">SYCHRONIZED</p>`;
 }
 
-async function executeScan() {
-    if (!API_KEY) return alert("System Offline: Connect Gemini API.");
-    const pair = document.getElementById('pairName').value || "Asset";
-    if (marketData.some(f => f === null)) return alert("Data Deficit: Please upload 4-Tier Chart Set.");
-
-    const btn = document.getElementById('scanBtn');
-    btn.innerHTML = `<i class="fa-solid fa-microchip fa-spin mr-2"></i> AGGREGATING STRATEGIES...`;
-    btn.disabled = true;
+async function run() {
+    if (!API) return alert("System Offline: Connect API Key.");
+    if (data.includes(null)) return alert("Data Gap: Upload 4-Tier Strategic Set.");
+    
+    const btn = document.getElementById('go');
+    const asset = document.getElementById('assetDisplay');
+    btn.innerHTML = `<i class="fa-solid fa-microchip fa-spin mr-3"></i> ANALYZING MARKET...`;
+    asset.innerText = "DETECTING PAIR...";
 
     try {
-        const imageParts = await Promise.all(marketData.map(fileToPart));
-        
-        // THE UNIVERSAL CONFLUENCE PROMPT
-        const prompt = `System: Quantitative Market Strategist. Asset: ${pair}.
-        Evaluate 4 charts (1H Bias, 15M Structure, 1M Entry, DXY Index) for universal confluence.
-        
-        TASK:
-        1. STRATEGY CHECK: Run analysis for SMC/ICT, Wyckoff (Accum/Dist), Price Action (Trend/BOS), and Supply & Demand.
-        2. DXY FILTER: Confirm move direction against Dollar strength.
-        3. CONSOLIDATION: If price is ranging or strategies conflict, return bias "WAIT" with a trigger price.
-        4. ACCURACY: Choose the SINGLE strategy providing the highest RR (Risk:Reward).
+        const parts = await Promise.all(data.map(f => {
+            return new Promise(r => {
+                const fr = new FileReader();
+                fr.readAsDataURL(f);
+                fr.onload = () => r({ inlineData: { mimeType: f.type, data: fr.result.split(',')[1] } });
+            });
+        }));
 
-        OUTPUT JSON ONLY:
+        const prompt = `Task: Institutional Trade Analysis. 
+        1. Look at all 4 charts (1H, 15M, 1M, DXY) and detect the Asset Pair.
+        2. Aggregator: Combine SMC, Price Action, and DXY Correlation.
+        3. IF CHOPPY: Set bias "WAIT" and give trigger_price. 
+        4. MENTOR LOGIC: Max 2 simple, punchy sentences per point.
+
+        JSON ONLY:
         {
-            "bias": "BUY|SELL|WAIT",
-            "entry": number,
-            "sl": number,
-            "tp": number,
-            "trigger": number,
-            "logic": "1. CHOSEN STRATEGY: [Explain why this strategy won] \\n2. THE STORY (Mentorship): [Simple breakdown for beginner/intermediate] \\n3. THE TRAP (Liquidity): [Target zones] \\n4. THE TRIGGER: [Breakout level]"
+            "p": "PAIR", "b": "BUY|SELL|WAIT", "e": number, "s": number, "t": number, "tr": number,
+            "l": "1. THE STORY: [Short]\\n2. THE TRAP: [Short]\\n3. THE TRIGGER: [Short]"
         }`;
 
-        let success = false;
-        for (const modelName of MODEL_POOL) {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${API_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...imageParts] }] })
-            });
+        const req = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${API}`, {
+            method: 'POST',
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, ...parts] }] })
+        });
 
-            if (response.ok) {
-                const data = await response.json();
-                const raw = data.candidates[0].content.parts[0].text;
-                const jsonMatch = raw.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    renderOutput(JSON.parse(jsonMatch[0]));
-                    success = true;
-                    break;
-                }
-            }
-        }
-        if (!success) throw new Error("API Sync Error. Verify your key.");
-    } catch (e) { alert("SYSTEM ALERT: " + e.message); }
-    finally { btn.innerHTML = "PERFORM UNIVERSAL SCAN"; btn.disabled = false; }
+        const d = await req.json();
+        const res = JSON.parse(d.candidates[0].content.parts[0].text.match(/\{[\s\S]*\}/)[0]);
+        
+        asset.innerText = `TARGET: ${res.p}`;
+        render(res);
+    } catch (e) { alert("SYSTEM ALERT: Critical Sync Error."); }
+    finally { btn.innerText = "Perform Multi-Strategy Scan"; }
 }
 
-function renderOutput(res) {
-    document.getElementById('resultBox').classList.remove('hidden');
-    const act = document.getElementById('actionText');
-    act.innerText = res.bias;
+function render(r) {
+    document.getElementById('results').classList.remove('hidden');
+    const b = document.getElementById('bias');
+    const w = document.getElementById('waitBox');
     
-    // Sentiment Glow Effects
-    if (res.bias === 'BUY') act.className = "text-7xl font-black italic mb-6 glow-text text-emerald-400";
-    else if (res.bias === 'SELL') act.className = "text-7xl font-black italic mb-6 glow-text text-rose-500";
-    else act.className = "text-7xl font-black italic mb-6 glow-text text-amber-400";
-
-    document.getElementById('entText').innerText = res.entry || "---";
-    document.getElementById('slText').innerText = res.sl || "---";
-    document.getElementById('tpText').innerText = res.tp || "---";
-    
-    // Adaptive Lot Size (1% Risk Management)
-    const slDist = Math.abs(res.entry - res.sl);
-    document.getElementById('lotText').innerText = slDist > 0 ? ((1000 * 0.01) / (slDist * 10)).toFixed(2) + " Lots" : "ADAPTIVE";
-
-    let finalLogic = res.logic;
-    if (res.bias === "WAIT" && res.trigger) {
-        finalLogic = `<span class="text-amber-400 font-black">MARKET PAUSE:</span> Do not execute until price triggers ${res.trigger}.\\n\\n${res.logic}`;
+    b.innerText = r.b;
+    if (r.b === "WAIT" && r.tr) {
+        w.classList.remove('hidden');
+        document.getElementById('waitMsg').innerText = `WAIT FOR TRIGGER: ${r.tr}`;
+        b.className = "text-[10rem] font-black italic glow-bias text-amber-500";
+    } else {
+        w.classList.add('hidden');
+        b.className = r.b === 'BUY' ? "text-[10rem] font-black italic glow-bias text-emerald-500" : "text-[10rem] font-black italic glow-bias text-rose-600";
     }
-    document.getElementById('logicText').innerText = finalLogic;
-    document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth' });
-}
 
-// TERMINAL CONTROLS
-function lockUI() {
-    const inp = document.getElementById('apiInput');
-    inp.disabled = true; inp.value = "••••••••••••••••";
-    document.getElementById('lockBtn').classList.add('hidden');
-    document.getElementById('editBtn').classList.remove('hidden');
-    document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]";
-}
-function enableEdit() {
-    document.getElementById('apiInput').disabled = false;
-    document.getElementById('apiInput').value = "";
-    document.getElementById('lockBtn').classList.remove('hidden');
-    document.getElementById('editBtn').classList.add('hidden');
-    document.getElementById('statusDot').className = "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_10px_#f43f5e]";
-}
-function saveApiKey() {
-    const val = document.getElementById('apiInput').value.trim();
-    if (val) { localStorage.setItem('omni_api_v3', val); API_KEY = val; lockUI(); toggleDrawer(); }
-}
-function toggleDrawer() {
-    document.getElementById('sideDrawer').classList.toggle('translate-x-full');
-    document.getElementById('overlay').classList.toggle('hidden');
+    document.getElementById('e').innerText = r.e || "--";
+    document.getElementById('s').innerText = r.s || "--";
+    document.getElementById('t').innerText = r.t || "--";
+    document.getElementById('logic').innerText = r.l;
+    
+    const dist = Math.abs(r.e - r.s);
+    document.getElementById('l').innerText = dist > 0 ? ((1000 * 0.01) / (dist * 10)).toFixed(2) + " Lots" : "ADAPTIVE";
+    
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 }

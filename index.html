@@ -7,174 +7,143 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* I HAVE KEPT YOUR EXACT CSS STYLES BELOW */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #050508; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow-x: hidden; padding: 16px 16px 100px 16px; }
-        .glow-green { text-shadow: 0 0 24px rgba(16,185,129,0.6); }
-        .glow-red   { text-shadow: 0 0 24px rgba(239,68,68,0.6); }
-        .glow-wait  { text-shadow: 0 0 24px rgba(148,163,184,0.4); }
         .glass-card { background: rgba(12,12,22,0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; }
+        
+        /* Upload Boxes */
         .upload-box { background: rgba(12,12,22,0.9); border: 1.5px dashed rgba(99,102,241,0.4); border-radius: 20px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; position: relative; gap: 8px; }
-        .upload-box:active { transform: scale(0.96); }
-        .upload-box .upload-icon { font-size: 22px; color: rgba(99,102,241,0.5); }
-        .upload-box .upload-label { font-size: 8px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(99,102,241,0.5); text-align: center; padding: 0 8px; }
-        .upload-box .chart-label { font-size: 7px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #475569; text-align: center; padding: 0 8px; }
         .upload-box.has-file { border: 1.5px solid #10b981; background: rgba(16,185,129,0.06); box-shadow: 0 0 20px rgba(16,185,129,0.2); }
         .upload-box.has-file .upload-icon, .upload-box.has-file .upload-label, .upload-box.has-file .chart-label { display: none; }
+        
+        /* Checkmark Animation */
         .tick-wrap { display: none; flex-direction: column; align-items: center; gap: 8px; }
         .upload-box.has-file .tick-wrap { display: flex; }
         .tick-icon { font-size: 32px; color: #10b981; filter: drop-shadow(0 0 10px rgba(16,185,129,0.8)); }
-        .tick-label { font-size: 8px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: #10b981; }
-        .scan-btn { width: 100%; padding: 20px; border-radius: 100px; background: linear-gradient(135deg, #4f46e5, #7c3aed); font-weight: 900; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; border: none; color: white; cursor: pointer; box-shadow: 0 8px 32px rgba(79,70,229,0.4); }
+        
+        /* Scan Button */
+        .scan-btn { width: 100%; padding: 20px; border-radius: 100px; background: linear-gradient(135deg, #4f46e5, #7c3aed); font-weight: 900; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; border: none; color: white; cursor: pointer; box-shadow: 0 8px 32px rgba(79,70,229,0.4); transition: transform 0.2s; }
+        .scan-btn:active { transform: scale(0.96); }
+
+        /* Results Display */
         .signal-card { background: linear-gradient(145deg, rgba(12,12,22,0.95), rgba(18,18,35,0.95)); border: 1px solid rgba(255,255,255,0.07); border-radius: 24px; overflow: hidden; position: relative; }
         .signal-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #10b981, transparent); }
         .signal-card.sell-card::before { background: linear-gradient(90deg, transparent, #ef4444, transparent); }
         .signal-card.wait-card::before { background: linear-gradient(90deg, transparent, #64748b, transparent); }
-        .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 100px; font-size: 10px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; }
-        .pill-green { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+        /* Typography & Utils */
+        .pill { padding: 4px 12px; border-radius: 100px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
         .data-label { font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #475569; }
         .data-value { font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700; }
-        .lots-box { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 16px; padding: 16px; }
-        .sr-box { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: 16px; padding: 16px; }
-        .watch-box { background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.25); border-radius: 16px; padding: 20px; text-align: center; }
-        .logic-card { background: rgba(8,8,16,0.9); border: 1px solid rgba(255,255,255,0.04); border-radius: 20px; padding: 20px; }
-        #sideDrawer { position: fixed; top: 0; right: 0; height: 100%; width: 85%; max-width: 360px; background: #080810; border-left: 1px solid rgba(255,255,255,0.06); padding: 24px; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); z-index: 1000; overflow-y: auto; }
+        
+        /* Side Drawer */
+        #sideDrawer { position: fixed; top: 0; right: 0; height: 100%; width: 85%; max-width: 360px; background: #080810; border-left: 1px solid rgba(255,255,255,0.06); padding: 24px; transform: translateX(100%); transition: 0.35s ease; z-index: 1000; }
         #sideDrawer.open { transform: translateX(0); }
-        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 999; display: none; }
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; display: none; }
         #overlay.show { display: block; }
-        .drawer-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 14px 16px; font-size: 12px; color: #e2e8f0; outline: none; }
-        .drawer-label { font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #475569; margin-bottom: 8px; display: block; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .pulse-dot { animation: pulse 2s infinite; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-        .fade-up { animation: fadeUp 0.4s ease forwards; }
     </style>
 </head>
 <body>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;margin-top:8px;">
+    <div class="flex justify-between items-center mb-8 mt-2">
         <div>
-            <h1 style="font-size:28px;font-weight:900;letter-spacing:-1px;font-style:italic;color:#f1f5f9;">OMNI–REAL</h1>
-            <p style="font-size:9px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:#10b981;display:flex;align-items:center;gap:6px;margin-top:2px;">
-                <span class="pulse-dot" style="width:6px;height:6px;background:#10b981;border-radius:50%;display:inline-block;"></span>
-                Infinity Scalper V8
+            <h1 class="text-3xl font-black italic text-slate-100 leading-tight">OMNI–REAL</h1>
+            <p class="text-[9px] font-extrabold tracking-[0.25em] text-emerald-500 uppercase flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                Infinity Scalper V8.2
             </p>
         </div>
-        <button onclick="toggleDrawer()" style="width:48px;height:48px;background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);border-radius:16px;color:#818cf8;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;position:relative;">
+        <button onclick="toggleDrawer()" class="w-12 h-12 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-indigo-400 flex items-center justify-center">
             <i class="fa-solid fa-sliders"></i>
         </button>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div class="grid grid-cols-2 gap-3 mb-4">
         <div class="upload-box" id="box0" onclick="document.getElementById('img0').click()">
-            <input type="file" id="img0" style="display:none;" accept="image/*" onchange="markFile(0)">
-            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-            <span class="upload-label">Upload</span>
-            <span class="chart-label">HTF Bias (1H)</span>
-            <div class="tick-wrap"><i class="fa-solid fa-circle-check tick-icon"></i><span class="tick-label">HTF Bias (1H)</span></div>
+            <input type="file" id="img0" class="hidden" accept="image/*" onchange="markFile(0)">
+            <i class="fa-solid fa-cloud-arrow-up text-indigo-400 text-xl upload-icon"></i>
+            <span class="text-[10px] font-bold text-slate-400 chart-label uppercase">1H Bias</span>
+            <div class="tick-wrap"><i class="fa-solid fa-circle-check tick-icon"></i></div>
         </div>
         <div class="upload-box" id="box1" onclick="document.getElementById('img1').click()">
-            <input type="file" id="img1" style="display:none;" accept="image/*" onchange="markFile(1)">
-            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-            <span class="upload-label">Upload</span>
-            <span class="chart-label">LTF Struct (15M)</span>
-            <div class="tick-wrap"><i class="fa-solid fa-circle-check tick-icon"></i><span class="tick-label">LTF Struct (15M)</span></div>
+            <input type="file" id="img1" class="hidden" accept="image/*" onchange="markFile(1)">
+            <i class="fa-solid fa-cloud-arrow-up text-indigo-400 text-xl upload-icon"></i>
+            <span class="text-[10px] font-bold text-slate-400 chart-label uppercase">15M Struct</span>
+            <div class="tick-wrap"><i class="fa-solid fa-circle-check tick-icon"></i></div>
         </div>
         <div class="upload-box" id="box2" onclick="document.getElementById('img2').click()">
-            <input type="file" id="img2" style="display:none;" accept="image/*" onchange="markFile(2)">
-            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-            <span class="upload-label">Upload</span>
-            <span class="chart-label">Entry (1M)</span>
-            <div class="tick-wrap"><i class="fa-solid fa-circle-check tick-icon"></i><span class="tick-label">Entry (1M)</span></div>
+            <input type="file" id="img2" class="hidden" accept="image/*" onchange="markFile(2)">
+            <i class="fa-solid fa-cloud-arrow-up text-indigo-400 text-xl upload-icon"></i>
+            <span class="text-[10px] font-bold text-slate-400 chart-label uppercase">1M Entry</span>
+            <div class="tick-wrap"><i class="fa-solid fa-circle-check tick-icon"></i></div>
         </div>
         <div class="upload-box" id="box3" onclick="document.getElementById('img3').click()">
-            <input type="file" id="img3" style="display:none;" accept="image/*" onchange="markFile(3)">
-            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-            <span class="upload-label">Upload</span>
-            <span class="chart-label">DXY Data</span>
-            <div class="tick-wrap"><i class="fa-solid fa-circle-check tick-icon"></i><span class="tick-label">DXY Data</span></div>
+            <input type="file" id="img3" class="hidden" accept="image/*" onchange="markFile(3)">
+            <i class="fa-solid fa-cloud-arrow-up text-indigo-400 text-xl upload-icon"></i>
+            <span class="text-[10px] font-bold text-slate-400 chart-label uppercase">DXY Index</span>
+            <div class="tick-wrap"><i class="fa-solid fa-circle-check tick-icon"></i></div>
         </div>
     </div>
 
-    <button id="scanBtn" class="scan-btn" onclick="executeScan()" style="margin-bottom:24px;">Perform Multi-Chart Scan</button>
+    <button id="scanBtn" class="scan-btn" onclick="executeScan()">Perform Multi-Chart Scan</button>
 
-    <div id="resultBox" style="display:none;" class="fade-up">
-        <div class="signal-card" id="signalCard" style="padding:24px;margin-bottom:12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <span id="strategyPill" class="pill pill-green">Quant V8.2</span>
-                <span id="scoreBadge" style="font-size:10px;font-weight:800;color:#475569;letter-spacing:0.1em;">SCORE —/10</span>
+    <div id="resultBox" class="hidden mt-6">
+        <div class="signal-card p-6 mb-3" id="signalCard">
+            <div class="flex justify-between items-center mb-6">
+                <span id="strategyPill" class="pill bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Quant V8.2</span>
+                <span id="scoreBadge" class="text-[10px] font-black text-slate-500 tracking-widest uppercase">SCORE —/10</span>
             </div>
-            <div style="text-align:center;margin-bottom:24px;">
-                <h2 id="actionText" style="font-size:56px;font-weight:900;font-style:italic;line-height:1;color:#64748b;">---</h2>
-            </div>
+            
+            <h2 id="actionText" class="text-6xl font-black italic text-center mb-6 text-slate-600 transition-colors duration-500">---</h2>
 
-            <div id="tradeGrid" style="display:none;">
-                <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:20px;margin-bottom:16px;">
-                    <div class="data-row"><span class="data-label">Execution</span><span class="data-value" id="entText" style="color:#f1f5f9;">—</span></div>
-                    <div class="data-row"><span class="data-label">Hard Stop</span><span class="data-value" id="slText" style="color:#ef4444;">—</span></div>
-                    <div class="data-row"><span class="data-label">Target</span><span class="data-value" id="tpText" style="color:#10b981;">—</span></div>
-                    <div class="data-row"><span class="data-label">Risk : Reward</span><span class="data-value" id="rrText" style="color:#818cf8;">—</span></div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div class="lots-box">
-                        <p style="font-size:8px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#f59e0b;margin-bottom:8px;">Recommended Lots</p>
-                        <p id="lotText" style="font-family:'Courier New',monospace;font-size:22px;font-weight:700;color:#fbbf24;">—</p>
+            <div id="tradeGrid" class="hidden border-t border-white/5 pt-5">
+                <div class="flex justify-between py-3 border-b border-white/5"><span class="data-label">Execution</span><span class="data-value" id="entText">—</span></div>
+                <div class="flex justify-between py-3 border-b border-white/5"><span class="data-label">Hard Stop</span><span class="data-value text-red-500" id="slText">—</span></div>
+                <div class="flex justify-between py-3 border-b border-white/5"><span class="data-label">Target</span><span class="data-value text-emerald-500" id="tpText">—</span></div>
+                
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="bg-amber-500/5 border border-amber-500/20 p-4 rounded-2xl text-center">
+                        <p class="data-label text-amber-500 mb-1">Lot Size</p>
+                        <p id="lotText" class="text-2xl font-bold text-amber-400">0.00</p>
                     </div>
-                    <div class="sr-box">
-                        <p style="font-size:8px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#818cf8;margin-bottom:6px;">Support</p>
-                        <p id="supportText" style="font-family:'Courier New',monospace;font-size:14px;font-weight:700;color:#a5b4fc;">—</p>
-                        <p style="font-size:8px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#818cf8;margin-top:10px;margin-bottom:6px;">Resistance</p>
-                        <p id="resistanceText" style="font-family:'Courier New',monospace;font-size:14px;font-weight:700;color:#a5b4fc;">—</p>
+                    <div class="bg-indigo-500/5 border border-indigo-500/20 p-4 rounded-2xl text-center">
+                        <p class="data-label text-indigo-400 mb-1">R : R</p>
+                        <p id="rrText" class="text-2xl font-bold text-indigo-300">1:0</p>
                     </div>
                 </div>
             </div>
 
-            <div id="waitGrid" style="display:none;">
-                <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:20px;">
-                    <div class="watch-box" style="margin-bottom:12px;">
-                        <p style="font-size:8px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#ca8a04;margin-bottom:8px;">Watch Level</p>
-                        <p id="watchLevel" style="font-size:30px;font-weight:900;color:#fbbf24;font-family:'Courier New',monospace;">—</p>
-                    </div>
-                    <div class="sr-box" style="margin-bottom:12px;">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                            <div>
-                                <p style="font-size:8px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#818cf8;margin-bottom:6px;">Support</p>
-                                <p id="waitSupportText" style="font-family:'Courier New',monospace;font-size:14px;font-weight:700;color:#a5b4fc;">—</p>
-                            </div>
-                            <div>
-                                <p style="font-size:8px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#818cf8;margin-bottom:6px;">Resistance</p>
-                                <p id="waitResistanceText" style="font-family:'Courier New',monospace;font-size:14px;font-weight:700;color:#a5b4fc;">—</p>
-                            </div>
-                        </div>
-                    </div>
+            <div id="waitGrid" class="hidden pt-5">
+                <div class="bg-amber-500/10 border border-amber-500/20 p-6 rounded-2xl text-center">
+                    <p class="data-label text-amber-500 mb-2">Watch Level</p>
+                    <p id="watchLevel" class="text-3xl font-black text-amber-400 tracking-tighter">—</p>
                 </div>
             </div>
         </div>
 
-        <div class="logic-card" style="margin-bottom:8px;">
-            <p style="font-size:8px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#334155;margin-bottom:10px;">Analysis</p>
-            <p id="logicText" style="font-size:12px;line-height:1.7;color:#64748b;font-style:italic;">Analysis pending...</p>
+        <div class="bg-slate-900/50 border border-white/5 p-5 rounded-2xl">
+            <p class="data-label mb-3">Model Reasoning</p>
+            <p id="logicText" class="text-xs italic text-slate-400 leading-relaxed">—</p>
         </div>
     </div>
 
     <div id="overlay" onclick="toggleDrawer()"></div>
     <div id="sideDrawer">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
-            <h3 style="font-size:18px;font-weight:900;font-style:italic;color:#f1f5f9;">MASTER CONTROL</h3>
-            <button onclick="toggleDrawer()" style="background:none;border:none;color:#475569;font-size:20px;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="glass-card" style="padding:20px;margin-bottom:24px;">
-            <span class="drawer-label">Access Key</span>
-            <input type="password" id="apiInput" placeholder="ENTER ACCESS KEY..." class="drawer-input" style="margin-bottom:12px;">
-            <div style="display:flex;gap:8px;">
-                <button id="lockBtn" onclick="saveApiKey()" style="flex:1;padding:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border:none;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:white;cursor:pointer;">Sync Terminal</button>
-                <button id="editBtn" onclick="enableEdit()" style="display:none;flex:1;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;font-size:10px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#94a3b8;cursor:pointer;">Edit Link</button>
+        <h3 class="text-xl font-black text-white mb-6">MASTER CONTROL</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="drawer-label">Balance ($)</label>
+                <input type="number" id="bal" value="10000" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white outline-none">
             </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:16px;">
-            <div><span class="drawer-label">Account Balance ($)</span><input type="number" id="bal" value="10000" class="drawer-input"></div>
-            <div><span class="drawer-label">Risk Per Trade (%)</span><input type="number" id="risk" value="1" class="drawer-input"></div>
+            <div>
+                <label class="drawer-label">Risk (%)</label>
+                <input type="number" id="risk" value="1" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white outline-none">
+            </div>
+            <div class="pt-6 border-t border-white/5">
+                <label class="drawer-label">API Access Key</label>
+                <input type="password" id="apiInput" placeholder="PASTE GEMINI KEY..." class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white outline-none">
+                <button onclick="saveApiKey()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] tracking-widest p-4 rounded-xl transition-all">SYNC TERMINAL</button>
+            </div>
         </div>
     </div>
 

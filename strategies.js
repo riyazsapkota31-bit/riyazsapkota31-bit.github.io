@@ -1,19 +1,28 @@
 /**
  * OMNI-REAL | PRECISION V11 (ULTRA-DYNAMIC ENGINE)
- * STABLE PRODUCTION BUILD
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// STABLE MODEL: Fixed to bypass "Model Not Found" and "v1beta" errors
+// STABLE MODEL: Fixed to bypass "Model Not Found" errors
 const MODEL = "gemini-1.5-flash"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI DYNAMICS & PERSISTENCE ---
+// --- UI DYNAMICS & FILE UPLOAD (TICK FIX) ---
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
-    if (document.getElementById(`img${idx}`).files.length > 0) {
+    // This looks for the hidden file input
+    const fileInput = document.getElementById(`img${idx}`);
+
+    if (fileInput && fileInput.files.length > 0) {
+        // Adds the 'has-file' class which triggers the green border/tick in CSS
         box.classList.add('has-file');
+        
+        // Force visual update for the icon/label if they exist
+        const label = document.getElementById(`label${idx}`);
+        const icon = document.getElementById(`icon${idx}`);
+        if (label) label.style.display = 'none';
+        if (icon) icon.style.display = 'block';
     }
 }
 
@@ -47,7 +56,6 @@ function enableEdit() {
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
     if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
-    // PERSISTENCE: Saves key to local memory
     localStorage.setItem('omni_api_v3', val);
     API_KEY = val;
     lockUI();
@@ -58,7 +66,7 @@ function toggleDrawer() {
     document.getElementById('sideDrawer').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('hidden');
     
-    // UNFREEZE: Ensures Master Control inputs are clickable
+    // Ensures inputs are interactive in Master Control
     ['bal', 'risk', 'apiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -91,12 +99,9 @@ async function executeScan() {
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
-        // MULTI-STRATEGY CONFLUENCE PROMPT
         const prompt = `System: High-Precision SMC Analyst. 
         Analyze 4 charts for structural alignment. 
-        1. Check SMC Order Blocks and ICT Liquidity Sweeps.
-        2. If HTF/LTF trend mismatch or low volatility, return: {"bias":"WAIT","logic":"Market in consolidation"}
-        3. If aligned, identify entry/SL/TP.
+        1. If HTF/LTF trend mismatch or low volatility, return bias 'WAIT'.
         Return ONLY JSON: {"strategy":"INFINITY-V11","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -105,7 +110,6 @@ async function executeScan() {
             body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] })
         });
 
-        // QUOTA & ERROR HANDLING
         if (!response.ok) {
             const err = await response.json();
             throw new Error(err.error.message);
@@ -118,7 +122,7 @@ async function executeScan() {
 
     } catch (e) {
         console.error(e);
-        alert(`TERMINAL ERROR: ${e.message}. Check API Studio settings.`);
+        alert(`TERMINAL ERROR: ${e.message}`);
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;
@@ -140,26 +144,25 @@ function renderOutput(res, resultBox) {
             const el = document.getElementById(id);
             if(el) el.innerText = "---";
         });
-    } 
-    // --- BUY / SELL LOGIC ---
-    else {
-        actionTxt.innerText = res.bias;
-        actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
-        
-        // RISK MANAGEMENT CALCULATIONS
-        const bal = parseFloat(document.getElementById('bal').value) || 10000;
-        const risk = parseFloat(document.getElementById('risk').value) || 1;
-        const slDist = Math.abs(res.entry - res.sl);
-        const lotSize = slDist > 0 ? ((bal * (risk/100)) / (slDist * 10)).toFixed(2) : "0.10";
-
-        document.getElementById('entText').innerText = res.entry.toFixed(5);
-        document.getElementById('slText').innerText = res.sl.toFixed(5);
-        document.getElementById('tpText').innerText = res.tp.toFixed(5);
-        document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
-        document.getElementById('supText').innerText = res.support?.toFixed(2) || "---";
-        document.getElementById('resText').innerText = res.resistance?.toFixed(2) || "---";
-        logicTxt.innerText = res.logic;
+        return;
     }
+
+    // --- EXECUTION MATH ---
+    const slDist = Math.abs(res.entry - res.sl);
+    const bal = parseFloat(document.getElementById('bal').value) || 10000;
+    const riskVal = bal * (parseFloat(document.getElementById('risk').value) / 100);
+    const lotSize = slDist > 0 ? (riskVal / (slDist * 10)).toFixed(2) : "0.10";
+
+    actionTxt.innerText = res.bias;
+    actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
+    
+    document.getElementById('entText').innerText = res.entry.toFixed(5);
+    document.getElementById('slText').innerText = res.sl.toFixed(5);
+    document.getElementById('tpText').innerText = res.tp.toFixed(5);
+    document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
+    document.getElementById('supText').innerText = res.support?.toFixed(2) || "---";
+    document.getElementById('resText').innerText = res.resistance?.toFixed(2) || "---";
+    logicTxt.innerText = res.logic;
 
     resultBox.scrollIntoView({ behavior: 'smooth' });
 }

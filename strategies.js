@@ -1,7 +1,7 @@
 /**
- * OMNI-BLACK | VERSION 52.8 (8-CORE SURGICAL STRIKE)
- * Full Integration: Aggressive Scalping + 99% Accuracy + Auto-Asset Detection
- * Hardware: Gemini 3 Flash (Mobile Optimized)
+ * OMNI-BLACK | VERSION 53.0 (ULTIMATE CONFLUENCE)
+ * 8-Core Integration: S&R, S&D, SMC, ICT, Wyckoff, PA, DXY, Fibonacci
+ * Mandate: Aggressive Scalp, 99% Precision, Auto-Asset Detect
  */
 
 let files = [null, null, null, null];
@@ -10,16 +10,17 @@ async function executeSurgicalScan() {
     const btn = document.getElementById('goBtn');
     const out = document.getElementById('outPanel');
     
+    // Confluence requires multi-timeframe perspective
     if (files.filter(f => f).length < 2) {
-        alert("UPLOAD ERROR: Upload 1M + 15M charts for surgical accuracy.");
+        alert("CONFLUENCE ERROR: Surgical 8-Core strike requires 1M + 15M/1H charts.");
         return;
     }
 
-    if (btn) { btn.innerText = "8-CORE HUNTING..."; btn.disabled = true; }
+    if (btn) { btn.innerText = "SYNCHRONIZING 8-CORES..."; btn.disabled = true; }
 
     try {
         const apiKey = localStorage.getItem('omni_api_key');
-        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key.");
+        if (!apiKey) throw new Error("Hardware Link Offline: No API Key found.");
 
         const b64Images = await Promise.all(
             files.map(file => file ? toBase64(file) : Promise.resolve(null))
@@ -35,8 +36,8 @@ async function executeSurgicalScan() {
 
     } catch (err) {
         if (!err.message.includes('null')) {
-            console.error("System Error:", err);
-            alert("ALERT: " + err.message);
+            console.error("System Fail:", err);
+            alert("SYSTEM ALERT: " + err.message);
         }
     } finally {
         if (btn) { btn.innerText = "EXECUTE COMMAND"; btn.disabled = false; }
@@ -48,20 +49,24 @@ async function fetchGeminiAnalysis(key, images) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${primaryModel}:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V52_8CORE_AGGRESSIVE
-        MANDATE:
-        1. ASSET: Auto-detect ticker from chart visuals.
-        2. STRATEGY: 8-Core ICT/SMC (Liquidity Sweeps, FVGs, Breakers).
-        3. AGGRESSION: High frequency. Do not wait for trend confirmation if a sweep and rejection occurs.
-        4. ACCURACY: 99% target. Strict SL/TP based on market structure.
-        5. DXY: Mandatory correlation check.
-        6. LOGIC: Exactly 10-15 words. No fluff.
+        PROTOCOL: OMNI_V53_ULTIMATE_STRIKE
+        TASK: Auto-detect asset and run 8-CORE VALIDATION (S&R, S&D, SMC, ICT, Wyckoff, PA, DXY, Fibonacci).
 
-        JSON FORMAT ONLY:
+        8-CORE MANDATE:
+        1. ASSET: Auto-detect Ticker/Pair from image text.
+        2. S&R/S&D: Identify major flips and origin zones (Rally-Base-Drop/Drop-Base-Rally).
+        3. SMC/ICT: Locate Order Blocks, FVGs, and Liquidity Sweeps of local wicks.
+        4. WYCKOFF: Confirm Spring or Sign of Strength (Accumulation/Distribution phase).
+        5. PA/FIB: Use rejection candles and ensure entry is in OTE (Discount for Long/Premium for Short).
+        6. AGGRESSION: High frequency. Execute on sweeps/inducements. Do not wait for late trends.
+        7. ACCURACY: 99% target. Strict SL/TP based on structural lows/highs.
+        8. LOGIC: 10-15 words only. Identify exactly which liquidity was swept.
+
+        OUTPUT JSON ONLY:
         {
           "assetName": "STRING",
           "assetType": "CRYPTO"|"FOREX"|"COMMODITY",
-          "dominantStrategy": "8-CORE_STRIKE",
+          "dominantStrategy": "8-CORE_ULTIMATE",
           "bias": "BUY"|"SELL"|"WATCHING",
           "entry": number, "sl": number, "tp": number,
           "logic": "STRING (10-15 WORDS)"
@@ -85,7 +90,7 @@ async function fetchGeminiAnalysis(key, images) {
         })
     });
 
-    if (!response.ok) throw new Error("Link Failed.");
+    if (!response.ok) throw new Error("Hardware Link Failed. Check API Status.");
     const data = await response.json();
     return JSON.parse(data.candidates[0].content.parts[0].text);
 }
@@ -94,8 +99,10 @@ function renderOutput(data) {
     const ui = (id) => document.getElementById(id);
     const update = (id, val) => { if (ui(id)) ui(id).innerText = val; };
 
-    update('assetTitle', data.assetName);
+    // Dynamic Asset Display
+    update('assetTitle', data.assetName || "DETECTING...");
 
+    // Bias Styling
     const bEl = ui('biasTxt');
     if (bEl) {
         bEl.innerText = data.bias;
@@ -105,15 +112,24 @@ function renderOutput(data) {
         }`;
     }
 
+    // Surgical Entry/Exit
     update('entVal', data.entry || "--");
     update('slVal', data.sl || "--");
     update('tpVal', data.tp || "--");
 
+    // Strategy & 10-15 Word Logic Summary
     const logicBox = ui('logicSummary');
     if (logicBox) {
-        logicBox.innerHTML = `<b class="text-cyan-400 text-xs">[8-CORE STRIKE]</b><br>${data.logic}`;
+        logicBox.innerHTML = `
+            <div class="flex items-center gap-2 mb-1">
+                <span class="bg-cyan-500/20 text-cyan-400 text-[10px] px-1 rounded border border-cyan-500/30 font-bold">8-CORE ACTIVE</span>
+                <span class="text-slate-500 text-[10px] uppercase font-bold tracking-widest">${data.dominantStrategy}</span>
+            </div>
+            <p class="text-slate-300 text-sm leading-relaxed">${data.logic}</p>
+        `;
     }
 
+    // Advanced Risk/Position Math
     const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
     const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
     if (bal && riskPct && data.entry && data.sl) {
@@ -121,9 +137,13 @@ function renderOutput(data) {
         const priceDiff = Math.abs(data.entry - data.sl);
         if (priceDiff > 0) {
             let size = riskAmount / priceDiff;
+            // Normalization per asset class
             if (data.assetType === "FOREX") size /= 10;
+            if (data.assetType === "COMMODITY") size /= 100;
             update('lotVal', size.toFixed(4));
         }
+    } else {
+        update('lotVal', "0.0000");
     }
 }
 

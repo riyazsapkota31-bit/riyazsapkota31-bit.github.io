@@ -3,181 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OMNI-BLACK | ULTIMATE</title>
+    <title>OMNI-BLACK | INTERACTIVE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --neon: #6366f1; --buy: #00ffa3; --sell: #ff0055; }
+        :root { --neon: #6366f1; --buy: #00ffa3; --sell: #ff0055; --panel: rgba(10, 10, 12, 0.9); }
         
         body { 
-            background: #000; color: #fff; font-family: 'Inter', sans-serif; 
-            padding: 16px; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+            background: radial-gradient(circle at top, #111, #000); 
+            color: #fff; font-family: 'Inter', sans-serif; padding: 16px; 
+            -webkit-font-smoothing: antialiased; overflow-x: hidden; min-height: 100vh;
         }
 
-        /* DYNAMIC NEURAL BACKGROUND */
-        .bg-mesh {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% -20%, #1a1a2e, #000);
-            z-index: -1;
-        }
-
-        /* GLASS-MORPHISM 2.0 */
+        /* 💎 ADVANCED GLASSMORPHISM 💎 */
         .glass { 
-            background: rgba(10, 10, 10, 0.7); 
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 30px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: var(--panel); 
+            backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 35px;
+            box-shadow: 0 40px 100px -20px rgba(0,0,0,1);
         }
 
-        /* INTERACTIVE MATRIX CARDS */
+        /* INTERACTIVE LIQUID MATRIX */
         .matrix-card { 
-            background: rgba(20, 20, 25, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 24px;
-            height: 120px;
-            transition: all 0.4s cubic-bezier(0.2, 1, 0.2, 1);
-            position: relative; overflow: hidden;
+            background: rgba(20, 20, 25, 0.4);
+            border: 1.5px solid rgba(255,255,255,0.04);
+            border-radius: 30px;
+            height: 135px;
+            transition: all 0.5s cubic-bezier(0.2, 1, 0.2, 1);
+            position: relative; overflow: hidden; cursor: pointer;
         }
 
-        .matrix-card:active { transform: scale(0.92) translateY(2px); }
+        /* The Neon Pulse Shadow */
+        .matrix-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at center, var(--neon), transparent 70%);
+            opacity: 0; transition: 0.5s; z-index: -1;
+        }
+
+        .matrix-card:active { transform: scale(0.95); }
         
+        /* THE "UPLOADED" STATE */
         .has-file { 
-            border: 1.5px solid var(--neon); 
-            background: rgba(99, 102, 241, 0.1);
-            box-shadow: 0 0 25px rgba(99, 102, 241, 0.2);
+            border: 2px solid var(--neon); 
+            background: rgba(99, 102, 241, 0.05);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
         }
-        .has-file i { color: var(--neon); text-shadow: 0 0 15px var(--neon); }
+        .has-file::after { opacity: 0.2; } /* Liquid background pulse */
+        .has-file i { color: var(--neon); text-shadow: 0 0 20px var(--neon); transform: scale(1.1); }
 
-        /* THE "EINSTEIN" BUTTON */
-        .btn-neural {
-            background: #fff; color: #000; font-weight: 900;
-            text-transform: uppercase; letter-spacing: 0.3em;
-            border-radius: 20px; padding: 20px; width: 100%;
-            transition: 0.4s cubic-bezier(0.2, 1, 0.2, 1);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+        /* NEURAL COMMAND BUTTON */
+        .btn-command {
+            background: #fff; color: #000; font-weight: 950;
+            text-transform: uppercase; letter-spacing: 0.35em;
+            border-radius: 25px; padding: 24px; width: 100%;
+            transition: 0.3s cubic-bezier(0.2, 1, 0.2, 1);
         }
-        .btn-neural:active { transform: translateY(4px) scale(0.98); box-shadow: 0 5px 10px rgba(0,0,0,0.6); }
+        .btn-command:active { transform: translateY(4px) scale(0.97); }
 
-        /* KINETIC HUD ELEMENTS */
+        /* DYNAMIC HUD ELEMENTS */
         .glow-bias { 
-            font-size: clamp(5rem, 18vw, 8rem); 
-            font-weight: 950; letter-spacing: -0.05em; font-style: italic; 
+            font-size: clamp(6rem, 22vw, 10rem); 
+            font-weight: 950; letter-spacing: -0.07em; font-style: italic; 
             line-height: 0.8; transition: 0.6s cubic-bezier(0.2, 1, 0.2, 1);
         }
 
-        .hud-stat { border-right: 1px solid rgba(255,255,255,0.05); }
-        .hud-stat:last-child { border: none; }
+        .hud-label { font-size: 10px; font-weight: 950; color: #444; text-transform: uppercase; letter-spacing: 0.4em; }
+        .hud-value { font-size: 2.8rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: -0.05em; }
 
-        /* SCANNING LINE EFFECT */
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(400%); }
+        /* LOADING LINE ANIMATION */
+        .scanning {
+            animation: scan 2s linear infinite;
+            background: linear-gradient(to bottom, transparent, var(--neon), transparent);
+            position: absolute; width: 100%; height: 20%; top: -20%; opacity: 0.3;
         }
-        .has-file::after {
-            content: ''; position: absolute; width: 100%; height: 2px;
-            background: var(--neon); top: 0; left: 0;
-            opacity: 0.4; animation: scanline 2s linear infinite;
-        }
+        @keyframes scan { 0% { top: -20%; } 100% { top: 100%; } }
     </style>
 </head>
 <body>
 
-    <div class="bg-mesh"></div>
-
-    <header class="flex justify-between items-center mb-6 px-2 mt-4">
+    <header class="flex justify-between items-center mb-10 px-4 py-2 mt-4">
         <div>
-            <h1 class="text-2xl font-black italic tracking-tighter leading-none">OMNI-BLACK</h1>
+            <h1 class="text-3xl font-black italic tracking-tighter text-white">OMNI-BLACK</h1>
             <div class="flex items-center gap-2 mt-2">
-                <div id="statusDot" class="w-2 h-2 rounded-full bg-rose-600 shadow-[0_0_10px_#f43f5e]"></div>
-                <p id="riskDisp" class="text-[8px] font-bold text-slate-500 uppercase tracking-[0.4em]">Hardware: Idle</p>
+                <div id="statusDot" class="w-3 h-3 rounded-full bg-rose-600 animate-pulse shadow-[0_0_20px_#f43f5e]"></div>
+                <p id="riskDisp" class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.5em]">Neural Link: Standby</p>
             </div>
         </div>
-        <div class="glass px-4 py-2 flex items-center gap-3">
-            <i class="fa-solid fa-bolt text-indigo-500 text-[10px]"></i>
-            <span class="text-[9px] font-black tracking-widest text-slate-300">SCALP.V21</span>
-        </div>
+        <button onclick="toggleSettings()" class="glass w-12 h-12 flex items-center justify-center border border-white/5 hover:border-indigo-500/50 transition-colors">
+            <i class="fa-solid fa-gear text-indigo-400"></i>
+        </button>
     </header>
 
-    <div class="glass p-6 mb-6 border-b-4 border-indigo-600/50">
-        <div class="flex justify-between items-center">
+    <div class="glass p-8 mb-10 border-t-2 border-indigo-600/30 overflow-hidden relative">
+        <div class="flex justify-between items-end relative z-10">
             <div>
-                <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mb-1">Target Asset</p>
-                <h2 id="pairDisp" class="text-xl font-black italic tracking-tighter text-white uppercase">Waiting...</h2>
+                <p class="hud-label mb-2">Quant Target</p>
+                <h2 id="pairDisp" class="text-2xl font-black italic tracking-tighter text-white uppercase">[NEURAL STANDBY]</h2>
             </div>
-            <div class="h-10 w-10 rounded-full border border-white/5 flex items-center justify-center">
-                <i class="fa-solid fa-fingerprint text-indigo-500/50"></i>
+            <div class="text-right">
+                <p class="hud-label mb-2">PRECISION</p>
+                <p class="text-indigo-400 font-black italic text-xs tracking-widest">A+ QUANT</p>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4 mb-8">
+    <div class="grid grid-cols-2 gap-6 mb-12">
         <div id="box0" class="matrix-card flex flex-col justify-center items-center" onclick="document.getElementById('i0').click()">
             <input type="file" id="i0" hidden accept="image/*" onchange="sync(0)">
-            <i class="fa-solid fa-cube text-slate-800 text-3xl mb-2 transition-all" id="ic0"></i>
-            <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest">1H Context</p>
+            <i class="fa-solid fa-globe text-slate-800 text-4xl mb-2 transition-all duration-500" id="ic0"></i>
+            <p class="hud-label">Global 1H</p>
+            <div id="scan0" class=""></div>
         </div>
         <div id="box1" class="matrix-card flex flex-col justify-center items-center" onclick="document.getElementById('i1').click()">
             <input type="file" id="i1" hidden accept="image/*" onchange="sync(1)">
-            <i class="fa-solid fa-microscope text-slate-800 text-3xl mb-2 transition-all" id="ic1"></i>
-            <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest">15M Macro</p>
+            <i class="fa-solid fa-layer-group text-slate-800 text-4xl mb-2 transition-all duration-500" id="ic1"></i>
+            <p class="hud-label">Macro 15M</p>
+            <div id="scan1" class=""></div>
         </div>
         <div id="box2" class="matrix-card flex flex-col justify-center items-center" onclick="document.getElementById('i2').click()">
             <input type="file" id="i2" hidden accept="image/*" onchange="sync(2)">
-            <i class="fa-solid fa-bolt-lightning text-slate-800 text-3xl mb-2 transition-all" id="ic2"></i>
-            <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest">1M Trigger</p>
+            <i class="fa-solid fa-bolt text-slate-800 text-4xl mb-2 transition-all duration-500" id="ic2"></i>
+            <p class="hud-label">Trigger 1M</p>
+            <div id="scan2" class=""></div>
         </div>
         <div id="box3" class="matrix-card flex flex-col justify-center items-center" onclick="document.getElementById('i3').click()">
             <input type="file" id="i3" hidden accept="image/*" onchange="sync(3)">
-            <i class="fa-solid fa-database text-slate-800 text-3xl mb-2 transition-all" id="ic3"></i>
-            <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest">DXY Data</p>
+            <i class="fa-solid fa-chart-line text-slate-800 text-4xl mb-2 transition-all duration-500" id="ic3"></i>
+            <p class="hud-label">DXY Data</p>
+            <div id="scan3" class=""></div>
         </div>
     </div>
 
-    <button id="goBtn" onclick="executeSurgicalScan()" class="btn-neural">Execute Scan</button>
+    <button id="goBtn" onclick="executeSurgicalScan()" class="btn-command mb-16 shadow-indigo-500/10 shadow-2xl">Execute Command</button>
 
-    <div id="outPanel" class="hidden mt-10 space-y-8 pb-32">
-        <div id="waitMsg" class="hidden glass py-5 text-center text-amber-500 font-black italic text-sm tracking-widest border-amber-500/20">PRE-TRIGGER PHASE</div>
+    <div id="outPanel" class="hidden mt-12 space-y-12 pb-32">
+        <div id="waitMsg" class="hidden glass py-6 rounded-[35px] text-center text-amber-500 font-black italic text-xl border-amber-500/20">AWAITING TRIGGER EVENT</div>
         
-        <div class="text-center py-4">
+        <div class="text-center relative">
             <h2 id="biasTxt" class="glow-bias"></h2>
+            <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 text-[18rem] font-black -z-10 tracking-tighter text-white">EINSTEIN</p>
         </div>
         
-        <div class="grid grid-cols-2 glass overflow-hidden">
-            <div class="hud-stat p-6 text-center">
-                <p class="text-[8px] font-black text-slate-500 uppercase mb-2">Entry</p>
-                <p id="entVal" class="text-3xl font-bold font-mono text-white">--</p>
-            </div>
-            <div class="hud-stat p-6 text-center">
-                <p class="text-[8px] font-black text-indigo-400 uppercase mb-2">Lots</p>
-                <p id="lotVal" class="text-3xl font-bold font-mono text-indigo-400">--</p>
-            </div>
-            <div class="hud-stat p-6 text-center border-t border-white/5">
-                <p class="text-[8px] font-black text-rose-500 uppercase mb-2">Stop</p>
-                <p id="slVal" class="text-3xl font-bold font-mono text-rose-500">--</p>
-            </div>
-            <div class="hud-stat p-6 text-center border-t border-white/5">
-                <p class="text-[8px] font-black text-emerald-400 uppercase mb-2">Target</p>
-                <p id="tpVal" class="text-3xl font-bold font-mono text-emerald-400">--</p>
-            </div>
+        <div class="grid grid-cols-2 gap-8 text-center glass py-12 px-6">
+            <div><p class="hud-label mb-2">Entry</p><p id="entVal" class="hud-value text-white">--</p></div>
+            <div><p class="hud-label mb-2 text-indigo-400">Lots (1% RSK)</p><p id="lotVal" class="hud-value text-indigo-400">--</p></div>
+            <div><p class="hud-label mb-2 text-rose-500">Stop Loss</p><p id="slVal" class="hud-value text-rose-500">--</p></div>
+            <div><p class="hud-label mb-2 text-emerald-500">Target</p><p id="tpVal" class="hud-value text-emerald-500">--</p></div>
         </div>
 
-        <div class="glass p-8 border-t-[8px] border-indigo-600 shadow-2xl">
-            <div class="flex items-center gap-2 mb-3">
-                <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
-                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Neural Proof</p>
+        <div class="p-10 glass border-l-[12px] border-indigo-600">
+            <div class="flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-fingerprint text-indigo-500 text-xs"></i>
+                <p class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Surgical Proof</p>
             </div>
-            <p id="logicSummary" class="text-lg text-slate-300 leading-snug italic font-bold"></p>
+            <p id="logicSummary" class="text-xl text-slate-200 leading-tight italic font-bold tracking-tight"></p>
         </div>
     </div>
 
-    <div class="mt-24 p-8 glass opacity-10 hover:opacity-100 transition-all duration-700">
-        <input type="password" id="kIn" placeholder="API KEY" class="bg-black/40 border border-white/5 rounded-2xl w-full mb-4 p-5 text-center text-sm outline-none text-indigo-400 font-mono">
-        <div class="grid grid-cols-2 gap-4">
-            <input type="number" id="bIn" placeholder="BAL" class="bg-black/40 border border-white/5 rounded-2xl p-5 text-center text-sm outline-none">
-            <input type="number" id="rIn" placeholder="RISK %" class="bg-black/40 border border-white/5 rounded-2xl p-5 text-center text-sm outline-none">
+    <div id="settingsModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 p-6 hidden items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="glass w-full max-w-md p-10 relative">
+            <i class="fa-solid fa-xmark absolute top-6 right-6 text-slate-600 hover:text-white" onclick="toggleSettings()"></i>
+            <h3 class="text-xl font-black italic tracking-tighter text-white mb-8 text-center">SYSTEM CONFIGURATION</h3>
+            
+            <input type="password" id="kIn" placeholder="GEMINI API KEY" class="bg-black/50 border border-white/10 rounded-2xl w-full mb-5 p-5 text-center text-sm outline-none text-indigo-400 font-mono">
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <input type="number" id="bIn" placeholder="BALANCE ($)" class="bg-black/50 border border-white/10 rounded-2xl p-5 text-center text-sm outline-none">
+                <input type="number" id="rIn" placeholder="RISK (%)" class="bg-black/50 border border-white/10 rounded-2xl p-5 text-center text-sm outline-none">
+            </div>
+            <button onclick="saveConfig()" class="w-full btn-command text-xs py-5">Sync Neural Engine</button>
         </div>
-        <button onclick="saveConfig()" class="w-full mt-6 text-[8px] font-black uppercase text-slate-500 tracking-[0.4em] hover:text-white">Initialize Link</button>
     </div>
 
     <script src="strategies.js"></script>

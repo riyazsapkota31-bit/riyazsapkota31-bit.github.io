@@ -1,7 +1,8 @@
 /**
- * OMNI-BLACK | VERSION 51.3 (REAL-MARKET SCALPER)
- * Hardware: Gemini 2.5 Flash
- * Mandate: Aggressive Scalping, 15-Word Logic, Zero-Null Shield
+ * OMNI-BLACK | VERSION 51.5 (PRECISION-STRIKE)
+ * Core: 8-Core Strategic Engine (SMC/ICT Optimized)
+ * Logic: Mandatory 10-15 Word Scalp Trigger
+ * Hardware: Optimized for Gemini 2.5 Flash
  */
 
 let files = [null, null, null, null];
@@ -10,45 +11,41 @@ async function executeSurgicalScan() {
     const btn = document.getElementById('goBtn');
     const out = document.getElementById('outPanel');
     
+    // Minimum 2 charts required (e.g., 1H + 1M) for surgical accuracy
     if (files.filter(f => f).length < 2) {
-        alert("UPLOAD ERROR: 2 timeframe layers required for confluence.");
+        alert("UPLOAD ERROR: Surgical confluence requires at least 2 timeframe layers.");
         return;
     }
 
-    if (btn) {
-        btn.innerText = "EXTRACTING LIVE DATA...";
-        btn.disabled = true;
-    }
+    if (btn) { btn.innerText = "EXTRACTING LIQUIDITY..."; btn.disabled = true; }
 
     try {
         const apiKey = localStorage.getItem('omni_api_key');
-        if (!apiKey) throw new Error("Hardware Link Offline: Link API in Settings.");
+        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key in settings.");
 
         const b64Images = await Promise.all(
             files.map(file => file ? toBase64(file) : Promise.resolve(null))
         );
 
-        // Targeted 2.5-Flash Neural Analysis
+        // Targeted Gemini 2.5 Flash Vision Analysis
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
-        // Render with the Null-Pointer Shield
+        // Render Output with "Null-Pointer" Safety Shields
         renderOutput(analysis);
         
         if (out) {
             out.classList.remove('hidden');
             out.scrollIntoView({ behavior: 'smooth' });
         }
+
     } catch (err) {
-        // Shield against 'null' property crashes (Ref: 1000040862.jpg)
+        // Silences common UI null errors to keep trading flow smooth
         if (!err.message.includes('null')) {
-            console.error("Core Fail:", err);
+            console.error("System Fail:", err);
             alert("SYSTEM ALERT: " + err.message);
         }
     } finally {
-        if (btn) {
-            btn.innerText = "EXECUTE COMMAND";
-            btn.disabled = false;
-        }
+        if (btn) { btn.innerText = "EXECUTE COMMAND"; btn.disabled = false; }
     }
 }
 
@@ -57,19 +54,19 @@ async function fetchGeminiAnalysis(key, images) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${primaryModel}:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V51_REAL_MARKET
-        CONTEXT: Live Scalping Session (SOL, ETH, BTC, XAUUSD).
+        PROTOCOL: OMNI_V51_PRECISION
+        CONTEXT: Professional Scalping (SOL, ETH, BTC, XAUUSD).
         
         MANDATE:
-        1. REAL ANALYSIS: Read EXACT prices from the Y-axis and current candles. No simulations.
-        2. 8-CORE ENGINE: Apply SMC, ICT, Wyckoff, PA, and DXY correlation.
-        3. AGGRESSIVE BIAS: Prioritize immediate BUY/SELL setups. Only use "WATCHING" if price is in a dead-zone.
-        4. WORD LIMIT: Provide the "logic" field in exactly 10-15 words.
-        5. STYLE: Hard technical analysis. No fluff.
+        1. REAL-TIME ONLY: Read exact prices from Y-axis and candles. Do not simulate.
+        2. 8-CORE ENGINE: Cross-reference SMC/ICT, Wyckoff, PA, and DXY correlation.
+        3. SCALPER BIAS: Prioritize immediate execution setups. 
+        4. RISK FILTER: Use "WATCHING" only if R:R is poor or no FVG/MS is present.
+        5. STRICT LOGIC: The "logic" field MUST be between 10 and 15 words. No greetings.
 
         RETURN JSON ONLY:
         {
-          "assetName": "STRING",
+          "assetName": "STRING (Visible Ticker)",
           "assetType": "CRYPTO"|"FOREX"|"COMMODITY",
           "dominantStrategy": "STRING",
           "bias": "BUY"|"SELL"|"WATCHING",
@@ -89,31 +86,23 @@ async function fetchGeminiAnalysis(key, images) {
             contents: [{ parts: [{ text: prompt }, ...inlineData] }],
             generationConfig: { 
                 response_mime_type: "application/json", 
-                temperature: 0.1,
+                temperature: 0.2, // Decisive balance
                 top_p: 1
             }
         })
     });
 
-    if (!response.ok) throw new Error("API Link Failed. Verify Key and 2.5-Flash status.");
+    if (!response.ok) throw new Error("Hardware Link Failed. Check API Key/Status.");
 
     const data = await response.json();
     return JSON.parse(data.candidates[0].content.parts[0].text);
 }
 
 function renderOutput(data) {
-    const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
-    const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
-
-    // NULL-POINTER SHIELD: Prevents 'innerText' errors from missing IDs
     const ui = (id) => document.getElementById(id);
     const update = (id, val) => { if (ui(id)) ui(id).innerText = val; };
 
-    // Update Header
-    const header = document.querySelector('.label-vibrant');
-    if (header) header.innerText = `${data.assetName || 'Market'} - ${data.dominantStrategy}`;
-    
-    // Update Bias with Dynamic Color
+    // Dynamic UI Color Control
     const bEl = ui('biasTxt');
     if (bEl) {
         bEl.innerText = data.bias;
@@ -123,23 +112,26 @@ function renderOutput(data) {
         }`;
     }
 
-    // Update Numerical Values (Matches slVal/tpVal in your HTML)
+    // Surgical Value Updates
     update('entVal', data.entry || "--");
     update('slVal', data.sl || "--");
     update('tpVal', data.tp || "--");
 
-    // Update Surgical Logic [Ref: 1000040863.jpg for layout]
+    // Tactical Logic Display
     const logicBox = ui('logicSummary');
     if (logicBox) {
-        logicBox.innerHTML = `<b class="text-cyan-400 uppercase text-xs">[LIVE CONFLUENCE: ${data.dominantStrategy}]</b><br>${data.logic}`;
+        logicBox.innerHTML = `<b class="text-cyan-400 uppercase text-xs">[SCALP CONFLUENCE: ${data.dominantStrategy}]</b><br>${data.logic}`;
     }
 
-    // Surgical Risk Math for Scalping
+    // Automated Risk/Position Math
+    const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
+    const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
     if (bal && riskPct && data.entry && data.sl) {
         const riskAmount = bal * (riskPct / 100);
         const priceDiff = Math.abs(data.entry - data.sl);
         if (priceDiff > 0) {
             let size = riskAmount / priceDiff;
+            // Asset Class Normalization
             if (data.assetType === "FOREX") size /= 10;
             if (data.assetType === "COMMODITY") size /= 100;
             update('lotVal', size.toFixed(4));

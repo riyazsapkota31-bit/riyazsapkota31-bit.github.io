@@ -7,175 +7,93 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --cyan: #00f2ff; 
-            --blue-glow: rgba(0, 242, 255, 0.3);
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --border-glow: rgba(255, 255, 255, 0.08);
-        }
-        
-        body { 
-            background: radial-gradient(circle at 50% 10%, #0d1117 0%, #000 100%); 
-            color: #fff; font-family: 'Inter', sans-serif; 
-            padding: 20px; min-height: 100vh; overflow-x: hidden;
-        }
-
-        /* 🛡️ BRANDING & LOGO [Ref: 1000040854.jpg] */
-        .brand-header { display: flex; align-items: center; gap: 12px; }
-        .logo-svg { width: 42px; height: 42px; filter: drop-shadow(0 0 8px var(--blue-glow)); }
-
-        .logo-text {
-            font-size: 2.6rem; font-weight: 900; font-style: italic; letter-spacing: -0.04em;
-            color: #fff; line-height: 1;
-            paint-order: stroke fill;
-            -webkit-text-stroke: 1.5px var(--cyan);
-            text-shadow: 0 0 10px var(--blue-glow);
-        }
-
-        /* ⚡️ INTERFACE ELEMENTS */
-        .upload-card {
-            height: 150px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            border-radius: 28px; background: rgba(255,255,255,0.01);
-            border: 1px solid rgba(255,255,255,0.06);
-            transition: 0.4s cubic-bezier(0.2, 1, 0.2, 1);
-        }
-
-        .has-file {
-            border: 1px solid var(--cyan) !important;
-            background: rgba(0, 242, 255, 0.04) !important;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.15);
-        }
-        .has-file i { color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
-
-        .btn-main {
-            background: #fff; color: #000; font-weight: 900;
-            text-transform: uppercase; letter-spacing: 0.4em;
-            padding: 22px; border-radius: 20px; width: 100%;
-            margin-top: 25px; transition: 0.3s;
-        }
-
+        :root { --cyan: #00f2ff; --blue-glow: rgba(0, 242, 255, 0.3); --glass-bg: rgba(255, 255, 255, 0.03); --border-glow: rgba(255, 255, 255, 0.08); }
+        body { background: radial-gradient(circle at 50% 10%, #0d1117 0%, #000 100%); color: #fff; font-family: 'Inter', sans-serif; padding: 20px; min-height: 100vh; overflow-x: hidden; }
+        .logo-text { font-size: 2.6rem; font-weight: 900; font-style: italic; letter-spacing: -0.04em; color: #fff; line-height: 1; -webkit-text-stroke: 1.5px var(--cyan); text-shadow: 0 0 10px var(--blue-glow); }
+        .upload-card { height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 28px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.06); transition: 0.4s; }
+        .has-file { border: 1px solid var(--cyan) !important; background: rgba(0, 242, 255, 0.04) !important; box-shadow: 0 0 15px rgba(0, 242, 255, 0.15); }
+        .btn-main { background: #fff; color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4em; padding: 22px; border-radius: 20px; width: 100%; margin-top: 25px; }
         .label-vibrant { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 0.2em; text-transform: uppercase; }
-
-        .settings-btn {
-            background: var(--glass-bg); border: 1px solid var(--border-glow);
-            width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
-            color: var(--cyan);
-        }
+        .stat-box { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <header class="flex justify-between items-center mb-12 pt-4 px-2">
-        <div class="brand-header">
-            <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 5L95 27.5V72.5L50 95L5L72.5V27.5L50 5Z" stroke="#00f2ff" stroke-width="4" stroke-linejoin="round"/>
-                <path d="M50 25L75 37.5V62.5L50 75L25 62.5V37.5L50 25Z" fill="#00f2ff" fill-opacity="0.2" stroke="#00f2ff" stroke-width="2"/>
-                <circle cx="50" cy="50" r="5" fill="#fff"/>
-            </svg>
-            <div>
-                <h1 class="logo-text">OMNI—BLACK</h1>
-                <p class="text-[9px] font-black tracking-[0.4em] text-cyan-400 opacity-40 uppercase ml-1">Terminal Active</p>
-            </div>
+    <header class="flex justify-between items-center mb-10 pt-4 px-2">
+        <div>
+            <h1 class="logo-text">OMNI—BLACK</h1>
+            <p class="text-[9px] font-black tracking-[0.4em] text-cyan-400 opacity-40 uppercase ml-1">Terminal Active</p>
         </div>
-        <button onclick="toggleSettings()" class="settings-btn">
-            <i class="fa-solid fa-sliders text-lg"></i>
-        </button>
+        <button onclick="toggleSettings()" class="bg-white/5 border border-white/10 w-12 h-12 rounded-xl text-cyan-400"><i class="fa-solid fa-sliders"></i></button>
     </header>
 
-    <div class="grid grid-cols-2 gap-5">
+    <div class="grid grid-cols-2 gap-4">
         <div id="box0" class="upload-card" onclick="document.getElementById('i0').click()">
-            <input type="file" id="i0" hidden accept="image/*" onchange="sync(0)">
-            <i class="fa-solid fa-compass text-slate-800 text-3xl mb-3"></i>
-            <p class="label-vibrant">1H Bias</p>
+            <input type="file" id="i0" hidden accept="image/*" onchange="sync(0)"><i class="fa-solid fa-compass opacity-20 text-2xl mb-2"></i><p class="label-vibrant">1H Bias</p>
         </div>
         <div id="box1" class="upload-card" onclick="document.getElementById('i1').click()">
-            <input type="file" id="i1" hidden accept="image/*" onchange="sync(1)">
-            <i class="fa-solid fa-microscope text-slate-800 text-3xl mb-3"></i>
-            <p class="label-vibrant">15M Struct</p>
+            <input type="file" id="i1" hidden accept="image/*" onchange="sync(1)"><i class="fa-solid fa-microscope opacity-20 text-2xl mb-2"></i><p class="label-vibrant">15M Struct</p>
         </div>
         <div id="box2" class="upload-card" onclick="document.getElementById('i2').click()">
-            <input type="file" id="i2" hidden accept="image/*" onchange="sync(2)">
-            <i class="fa-solid fa-crosshairs text-slate-800 text-3xl mb-3"></i>
-            <p class="label-vibrant">1M Trigger</p>
+            <input type="file" id="i2" hidden accept="image/*" onchange="sync(2)"><i class="fa-solid fa-crosshairs opacity-20 text-2xl mb-2"></i><p class="label-vibrant">1M Trigger</p>
         </div>
         <div id="box3" class="upload-card" onclick="document.getElementById('i3').click()">
-            <input type="file" id="i3" hidden accept="image/*" onchange="sync(3)">
-            <i class="fa-solid fa-globe text-slate-800 text-3xl mb-3"></i>
-            <p class="label-vibrant">DXY Data</p>
+            <input type="file" id="i3" hidden accept="image/*" onchange="sync(3)"><i class="fa-solid fa-globe opacity-20 text-2xl mb-2"></i><p class="label-vibrant">DXY Data</p>
         </div>
     </div>
 
     <button id="goBtn" onclick="executeSurgicalScan()" class="btn-main">Execute Command</button>
 
-    <div id="outPanel" class="hidden mt-12 pb-40 space-y-6">
-        <div class="text-center mb-8">
-            <h2 id="biasTxt" class="text-8xl font-black italic tracking-tighter" style="filter: drop-shadow(0 0 20px currentColor);"></h2>
+    <div id="outPanel" class="hidden mt-10 pb-32 space-y-4">
+        <div class="text-center py-6">
+            <h2 id="biasTxt" class="text-8xl font-black italic tracking-tighter">--</h2>
         </div>
-        <div class="grid grid-cols-2 rounded-[30px] overflow-hidden border border-white/5 bg-white/[0.02] backdrop-blur-md">
-            <div class="p-8 text-center border-r border-white/5">
-                <p class="label-vibrant mb-1">Entry</p>
-                <p id="entVal" class="text-3xl font-bold font-mono">--</p>
-            </div>
-            <div class="p-8 text-center">
-                <p class="label-vibrant mb-1 text-cyan-400">Lot Size</p>
-                <p id="lotVal" class="text-3xl font-bold font-mono text-cyan-400">--</p>
-            </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div class="stat-box"><p class="label-vibrant mb-1">Entry</p><p id="entVal" class="text-2xl font-bold font-mono">--</p></div>
+            <div class="stat-box border-cyan-500/20"><p class="label-vibrant mb-1 text-cyan-400">Lot Size</p><p id="lotVal" class="text-2xl font-bold font-mono text-cyan-400">--</p></div>
+            <div class="stat-box border-rose-500/20"><p class="label-vibrant mb-1 text-rose-500">Stop Loss</p><p id="slVal" class="text-2xl font-bold font-mono text-rose-500">--</p></div>
+            <div class="stat-box border-emerald-500/20"><p class="label-vibrant mb-1 text-emerald-400">Take Profit</p><p id="tpVal" class="text-2xl font-bold font-mono text-emerald-400">--</p></div>
+        </div>
+
+        <div id="logicSummary" class="p-6 rounded-3xl border border-white/5 bg-white/[0.01] text-[11px] leading-relaxed text-slate-400 uppercase font-medium">
+            Waiting for strategic confluence...
         </div>
     </div>
 
-    <div id="settingsModal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center p-8 backdrop-blur-3xl">
-        <form onsubmit="saveConfig(event)" class="w-full max-w-sm rounded-[35px] p-10 border-white/5 border bg-white/[0.02]">
-            <h3 class="text-center font-black italic mb-10 tracking-tighter text-white text-xl uppercase">Core Configuration</h3>
-            <input type="password" id="kIn" placeholder="API KEY" class="bg-black/40 border border-white/10 rounded-2xl w-full mb-4 p-5 text-sm outline-none text-cyan-400 font-mono">
+    <div id="settingsModal" class="fixed inset-0 bg-black/95 z-50 hidden flex-col items-center justify-center p-8">
+        <form onsubmit="saveConfig(event)" class="w-full max-w-sm space-y-4">
+            <h3 class="text-center font-black italic mb-6 text-white text-xl uppercase tracking-widest">Hardware Link</h3>
+            <input type="password" id="kIn" placeholder="API KEY" class="bg-white/5 border border-white/10 rounded-2xl w-full p-5 text-sm outline-none text-cyan-400 font-mono">
             <div class="grid grid-cols-2 gap-4">
-                <input type="number" id="bIn" step="any" placeholder="BAL" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
-                <input type="number" id="rIn" step="any" placeholder="RISK %" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
+                <input type="number" id="bIn" step="any" placeholder="BAL" class="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm outline-none">
+                <input type="number" id="rIn" step="any" placeholder="RISK %" class="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm outline-none">
             </div>
-            <button type="submit" class="btn-main mt-8 text-[10px] py-5">Link Hardware</button>
-            <p class="text-center text-[10px] mt-10 text-slate-600 font-bold uppercase cursor-pointer" onclick="toggleSettings()">Back</p>
+            <button type="submit" class="btn-main">Sync Core</button>
+            <p class="text-center text-[10px] mt-6 text-slate-600 font-bold uppercase" onclick="toggleSettings()">Back</p>
         </form>
     </div>
 
     <script src="strategies.js"></script>
     <script>
-        // 1. Persistence Logic: Load data on startup
-        window.onload = function() {
+        window.onload = () => {
             if (localStorage.getItem('omni_api_key')) {
                 document.getElementById('kIn').value = localStorage.getItem('omni_api_key');
                 document.getElementById('bIn').value = localStorage.getItem('omni_balance');
                 document.getElementById('rIn').value = localStorage.getItem('omni_risk');
-                console.log("Hardware Link Restored.");
             }
         };
-
-        // 2. Save Logic: Prevent refresh and store locally [Ref: 1000040855.jpg]
-        function saveConfig(event) {
-            event.preventDefault(); // CRITICAL: Stops the page refresh
-            
-            const apiKey = document.getElementById('kIn').value;
-            const balance = document.getElementById('bIn').value;
-            const risk = document.getElementById('rIn').value;
-
-            localStorage.setItem('omni_api_key', apiKey);
-            localStorage.setItem('omni_balance', balance);
-            localStorage.setItem('omni_risk', risk);
-
-            alert("System Core Synced.");
-            toggleSettings();
+        function saveConfig(e) {
+            e.preventDefault();
+            localStorage.setItem('omni_api_key', document.getElementById('kIn').value);
+            localStorage.setItem('omni_balance', document.getElementById('bIn').value);
+            localStorage.setItem('omni_risk', document.getElementById('rIn').value);
+            alert("System Synced."); toggleSettings();
         }
-
-        function toggleSettings() {
-            const m = document.getElementById('settingsModal');
-            m.classList.toggle('hidden'); m.classList.toggle('flex');
-        }
-
+        function toggleSettings() { const m = document.getElementById('settingsModal'); m.classList.toggle('hidden'); m.classList.toggle('flex'); }
         function sync(i) {
             const f = document.getElementById(`i${i}`).files[0];
-            if(f) {
-                document.getElementById(`box${i}`).classList.add('has-file');
-                if (typeof files !== 'undefined') files[i] = f;
-            }
+            if(f) { document.getElementById(`box${i}`).classList.add('has-file'); if (typeof files !== 'undefined') files[i] = f; }
         }
     </script>
 </body>

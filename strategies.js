@@ -1,5 +1,5 @@
-/** * OMNI-REAL | CORE V9.0
- * ARCHITECTURE: Multi-Tier Confluence Engine
+/** * OMNI-REAL INFINITY V9.0 | GLOBAL STRATEGY AGGREGATOR
+ * MODELS: Gemini 2.5 Flash / Lite
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
@@ -14,9 +14,8 @@ window.onload = () => {
 };
 
 function markFile(idx) {
-    const file = document.getElementById(`img${idx}`).files[0];
-    if (file) {
-        marketData[idx] = file; 
+    if (document.getElementById(`img${idx}`).files[0]) {
+        marketData[idx] = document.getElementById(`img${idx}`).files[0]; 
         const box = document.getElementById(`box${idx}`);
         box.classList.add('has-file');
         document.getElementById(`content${idx}`).innerHTML = `
@@ -37,26 +36,26 @@ async function fileToPart(file) {
 }
 
 async function executeScan() {
-    if (!API_KEY) return alert("CRITICAL: Terminal Disconnected. Connect API Key.");
-    const pair = document.getElementById('pairName').value || "Global Market";
-    if (marketData.some(f => f === null)) return alert("DATA GAP: Please upload all 4 required timeframe tiers.");
+    if (!API_KEY) return alert("System Offline: Connect Gemini API.");
+    const pair = document.getElementById('pairName').value || "Asset";
+    if (marketData.some(f => f === null)) return alert("Data Deficit: Please upload 4-Tier Chart Set.");
 
     const btn = document.getElementById('scanBtn');
-    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> AGGREGATING DATA...`;
+    btn.innerHTML = `<i class="fa-solid fa-microchip fa-spin mr-2"></i> AGGREGATING STRATEGIES...`;
     btn.disabled = true;
 
     try {
         const imageParts = await Promise.all(marketData.map(fileToPart));
         
-        // WORLD-CLASS PROMPT ENGINEERING
-        const prompt = `Act as a Top 1% Institutional SMC Trader. 
-        Analyze these 4 charts for ${pair} confluence: 1H Bias, 15M Structure, 1M Entry, and DXY Strength.
+        // THE UNIVERSAL CONFLUENCE PROMPT
+        const prompt = `System: Quantitative Market Strategist. Asset: ${pair}.
+        Evaluate 4 charts (1H Bias, 15M Structure, 1M Entry, DXY Index) for universal confluence.
         
-        RULES:
-        1. STRATEGY: Use Smart Money Concepts (SMC), Order Blocks, FVG, and Liquidity Grab.
-        2. ACCURACY: If the charts contradict each other, return "WAIT".
-        3. DXY: Factor in USD strength/weakness into the final bias.
-        4. CONSOLIDATION: If price is ranging without BOS/CHoCH, return "WAIT" with a trigger price.
+        TASK:
+        1. STRATEGY CHECK: Run analysis for SMC/ICT, Wyckoff (Accum/Dist), Price Action (Trend/BOS), and Supply & Demand.
+        2. DXY FILTER: Confirm move direction against Dollar strength.
+        3. CONSOLIDATION: If price is ranging or strategies conflict, return bias "WAIT" with a trigger price.
+        4. ACCURACY: Choose the SINGLE strategy providing the highest RR (Risk:Reward).
 
         OUTPUT JSON ONLY:
         {
@@ -65,7 +64,7 @@ async function executeScan() {
             "sl": number,
             "tp": number,
             "trigger": number,
-            "logic": "Step-by-step institutional reasoning"
+            "logic": "1. CHOSEN STRATEGY: [Explain why this strategy won] \\n2. THE STORY (Mentorship): [Simple breakdown for beginner/intermediate] \\n3. THE TRAP (Liquidity): [Target zones] \\n4. THE TRIGGER: [Breakout level]"
         }`;
 
         let success = false;
@@ -87,21 +86,17 @@ async function executeScan() {
                 }
             }
         }
-        if (!success) throw new Error("Connection timed out. Re-sync key.");
+        if (!success) throw new Error("API Sync Error. Verify your key.");
     } catch (e) { alert("SYSTEM ALERT: " + e.message); }
-    finally { 
-        btn.innerHTML = "PERFORM MULTI-CHART SCAN"; 
-        btn.disabled = false; 
-    }
+    finally { btn.innerHTML = "PERFORM UNIVERSAL SCAN"; btn.disabled = false; }
 }
 
 function renderOutput(res) {
-    const box = document.getElementById('resultBox');
-    box.classList.remove('hidden');
+    document.getElementById('resultBox').classList.remove('hidden');
     const act = document.getElementById('actionText');
     act.innerText = res.bias;
     
-    // Premium Color Logic
+    // Sentiment Glow Effects
     if (res.bias === 'BUY') act.className = "text-7xl font-black italic mb-6 glow-text text-emerald-400";
     else if (res.bias === 'SELL') act.className = "text-7xl font-black italic mb-6 glow-text text-rose-500";
     else act.className = "text-7xl font-black italic mb-6 glow-text text-amber-400";
@@ -110,19 +105,19 @@ function renderOutput(res) {
     document.getElementById('slText').innerText = res.sl || "---";
     document.getElementById('tpText').innerText = res.tp || "---";
     
-    // Institutional Position Sizing (Fixed 1% Risk)
+    // Adaptive Lot Size (1% Risk Management)
     const slDist = Math.abs(res.entry - res.sl);
     document.getElementById('lotText').innerText = slDist > 0 ? ((1000 * 0.01) / (slDist * 10)).toFixed(2) + " Lots" : "ADAPTIVE";
 
-    let logicFinal = res.logic;
+    let finalLogic = res.logic;
     if (res.bias === "WAIT" && res.trigger) {
-        logicFinal = `<span class="text-amber-400 font-black uppercase">TRIGGER ALERT:</span> Break ${res.trigger} to confirm entry.<br><br>${res.logic}`;
+        finalLogic = `<span class="text-amber-400 font-black">MARKET PAUSE:</span> Do not execute until price triggers ${res.trigger}.\\n\\n${res.logic}`;
     }
-    document.getElementById('logicText').innerHTML = logicFinal;
-    box.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('logicText').innerText = finalLogic;
+    document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth' });
 }
 
-// UI HANDLERS
+// TERMINAL CONTROLS
 function lockUI() {
     const inp = document.getElementById('apiInput');
     inp.disabled = true; inp.value = "••••••••••••••••";

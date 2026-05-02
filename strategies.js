@@ -3,7 +3,7 @@
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// UPDATED MODEL: Using the experimental flash identifier for v1beta compatibility
+// FIX: Changed to 2.0 Flash Experimental to bypass "Model Not Found" errors
 const MODEL = "gemini-2.0-flash-exp"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
@@ -14,16 +14,14 @@ function markFile(idx) {
     const fileInput = document.getElementById(`img${idx}`);
     
     if (fileInput && fileInput.files.length > 0) {
-        // Apply immediate visual feedback
         box.classList.add('has-file');
         box.style.border = "2px solid #10b981";
-        box.style.background = "rgba(16, 185, 129, 0.1)";
-
-        // Force the checkmark to appear by overwriting the icon container
+        
+        // This manually injects the tick so it shows up instantly
         const content = box.querySelector('center') || box;
         content.innerHTML = `
             <div style="font-size:2.5rem; color:#10b981; margin-bottom:10px;">✅</div>
-            <p style="color:#10b981; font-weight:bold; font-size:0.8rem;">CHART LOADED</p>
+            <p style="color:#10b981; font-weight:bold; font-size:0.8rem;">CHART SYNCED</p>
         `;
     }
 }
@@ -32,7 +30,7 @@ function toggleDrawer() {
     document.getElementById('sideDrawer').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('hidden');
     
-    // Ensure all Master Control inputs remain interactive
+    // UNFREEZE: Ensures Master Control inputs are interactive
     ['bal', 'risk', 'apiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -45,7 +43,7 @@ function toggleDrawer() {
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
     if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
-    localStorage.setItem('omni_api_v3', val); // Save for refresh persistence
+    localStorage.setItem('omni_api_v3', val);
     API_KEY = val;
     lockUI();
     toggleDrawer();
@@ -77,15 +75,15 @@ async function executeScan() {
     
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
-    btn.innerText = "CALIBRATING INSTITUTIONAL BIAS...";
+    btn.innerText = "CALIBRATING CONFLUENCE...";
     btn.disabled = true;
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
         
-        // Institutional Confluence Prompt
-        const prompt = `Act as an Institutional SMC/ICT Analyst. Analyze 4 charts for structural alignment. 
-        If mismatch found, return bias 'WAIT'. 
+        // MULTI-STRATEGY PROMPT (SMC/ICT/Price Action)
+        const prompt = `Act as an Institutional SMC/ICT Analyst. Analyze 4 charts. 
+        If HTF/LTF trend mismatch or consolidation, return bias 'WAIT'.
         Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -96,7 +94,7 @@ async function executeScan() {
 
         if (!response.ok) {
             const err = await response.json();
-            throw new Error(err.error.message); // Explicitly handles the "Model Not Found"
+            throw new Error(err.error.message); // Handles "Not Found" or "Permission" errors
         }
 
         const data = await response.json();
@@ -122,7 +120,7 @@ function renderOutput(res, resultBox) {
     if (res.bias === "WAIT") {
         actionTxt.innerText = "NO TRADE";
         actionTxt.className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
-        logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Pending Setup"} | ${res.logic}`;
+        logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Pending"} | ${res.logic}`;
         ['entText','slText','tpText','lotText'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.innerText = "---";
@@ -131,7 +129,7 @@ function renderOutput(res, resultBox) {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        // Automatic Position Sizing Math
+        // LOT SIZE CALCULATION
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1;
         const slDist = Math.abs(res.entry - res.sl);

@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OMNI-BLACK | BALANCED</title>
+    <title>OMNI-BLACK | VECTOR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { 
             --cyan: #00f2ff; 
-            /* Reduced intensity from 0.4 to 0.25 for a subtler look */
-            --blue-glow: rgba(0, 242, 255, 0.25);
+            --blue-glow: rgba(0, 242, 255, 0.3);
             --glass-bg: rgba(255, 255, 255, 0.03);
             --border-glow: rgba(255, 255, 255, 0.08);
         }
@@ -21,111 +20,113 @@
             padding: 20px; min-height: 100vh; overflow-x: hidden;
         }
 
-        /* ✨ LOGO (SHIFTED LEFT + REDUCED GLOW) ✨ */
-        .brand-container {
-            display: flex; flex-direction: column; align-items: flex-start;
+        /* 🛡️ CUSTOM SVG LOGO & BRANDING 🛡️ */
+        .brand-header {
+            display: flex; align-items: center; gap: 12px;
         }
+
+        .logo-svg {
+            width: 42px; height: 42px;
+            filter: drop-shadow(0 0 8px var(--blue-glow));
+        }
+
+        /* ⚡️ HIGH-VOLTAGE TEXT BORDER ⚡️ */
         .logo-text {
-            font-size: 2.8rem; font-weight: 900; font-style: italic; letter-spacing: -0.05em;
+            font-size: 2.6rem; font-weight: 900; font-style: italic; letter-spacing: -0.04em;
             color: #fff; line-height: 1;
-            /* Softer text shadow for less intensity */
-            text-shadow: 0 0 12px var(--blue-glow);
-            -webkit-text-stroke: 0.5px rgba(0, 242, 255, 0.5);
+            /* Multi-layer stroke for eye-catching depth */
+            paint-order: stroke fill;
+            -webkit-text-stroke: 1.5px var(--cyan);
+            text-shadow: 
+                0 0 10px var(--blue-glow),
+                0 0 20px rgba(0, 242, 255, 0.1);
         }
 
-        /* 🧪 GLASSMORPHISM 🧪 */
-        .glass-terminal {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glow);
-            border-radius: 35px;
-        }
-
-        /* ⚡️ UPLOAD CARDS ⚡️ */
+        /* 🧪 GLASS TILES (Subtle intensity) */
         .upload-card {
-            height: 155px; display: flex; flex-direction: column;
+            height: 150px; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             border-radius: 28px; background: rgba(255,255,255,0.01);
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: 0.4s ease-out;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: 0.4s cubic-bezier(0.2, 1, 0.2, 1);
         }
 
-        .upload-card i { font-size: 2rem; color: rgba(255,255,255,0.1); margin-bottom: 12px; }
-
-        /* UPLOADED STATE (REDUCED INTENSITY) [Ref: 1000040692.jpg] */
+        /* UPLOADED STATE [Ref: 1000040692.jpg] */
         .has-file {
-            border: 1.5px solid var(--cyan) !important;
-            background: rgba(0, 242, 255, 0.03) !important;
-            /* Softened shadow to be less distracting */
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            border: 1px solid var(--cyan) !important;
+            background: rgba(0, 242, 255, 0.04) !important;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.15);
         }
-        .has-file i { color: var(--cyan); text-shadow: 0 0 8px var(--cyan); }
-        .has-file p { color: #fff !important; font-weight: 700; opacity: 1; }
+        .has-file i { color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
 
-        .btn-command {
+        .btn-main {
             background: #fff; color: #000; font-weight: 900;
             text-transform: uppercase; letter-spacing: 0.4em;
-            padding: 24px; border-radius: 22px; width: 100%;
-            margin-top: 30px; transition: 0.3s;
+            padding: 22px; border-radius: 20px; width: 100%;
+            margin-top: 25px; transition: 0.3s;
         }
 
-        .label-vibrant { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.25); letter-spacing: 0.2em; text-transform: uppercase; }
+        .label-vibrant { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 0.2em; text-transform: uppercase; }
 
-        /* CORE LINK (SHIFTED RIGHT) [Ref: 1000040681.jpg] */
-        .settings-trigger {
+        .settings-btn {
             background: var(--glass-bg); border: 1px solid var(--border-glow);
-            width: 50px; height: 50px; border-radius: 18px; display: flex; align-items: center; justify-content: center;
-            color: var(--cyan); transition: 0.3s;
+            width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            color: var(--cyan);
         }
-        .settings-trigger:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
 
-    <header class="flex justify-between items-center mb-10 pt-4 px-2">
-        <div class="brand-container">
-            <h1 class="logo-text">OMNI—BLACK</h1>
-            <p class="text-[9px] font-black tracking-[0.4em] text-cyan-400 opacity-50 uppercase ml-1">Precision Scan</p>
+    <header class="flex justify-between items-center mb-12 pt-4 px-2">
+        <div class="brand-header">
+            <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 5L95 27.5V72.5L50 95L5L72.5V27.5L50 5Z" stroke="#00f2ff" stroke-width="4" stroke-linejoin="round"/>
+                <path d="M50 25L75 37.5V62.5L50 75L25 62.5V37.5L50 25Z" fill="#00f2ff" fill-opacity="0.2" stroke="#00f2ff" stroke-width="2"/>
+                <circle cx="50" cy="50" r="5" fill="#fff"/>
+            </svg>
+            <div>
+                <h1 class="logo-text">OMNI—BLACK</h1>
+                <p class="text-[9px] font-black tracking-[0.4em] text-cyan-400 opacity-40 uppercase ml-1">Terminal Active</p>
+            </div>
         </div>
-        <button onclick="toggleSettings()" class="settings-trigger">
-            <i class="fa-solid fa-sliders text-xl"></i>
+        <button onclick="toggleSettings()" class="settings-btn">
+            <i class="fa-solid fa-sliders text-lg"></i>
         </button>
     </header>
 
     <div class="grid grid-cols-2 gap-5">
         <div id="box0" class="upload-card" onclick="document.getElementById('i0').click()">
             <input type="file" id="i0" hidden accept="image/*" onchange="sync(0)">
-            <i class="fa-solid fa-chart-pie"></i>
-            <p class="label-vibrant">1H Context</p>
+            <i class="fa-solid fa-compass text-slate-800 text-3xl mb-3"></i>
+            <p class="label-vibrant">1H Bias</p>
         </div>
         <div id="box1" class="upload-card" onclick="document.getElementById('i1').click()">
             <input type="file" id="i1" hidden accept="image/*" onchange="sync(1)">
-            <i class="fa-solid fa-microscope"></i>
-            <p class="label-vibrant">15M Macro</p>
+            <i class="fa-solid fa-microscope text-slate-800 text-3xl mb-3"></i>
+            <p class="label-vibrant">15M Struct</p>
         </div>
         <div id="box2" class="upload-card" onclick="document.getElementById('i2').click()">
             <input type="file" id="i2" hidden accept="image/*" onchange="sync(2)">
-            <i class="fa-solid fa-bolt"></i>
+            <i class="fa-solid fa-crosshairs text-slate-800 text-3xl mb-3"></i>
             <p class="label-vibrant">1M Trigger</p>
         </div>
         <div id="box3" class="upload-card" onclick="document.getElementById('i3').click()">
             <input type="file" id="i3" hidden accept="image/*" onchange="sync(3)">
-            <i class="fa-solid fa-wave-square"></i>
-            <p class="label-vibrant">DXY Sync</p>
+            <i class="fa-solid fa-globe text-slate-800 text-3xl mb-3"></i>
+            <p class="label-vibrant">DXY Data</p>
         </div>
     </div>
 
-    <button id="goBtn" onclick="executeSurgicalScan()" class="btn-command">Execute Command</button>
+    <button id="goBtn" onclick="executeSurgicalScan()" class="btn-main">Execute Command</button>
 
     <div id="outPanel" class="hidden mt-12 pb-40 space-y-6">
-        <div class="text-center mb-10">
-            <h2 id="biasTxt" class="text-8xl font-black italic tracking-tighter" style="filter: drop-shadow(0 0 25px currentColor);"></h2>
+        <div class="text-center mb-8">
+            <h2 id="biasTxt" class="text-8xl font-black italic tracking-tighter" style="filter: drop-shadow(0 0 20px currentColor);"></h2>
         </div>
         
-        <div class="grid grid-cols-2 glass-terminal overflow-hidden border border-white/5">
+        <div class="grid grid-cols-2 rounded-[30px] overflow-hidden border border-white/5 bg-white/[0.02] backdrop-blur-md">
             <div class="p-8 text-center border-r border-white/5">
-                <p class="label-vibrant mb-1">Execution</p>
+                <p class="label-vibrant mb-1">Entry</p>
                 <p id="entVal" class="text-3xl font-bold font-mono">--</p>
             </div>
             <div class="p-8 text-center">
@@ -133,30 +134,30 @@
                 <p id="lotVal" class="text-3xl font-bold font-mono text-cyan-400">--</p>
             </div>
             <div class="p-8 text-center border-t border-white/5 border-r">
-                <p class="label-vibrant mb-1 text-rose-500/50">Stop Loss</p>
+                <p class="label-vibrant mb-1 text-rose-500/40">Stop</p>
                 <p id="slVal" class="text-3xl font-bold font-mono text-rose-500">--</p>
             </div>
             <div class="p-8 text-center border-t border-white/5">
-                <p class="label-vibrant mb-1 text-emerald-400/50">Target</p>
+                <p class="label-vibrant mb-1 text-emerald-400/40">Target</p>
                 <p id="tpVal" class="text-3xl font-bold font-mono text-emerald-400">--</p>
             </div>
         </div>
 
-        <div class="glass-terminal p-8 border-l-[6px] border-cyan-500/50">
+        <div class="p-8 rounded-[30px] bg-white/[0.01] border border-white/5 border-l-[6px] border-cyan-500/40">
             <p id="logicSummary" class="text-lg text-slate-300 leading-relaxed italic font-medium"></p>
         </div>
     </div>
 
     <div id="settingsModal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center p-8 backdrop-blur-3xl">
-        <div class="w-full max-w-sm glass-terminal p-10 border-white/5 border">
-            <h3 class="text-center font-black italic mb-10 tracking-tighter text-white text-xl">SYSTEM CORE</h3>
+        <div class="w-full max-w-sm rounded-[35px] p-10 border-white/5 border bg-white/[0.02]">
+            <h3 class="text-center font-black italic mb-10 tracking-tighter text-white text-xl uppercase">Core Configuration</h3>
             <input type="password" id="kIn" placeholder="API KEY" class="bg-black/40 border border-white/10 rounded-2xl w-full mb-4 p-5 text-sm outline-none text-cyan-400 font-mono">
             <div class="grid grid-cols-2 gap-4">
                 <input type="number" id="bIn" placeholder="BAL" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
                 <input type="number" id="rIn" placeholder="RISK %" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
             </div>
-            <button onclick="saveConfig()" class="btn-command mt-8 text-[10px] py-5">Sync Hardware</button>
-            <p class="text-center text-[10px] mt-10 text-slate-600 font-bold uppercase cursor-pointer" onclick="toggleSettings()">Close Settings</p>
+            <button onclick="saveConfig()" class="btn-main mt-8 text-[10px] py-5">Link Hardware</button>
+            <p class="text-center text-[10px] mt-10 text-slate-600 font-bold uppercase cursor-pointer" onclick="toggleSettings()">Back</p>
         </div>
     </div>
 

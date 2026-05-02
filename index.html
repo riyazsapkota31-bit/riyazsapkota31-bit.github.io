@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OMNI-BLACK | ULTIMATE</title>
+    <title>OMNI-BLACK | BALANCED</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { 
             --cyan: #00f2ff; 
-            --blue-glow: rgba(0, 242, 255, 0.4);
+            /* Reduced intensity from 0.4 to 0.25 for a subtler look */
+            --blue-glow: rgba(0, 242, 255, 0.25);
             --glass-bg: rgba(255, 255, 255, 0.03);
-            --border-glow: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(255, 255, 255, 0.08);
         }
         
         body { 
@@ -20,148 +21,142 @@
             padding: 20px; min-height: 100vh; overflow-x: hidden;
         }
 
-        /* ✨ HIGH-ACCESS LOGO WITH NEON BORDER GLOW ✨ */
-        .app-branding {
-            text-align: center; margin-bottom: 40px;
+        /* ✨ LOGO (SHIFTED LEFT + REDUCED GLOW) ✨ */
+        .brand-container {
+            display: flex; flex-direction: column; align-items: flex-start;
         }
         .logo-text {
-            font-size: 3.2rem; font-weight: 900; font-style: italic; letter-spacing: -0.05em;
+            font-size: 2.8rem; font-weight: 900; font-style: italic; letter-spacing: -0.05em;
             color: #fff; line-height: 1;
-            text-shadow: 
-                0 0 10px var(--blue-glow),
-                0 0 20px var(--blue-glow);
-            -webkit-text-stroke: 1px var(--cyan);
+            /* Softer text shadow for less intensity */
+            text-shadow: 0 0 12px var(--blue-glow);
+            -webkit-text-stroke: 0.5px rgba(0, 242, 255, 0.5);
         }
 
-        /* 🧪 ELITE GLASSMORPHISM 🧪 */
+        /* 🧪 GLASSMORPHISM 🧪 */
         .glass-terminal {
             background: var(--glass-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border-glow);
             border-radius: 35px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
 
-        /* ⚡️ INTERACTIVE UPLOAD MATRIX ⚡️ */
-        .upload-grid { display: grid; grid-cols: 2; gap: 20px; }
-
+        /* ⚡️ UPLOAD CARDS ⚡️ */
         .upload-card {
-            height: 160px; display: flex; flex-direction: column;
+            height: 155px; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            border-radius: 28px; background: rgba(255,255,255,0.015);
-            border: 1px dashed rgba(255,255,255,0.1);
-            transition: 0.5s cubic-bezier(0.2, 1, 0.2, 1);
-            position: relative; overflow: hidden;
+            border-radius: 28px; background: rgba(255,255,255,0.01);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.4s ease-out;
         }
 
-        .upload-card i { font-size: 2.2rem; color: rgba(255,255,255,0.15); margin-bottom: 12px; transition: 0.4s; }
+        .upload-card i { font-size: 2rem; color: rgba(255,255,255,0.1); margin-bottom: 12px; }
 
-        /* ACTIVE/GLOW STATE [Ref: V8/V11 Checkmarks] */
+        /* UPLOADED STATE (REDUCED INTENSITY) [Ref: 1000040692.jpg] */
         .has-file {
-            border: 2px solid var(--cyan) !important;
-            background: rgba(0, 242, 255, 0.05) !important;
-            box-shadow: 0 0 30px var(--blue-glow), inset 0 0 15px var(--blue-glow);
+            border: 1.5px solid var(--cyan) !important;
+            background: rgba(0, 242, 255, 0.03) !important;
+            /* Softened shadow to be less distracting */
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
         }
-        .has-file i { color: var(--cyan); text-shadow: 0 0 15px var(--cyan); transform: scale(1.1); }
-        .has-file p { color: #fff !important; font-weight: 900; }
+        .has-file i { color: var(--cyan); text-shadow: 0 0 8px var(--cyan); }
+        .has-file p { color: #fff !important; font-weight: 700; opacity: 1; }
 
-        /* 🚀 COMMAND EXECUTION 🚀 */
         .btn-command {
             background: #fff; color: #000; font-weight: 900;
             text-transform: uppercase; letter-spacing: 0.4em;
             padding: 24px; border-radius: 22px; width: 100%;
             margin-top: 30px; transition: 0.3s;
-            box-shadow: 0 15px 40px rgba(0, 242, 255, 0.2);
         }
-        .btn-command:active { transform: scale(0.96); opacity: 0.8; }
 
-        .label-vibrant { font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.3); letter-spacing: 0.25em; text-transform: uppercase; }
+        .label-vibrant { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.25); letter-spacing: 0.2em; text-transform: uppercase; }
 
-        /* SETTINGS ICON GLOW [Ref: V8 Icon] */
+        /* CORE LINK (SHIFTED RIGHT) [Ref: 1000040681.jpg] */
         .settings-trigger {
             background: var(--glass-bg); border: 1px solid var(--border-glow);
-            width: 52px; height: 52px; border-radius: 18px; display: flex; align-items: center; justify-content: center;
-            color: var(--cyan); box-shadow: 0 0 15px var(--blue-glow);
+            width: 50px; height: 50px; border-radius: 18px; display: flex; align-items: center; justify-content: center;
+            color: var(--cyan); transition: 0.3s;
         }
+        .settings-trigger:active { transform: scale(0.9); }
     </style>
 </head>
 <body>
 
     <header class="flex justify-between items-center mb-10 pt-4 px-2">
+        <div class="brand-container">
+            <h1 class="logo-text">OMNI—BLACK</h1>
+            <p class="text-[9px] font-black tracking-[0.4em] text-cyan-400 opacity-50 uppercase ml-1">Precision Scan</p>
+        </div>
         <button onclick="toggleSettings()" class="settings-trigger">
             <i class="fa-solid fa-sliders text-xl"></i>
         </button>
-        <div class="text-right">
-            <h1 class="logo-text">OMNI—BLACK</h1>
-            <p class="text-[9px] font-black tracking-[0.5em] text-cyan-400 opacity-60 uppercase">System Active</p>
-        </div>
     </header>
 
     <div class="grid grid-cols-2 gap-5">
         <div id="box0" class="upload-card" onclick="document.getElementById('i0').click()">
             <input type="file" id="i0" hidden accept="image/*" onchange="sync(0)">
-            <i class="fa-solid fa-cube"></i>
-            <p class="label-vibrant">1H Bias</p>
+            <i class="fa-solid fa-chart-pie"></i>
+            <p class="label-vibrant">1H Context</p>
         </div>
         <div id="box1" class="upload-card" onclick="document.getElementById('i1').click()">
             <input type="file" id="i1" hidden accept="image/*" onchange="sync(1)">
-            <i class="fa-solid fa-layer-group"></i>
-            <p class="label-vibrant">15M Struct</p>
+            <i class="fa-solid fa-microscope"></i>
+            <p class="label-vibrant">15M Macro</p>
         </div>
         <div id="box2" class="upload-card" onclick="document.getElementById('i2').click()">
             <input type="file" id="i2" hidden accept="image/*" onchange="sync(2)">
-            <i class="fa-solid fa-bolt-lightning"></i>
-            <p class="label-vibrant">1M Entry</p>
+            <i class="fa-solid fa-bolt"></i>
+            <p class="label-vibrant">1M Trigger</p>
         </div>
         <div id="box3" class="upload-card" onclick="document.getElementById('i3').click()">
             <input type="file" id="i3" hidden accept="image/*" onchange="sync(3)">
-            <i class="fa-solid fa-chart-line"></i>
-            <p class="label-vibrant">DXY Data</p>
+            <i class="fa-solid fa-wave-square"></i>
+            <p class="label-vibrant">DXY Sync</p>
         </div>
     </div>
 
     <button id="goBtn" onclick="executeSurgicalScan()" class="btn-command">Execute Command</button>
 
-    <div id="outPanel" class="hidden mt-16 pb-40 space-y-8">
-        <div class="text-center">
-            <h2 id="biasTxt" class="text-9xl font-black italic tracking-tighter" style="filter: drop-shadow(0 0 40px currentColor);"></h2>
+    <div id="outPanel" class="hidden mt-12 pb-40 space-y-6">
+        <div class="text-center mb-10">
+            <h2 id="biasTxt" class="text-8xl font-black italic tracking-tighter" style="filter: drop-shadow(0 0 25px currentColor);"></h2>
         </div>
         
-        <div class="grid grid-cols-2 glass-terminal overflow-hidden">
+        <div class="grid grid-cols-2 glass-terminal overflow-hidden border border-white/5">
             <div class="p-8 text-center border-r border-white/5">
-                <p class="label-vibrant mb-2">Execution</p>
-                <p id="entVal" class="text-3xl font-bold font-mono text-white">--</p>
+                <p class="label-vibrant mb-1">Execution</p>
+                <p id="entVal" class="text-3xl font-bold font-mono">--</p>
             </div>
             <div class="p-8 text-center">
-                <p class="label-vibrant mb-2">Lot Size</p>
+                <p class="label-vibrant mb-1">Lot Size</p>
                 <p id="lotVal" class="text-3xl font-bold font-mono text-cyan-400">--</p>
             </div>
             <div class="p-8 text-center border-t border-white/5 border-r">
-                <p class="label-vibrant mb-2 text-rose-500/60">Hard Stop</p>
+                <p class="label-vibrant mb-1 text-rose-500/50">Stop Loss</p>
                 <p id="slVal" class="text-3xl font-bold font-mono text-rose-500">--</p>
             </div>
             <div class="p-8 text-center border-t border-white/5">
-                <p class="label-vibrant mb-2 text-emerald-400/60">TP Target</p>
+                <p class="label-vibrant mb-1 text-emerald-400/50">Target</p>
                 <p id="tpVal" class="text-3xl font-bold font-mono text-emerald-400">--</p>
             </div>
         </div>
 
-        <div class="glass-terminal p-10 border-l-[10px] border-cyan-500">
-            <p id="logicSummary" class="text-xl text-slate-100 leading-tight italic font-bold"></p>
+        <div class="glass-terminal p-8 border-l-[6px] border-cyan-500/50">
+            <p id="logicSummary" class="text-lg text-slate-300 leading-relaxed italic font-medium"></p>
         </div>
     </div>
 
-    <div id="settingsModal" class="fixed inset-0 bg-black/80 z-50 hidden flex-col items-center justify-center p-8 backdrop-blur-2xl">
-        <div class="w-full max-w-sm glass-terminal p-10 border-cyan-500/20 border">
-            <h3 class="text-center font-black italic mb-10 tracking-tighter text-white text-2xl">CORE LINK</h3>
-            <input type="password" id="kIn" placeholder="GEMINI API KEY" class="bg-black/50 border border-white/10 rounded-2xl w-full mb-4 p-5 text-sm outline-none text-cyan-400 font-mono">
+    <div id="settingsModal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center p-8 backdrop-blur-3xl">
+        <div class="w-full max-w-sm glass-terminal p-10 border-white/5 border">
+            <h3 class="text-center font-black italic mb-10 tracking-tighter text-white text-xl">SYSTEM CORE</h3>
+            <input type="password" id="kIn" placeholder="API KEY" class="bg-black/40 border border-white/10 rounded-2xl w-full mb-4 p-5 text-sm outline-none text-cyan-400 font-mono">
             <div class="grid grid-cols-2 gap-4">
-                <input type="number" id="bIn" placeholder="BALANCE" class="bg-black/50 border border-white/10 rounded-2xl p-5 text-sm outline-none">
-                <input type="number" id="rIn" placeholder="RISK %" class="bg-black/50 border border-white/10 rounded-2xl p-5 text-sm outline-none">
+                <input type="number" id="bIn" placeholder="BAL" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
+                <input type="number" id="rIn" placeholder="RISK %" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
             </div>
-            <button onclick="saveConfig()" class="btn-command mt-8 text-xs py-5">Sync Hardware</button>
-            <p class="text-center text-[10px] mt-10 text-slate-500 font-black uppercase cursor-pointer" onclick="toggleSettings()">Return to Terminal</p>
+            <button onclick="saveConfig()" class="btn-command mt-8 text-[10px] py-5">Sync Hardware</button>
+            <p class="text-center text-[10px] mt-10 text-slate-600 font-bold uppercase cursor-pointer" onclick="toggleSettings()">Close Settings</p>
         </div>
     </div>
 

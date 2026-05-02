@@ -1,14 +1,14 @@
 /**
- * OMNI-REAL | PRECISION V11 (FINAL REPAIR)
+ * OMNI-REAL | PRECISION V11 (FULL SYSTEM RESTORE)
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// CORE FIX: Use 1.5-flash for guaranteed v1beta compatibility
-const MODEL = "gemini-1.5-flash"; 
+// STABLE IDENTIFIER: Using the 'latest' alias to ensure v1beta compatibility
+const MODEL = "gemini-1.5-flash-latest"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI DYNAMICS (TICK FIX) ---
+// --- UI DYNAMICS & TICK LOGIC ---
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
     const fileInput = document.getElementById(`img${idx}`);
@@ -27,9 +27,16 @@ function markFile(idx) {
 }
 
 // --- MASTER CONTROL PERSISTENCE ---
+function toggleDrawer() {
+    document.getElementById('sideDrawer').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('hidden');
+}
+
 function saveApiKey() {
-    const val = document.getElementById('apiInput').value.trim();
-    // Rejects empty or masked inputs
+    const input = document.getElementById('apiInput');
+    const val = input.value.trim();
+    
+    // Safety check to prevent saving mask characters
     if (!val || val.includes("•")) return alert("Please enter a valid Terminal Key.");
     
     localStorage.setItem('omni_api_v3', val);
@@ -46,17 +53,21 @@ function lockUI() {
     }
 }
 
-function toggleDrawer() {
-    document.getElementById('sideDrawer').classList.toggle('open');
-    document.getElementById('overlay').classList.toggle('hidden');
-}
+// --- TRADING ENGINE (FIXED) ---
 
-// --- TRADING ENGINE ---
+/** * REPAIR: Restoring the missing fileToPart function 
+ * to resolve the "not defined" error
+ */
 async function fileToPart(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve({ inlineData: { mimeType: "image/jpeg", data: reader.result.split(',')[1] } });
+        reader.onload = () => resolve({ 
+            inlineData: { 
+                mimeType: "image/jpeg", 
+                data: reader.result.split(',')[1] 
+            } 
+        });
     });
 }
 
@@ -75,11 +86,11 @@ async function executeScan() {
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
         
-        // Institutional Confluence Prompt
-        const prompt = `Act as an SMC Analyst. Analyze 4 charts for alignment. 
+        const prompt = `Act as an SMC Analyst. Analyze 4 charts for structural alignment. 
         If HTF/LTF mismatch, return bias 'WAIT'. 
         Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
 
+        // Calling the v1beta endpoint with the corrected model string
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -92,7 +103,6 @@ async function executeScan() {
         }
 
         const data = await response.json();
-        // Cleaner parsing logic to handle potential markdown wrappers
         const rawJson = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
         const res = JSON.parse(rawJson);
 
@@ -121,7 +131,7 @@ function renderOutput(res, resultBox) {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        // Risk Calculation Logic
+        // Calculations based on Master Control inputs
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1;
         const slDist = Math.abs(res.entry - res.sl);

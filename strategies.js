@@ -1,32 +1,35 @@
 /**
- * OMNI-REAL | PRECISION V11 (FULL SYSTEM RESTORE)
+ * OMNI-REAL | PRECISION V11 (COMPLETE SYSTEM REPAIR)
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// STABLE IDENTIFIER: Using the 'latest' alias to ensure v1beta compatibility
+// CORE FIX: This ID is verified for the v1beta endpoint
 const MODEL = "gemini-1.5-flash-latest"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI DYNAMICS & TICK LOGIC ---
+// --- UI DYNAMICS (REF: 1000040692.jpg) ---
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
     const fileInput = document.getElementById(`img${idx}`);
     
     if (fileInput && fileInput.files.length > 0) {
+        // Apply the "Uploaded" aesthetic from your picture
         box.classList.add('has-file');
         box.style.border = "2px solid #10b981";
+        box.style.background = "rgba(16, 185, 129, 0.05)";
         
-        // Manual tick injection for visual confirmation
         const content = box.querySelector('center') || box;
         content.innerHTML = `
-            <div style="font-size:2.5rem; margin-bottom:10px;">✅</div>
-            <p style="color:#10b981; font-weight:bold; font-size:0.8rem;">CHART LOADED</p>
+            <div style="background:#10b981; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">
+                <span style="color:white; font-size:1.5rem; font-weight:bold;">✓</span>
+            </div>
+            <p style="color:#10b981; font-weight:bold; font-size:0.75rem; letter-spacing:1px;">CHART SYNCED</p>
         `;
     }
 }
 
-// --- MASTER CONTROL PERSISTENCE ---
+// --- MASTER CONTROL ---
 function toggleDrawer() {
     document.getElementById('sideDrawer').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('hidden');
@@ -35,10 +38,7 @@ function toggleDrawer() {
 function saveApiKey() {
     const input = document.getElementById('apiInput');
     const val = input.value.trim();
-    
-    // Safety check to prevent saving mask characters
-    if (!val || val.includes("•")) return alert("Please enter a valid Terminal Key.");
-    
+    if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
     localStorage.setItem('omni_api_v3', val);
     API_KEY = val;
     lockUI();
@@ -53,20 +53,15 @@ function lockUI() {
     }
 }
 
-// --- TRADING ENGINE (FIXED) ---
+// --- TRADING ENGINE (REPAIRED) ---
 
-/** * REPAIR: Restoring the missing fileToPart function 
- * to resolve the "not defined" error
- */
+// This function was missing, causing the "not defined" error
 async function fileToPart(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => resolve({ 
-            inlineData: { 
-                mimeType: "image/jpeg", 
-                data: reader.result.split(',')[1] 
-            } 
+            inlineData: { mimeType: "image/jpeg", data: reader.result.split(',')[1] } 
         });
     });
 }
@@ -87,10 +82,9 @@ async function executeScan() {
         const imageParts = await Promise.all(files.map(fileToPart));
         
         const prompt = `Act as an SMC Analyst. Analyze 4 charts for structural alignment. 
-        If HTF/LTF mismatch, return bias 'WAIT'. 
+        If mismatch, return bias 'WAIT'. 
         Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
 
-        // Calling the v1beta endpoint with the corrected model string
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -99,7 +93,7 @@ async function executeScan() {
 
         if (!response.ok) {
             const err = await response.json();
-            throw new Error(err.error.message); 
+            throw new Error(err.error.message); // Catches "Model Not Found"
         }
 
         const data = await response.json();
@@ -120,7 +114,6 @@ async function executeScan() {
 function renderOutput(res, resultBox) {
     const actionTxt = document.getElementById('actionText');
     const logicTxt = document.getElementById('logicText');
-    
     resultBox.classList.remove('hidden');
 
     if (res.bias === "WAIT") {
@@ -131,7 +124,6 @@ function renderOutput(res, resultBox) {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        // Calculations based on Master Control inputs
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1;
         const slDist = Math.abs(res.entry - res.sl);

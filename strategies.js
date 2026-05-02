@@ -1,14 +1,14 @@
 /**
  * OMNI-REAL | INFINITY SCALPER V8.2
- * FIXED: UI Content Reset & API Connection Protocol
+ * FIXED: fileToPart undefined & Connection Protocol
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-const MODEL = "gemini-1.5-flash-latest"; 
+const MODEL = "gemini-1.5-flash-latest";
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI FIX: PRESERVES INPUT TAGS ---
+// --- UI RECOVERY: PREVENTS DATA GAP ---
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
     const input = document.getElementById(`img${idx}`);
@@ -16,7 +16,7 @@ function markFile(idx) {
     
     if (input.files && input.files[0]) {
         box.classList.add('has-file');
-        // Update ONLY content div to prevent deleting input data
+        // Visual indicator that doesn't clear the input field
         content.innerHTML = `
             <div style="background:#10b981; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 10px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">
                 <span style="color:white; font-size:1.5rem; font-weight:bold;">✓</span>
@@ -26,7 +26,7 @@ function markFile(idx) {
     }
 }
 
-// --- TERMINAL LOCK LOGIC ---
+// --- MASTER CONTROL INTERFACE ---
 function lockUI() {
     const apiInput = document.getElementById('apiInput');
     apiInput.value = "••••••••••••••••••••";
@@ -48,7 +48,7 @@ function enableEdit() {
 
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
-    if (!val || val.includes("•")) return alert("Sync Failed: Enter valid key.");
+    if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
     localStorage.setItem('omni_api_v3', val);
     API_KEY = val;
     lockUI();
@@ -60,7 +60,8 @@ function toggleDrawer() {
     document.getElementById('overlay').classList.toggle('hidden');
 }
 
-// --- ENGINE: FIXES CONNECTION & DATA FLOW ---
+// --- CORE SCAN ENGINE ---
+// Explicitly defining fileToPart to fix the terminal error
 async function fileToPart(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -74,24 +75,22 @@ async function executeScan() {
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     
-    // Explicit ID selection prevents "Data Gap"
-    const files = [
-        document.getElementById('img0').files[0],
-        document.getElementById('img1').files[0],
-        document.getElementById('img2').files[0],
-        document.getElementById('img3').files[0]
-    ];
+    // Direct selection to ensure no "Data Gaps"
+    const f0 = document.getElementById('img0').files[0];
+    const f1 = document.getElementById('img1').files[0];
+    const f2 = document.getElementById('img2').files[0];
+    const f3 = document.getElementById('img3').files[0];
     
-    if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
+    if (!f0 || !f1 || !f2 || !f3) return alert("Data Gap: Upload all 4 Market Tiers.");
 
-    btn.innerText = "CALIBRATING MULTI-STRATEGY...";
+    btn.innerText = "SYNCHRONIZING ANALYTICS...";
     btn.disabled = true;
 
     try {
-        const imageParts = await Promise.all(files.map(fileToPart));
+        const imageParts = await Promise.all([f0, f1, f2, f3].map(fileToPart));
         
-        const prompt = `System: SMC & Price Action Analyst. Analyze 4 charts for structural confluence. 
-        If tiers conflict, return BIAS: "WAIT" and specify a "Watch Level" price.
+        const prompt = `Act as an expert technical analyst. Analyze 4 charts for SMC confluence. 
+        If bias is not clear, return "WAIT". If "WAIT", provide a "Watch Level" price.
         Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -101,19 +100,17 @@ async function executeScan() {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || "Connection Protocol Failed");
+            const err = await response.json();
+            throw new Error(err.error?.message || "Connection Failed");
         }
 
         const data = await response.json();
-        const rawText = data.candidates[0].content.parts[0].text;
-        const res = JSON.parse(rawText.replace(/```json/g, '').replace(/```/g, '').trim());
+        const resText = data.candidates[0].content.parts[0].text;
+        const res = JSON.parse(resText.replace(/```json/g, '').replace(/```/g, '').trim());
 
         renderOutput(res, resultBox);
-
     } catch (e) {
-        alert("TERMINAL ERROR: " + e.message);
-        console.error(e);
+        alert("TERMINAL ERROR: " + e.message); // Details connection errors
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;
@@ -129,6 +126,7 @@ function renderOutput(res, resultBox) {
         actionTxt.innerText = "WAIT & WATCH"; //
         actionTxt.className = "text-5xl font-extrabold italic mb-10 text-amber-500 glow-text";
         logicTxt.innerText = `WATCH LEVEL: ${res.support || res.entry} | ${res.logic}`;
+        ['entText','slText','tpText','lotText','supText','resText'].forEach(id => document.getElementById(id).innerText = "---");
     } else {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;

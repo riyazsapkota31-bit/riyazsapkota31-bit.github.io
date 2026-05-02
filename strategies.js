@@ -1,9 +1,10 @@
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// UPDATED: Using the active model name to prevent 404 errors
-const MODEL = "gemini-2.5-flash"; 
+// UPDATED: Using Gemini 2.0 Flash for maximum speed and logic accuracy
+const MODEL = "gemini-2.0-flash"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
+// --- UI DRAWER CONTROLS ---
 function toggleDrawer() {
     const d = document.getElementById('sideDrawer');
     const o = document.getElementById('overlay');
@@ -12,12 +13,12 @@ function toggleDrawer() {
 
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
-    const icon = document.getElementById(`icon${idx}`);
-    const label = document.getElementById(`label${idx}`);
     if (document.getElementById(`img${idx}`).files.length > 0) {
         box.classList.add('has-file');
-        label.classList.add('hidden');
-        icon.classList.remove('hidden');
+        const icon = document.getElementById(`icon${idx}`);
+        const label = document.getElementById(`label${idx}`);
+        if(icon) icon.classList.remove('hidden');
+        if(label) label.classList.add('hidden');
     }
 }
 
@@ -43,11 +44,7 @@ function saveApiKey() {
     API_KEY = val; lockUI(); toggleDrawer();
 }
 
-/**
- * IMAGE OPTIMIZER
- * Downscales images to ensure the payload is small enough for a fast API response.
- * Prevents "Connection timed out" errors.
- */
+// --- IMAGE PROCESSING (Prevents Timeouts) ---
 async function processImage(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -57,39 +54,45 @@ async function processImage(file) {
             img.src = e.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const scale = 800 / Math.max(img.width, img.height);
+                const scale = 1000 / Math.max(img.width, img.height);
                 canvas.width = img.width * scale;
                 canvas.height = img.height * scale;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-                resolve({ inlineData: { mimeType: "image/jpeg", data: dataUrl.split(',')[1] } });
+                resolve({ inlineData: { mimeType: "image/jpeg", data: canvas.toDataURL('image/jpeg', 0.7).split(',')[1] } });
             };
         };
     });
 }
 
+// --- MAIN EXECUTION ENGINE ---
 async function executeScan() {
     if (!API_KEY) return alert("Enter API Key in Settings.");
     const btn = document.getElementById('scanBtn');
-    const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
-    
-    if (files.some(f => !f)) return alert("Please upload all 4 required charts.");
+    if (files.some(f => !f)) return alert("Upload all 4 charts (1H, 15M, 1M, DXY).");
 
-    btn.innerText = "AGGREGATING ALL STRATEGIES...";
+    btn.innerText = "RUNNING MULTI-STRATEGY ENGINE...";
     btn.disabled = true;
 
     try {
         const imageParts = await Promise.all(files.map(processImage));
         
-        // System prompt designed for human-like technical analysis
-        const prompt = `Act as an institutional Quant Analyst specializing in SMC (Smart Money Concepts). 
-        Analyze the 4 provided charts: 1H (HTF Bias), 15M (Structure), 1M (Entry), and DXY (Correlation).
-        Look for: Change of Character (CHoCH), Break of Structure (BOS), and Fair Value Gaps (FVG).
+        // Institutional Prompt based on Claude conversation
+        const prompt = `Act as a Senior Institutional Quant. Evaluate these 4 charts using 4 concurrent strategies:
+        1. SMC: CHoCH, BOS, Order Blocks, FVGs.
+        2. Supply/Demand: Locate fresh 1H zones and 15M confirmations.
+        3. Trend: HH/HL on 1H, EMA/Pullback on 15M.
+        4. Breakout: 15M range consolidation with 1M retest.
+
+        SCORING RULES (0-10):
+        +2 if DXY Correlation confirms.
+        +2 if 1H and 15M Timeframes align.
+        -3 if price is inside a major HTF counter-trend zone.
         
-        Return ONLY valid JSON: 
-        {"strategy":"Infinity V8.2","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
+        MANDATORY: If the highest strategy score is less than 4, you MUST return "WAIT".
+        
+        JSON FORMAT ONLY: {"strategy":"name","bias":"BUY|SELL|WAIT","entry":num,"sl":num,"tp":num,"score":num,"logic":"max 2 sentences"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -104,48 +107,66 @@ async function executeScan() {
         const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
         const res = JSON.parse(cleanJson);
 
-        /**
-         * HUMAN ACCURACY RISK MANAGEMENT
-         * Calculates lot size based on Balance, Risk %, and the distance to SL.
-         */
-        const balance = parseFloat(document.getElementById('bal').value) || 10000;
-        const riskPercent = parseFloat(document.getElementById('risk').value) || 1;
-        
-        const entryPrice = res.entry;
-        const stopLoss = res.sl;
-        
-        // Gold (XAUUSD) specific pip calculation (100 units per standard lot)
-        const pipsAtRisk = Math.abs(entryPrice - stopLoss);
-
-        let calculatedLot = 0;
-        if (pipsAtRisk > 0) {
-            const riskAmount = balance * (riskPercent / 100);
-            calculatedLot = riskAmount / (pipsAtRisk * 100);
-        }
-
-        // --- UPDATE UI WITH FORMATTING ---
-        document.getElementById('actionText').innerText = res.bias;
-        document.getElementById('actionText').className = `text-5xl font-extrabold italic mb-10 glow-text ${
-            res.bias === 'BUY' ? 'text-emerald-400' : (res.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500')
-        }`;
-        
-        document.getElementById('entText').innerText = res.entry.toFixed(2);
-        document.getElementById('slText').innerText = res.sl.toFixed(2);
-        document.getElementById('tpText').innerText = res.tp.toFixed(2);
-        
-        // Fix for the 0.00 Lot Size error
-        document.getElementById('lotText').innerText = calculatedLot.toFixed(2);
-        
-        document.getElementById('logicText').innerText = res.logic;
-
-        resultBox.classList.remove('hidden');
-        resultBox.scrollIntoView({ behavior: 'smooth' });
+        renderResults(res);
 
     } catch (e) {
         alert("TERMINAL ERROR: " + e.message);
-        console.error("Analysis Failed:", e);
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;
     }
+}
+
+// --- UI RENDERING & RISK CALCULATION ---
+function renderResults(res) {
+    const resultBox = document.getElementById('resultBox');
+    const actionTxt = document.getElementById('actionText');
+    const scoreBar = document.getElementById('scoreBar');
+
+    // 1. Handle "WAIT" Condition (Reset Data)
+    if (res.bias === 'WAIT' || res.score < 4) {
+        actionTxt.innerText = "WAIT";
+        actionTxt.className = "text-5xl font-extrabold italic mb-10 text-slate-500 uppercase";
+        document.getElementById('entText').innerText = "---";
+        document.getElementById('slText').innerText = "---";
+        document.getElementById('tpText').innerText = "---";
+        document.getElementById('lotText').innerText = "---";
+    } else {
+        // 2. Handle Active Signal
+        actionTxt.innerText = res.bias;
+        actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text uppercase ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
+        
+        document.getElementById('entText').innerText = res.entry.toFixed(2);
+        document.getElementById('slText').innerText = res.sl.toFixed(2);
+        document.getElementById('tpText').innerText = res.tp.toFixed(2);
+
+        // 3. Dynamic Risk Math (Claude's Pip-Fix)
+        const bal = parseFloat(document.getElementById('bal').value) || 10000;
+        const riskPercent = parseFloat(document.getElementById('risk').value) || 1;
+        const instrument = document.getElementById('instrument').value;
+
+        let pipMultiplier = 10; // Default Forex
+        if (instrument === 'GOLD') pipMultiplier = 100;
+        if (instrument === 'BTC') pipMultiplier = 1;
+
+        const pipsAtRisk = Math.abs(res.entry - res.sl);
+        const riskAmount = bal * (riskPercent / 100);
+        const lotSize = pipsAtRisk > 0 ? (riskAmount / (pipsAtRisk * pipMultiplier)) : 0;
+
+        document.getElementById('lotText').innerText = lotSize.toFixed(2);
+    }
+
+    // 4. Update Strategy & Score Bar
+    document.getElementById('strategyText').innerText = res.strategy;
+    document.getElementById('logicText').innerText = res.logic;
+    
+    if (scoreBar) {
+        const scorePercent = (res.score * 10);
+        scoreBar.style.width = scorePercent + "%";
+        // Color coding: High = Green, Medium = Amber, Low = Red
+        scoreBar.style.backgroundColor = res.score >= 7 ? "#10b981" : (res.score >= 4 ? "#f59e0b" : "#ef4444");
+    }
+
+    resultBox.classList.remove('hidden');
+    resultBox.scrollIntoView({ behavior: 'smooth' });
 }

@@ -1,37 +1,34 @@
 /**
- * OMNI-REAL | PRECISION V11 (ULTRA-DYNAMIC ENGINE - REPAIRED)
+ * OMNI-REAL | PRECISION V11 (API & ENGINE RESTORE)
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// STABLE FIX: Using the 'latest' alias ensures v1beta compatibility
+// FIX: Using stable identifier for v1beta compatibility
 const MODEL = "gemini-1.5-flash-latest"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI DYNAMICS (SYNCED TICK REPAIR) ---
-function markFile(idx) {
-    const box = document.getElementById(`box${idx}`);
-    const fileInput = document.getElementById(`img${idx}`);
+// --- MASTER CONTROL (REPAIRED) ---
 
-    if (fileInput.files.length > 0) {
-        box.classList.add('has-file');
-        box.style.border = "2px solid #10b981";
-        
-        const content = box.querySelector('center') || box;
-        content.innerHTML = `
-            <div style="background:#10b981; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">
-                <span style="color:white; font-size:1.5rem; font-weight:bold;">✓</span>
-            </div>
-            <p style="color:#10b981; font-weight:bold; font-size:0.75rem; letter-spacing:1px;">CHART SYNCED</p>
-        `;
-    }
+/**
+ * Call this function from your "Edit" button or 
+ * double-click the API input to unlock it.
+ */
+function enableEdit() {
+    const input = document.getElementById('apiInput');
+    input.value = ""; 
+    input.disabled = false;
+    input.classList.remove('opacity-40');
+    input.focus();
 }
 
-// --- MASTER CONTROL ---
 function saveApiKey() {
-    const val = document.getElementById('apiInput').value.trim();
-    // Safety check for masked input
-    if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
+    const input = document.getElementById('apiInput');
+    const val = input.value.trim();
+    
+    // Safety check: prevents saving the dot mask
+    if (!val || val.includes("•")) return alert("Please enter a valid Terminal Key.");
+    
     localStorage.setItem('omni_api_v3', val);
     API_KEY = val;
     lockUI();
@@ -52,9 +49,11 @@ function toggleDrawer() {
     document.getElementById('overlay').classList.toggle('hidden');
 }
 
-// --- TRADING ENGINE (REPAIRED) ---
+// --- TRADING ENGINE (FIXED) ---
 
-// REPAIR: Restored fileToPart to resolve 'not defined' error
+/** * REPAIR: Restoring missing fileToPart function 
+ * to fix 'not defined' error
+ */
 async function fileToPart(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -74,13 +73,13 @@ async function executeScan() {
     
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
-    btn.innerText = "CALIBRATING INSTITUTIONAL BIAS...";
+    btn.innerText = "CALIBRATING CONFLUENCE...";
     btn.disabled = true;
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
-        const prompt = `System: SMC Analyst. Analyze 4 charts. 
-        Return ONLY JSON: {"strategy":"INFINITY-V11","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
+        const prompt = `System: SMC Analyst. Analyze 4 charts for structural alignment. 
+        Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -94,7 +93,8 @@ async function executeScan() {
         }
 
         const data = await response.json();
-        const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
+        const rawJson = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const res = JSON.parse(rawJson);
 
         renderOutput(res, resultBox);
 
@@ -107,32 +107,22 @@ async function executeScan() {
     }
 }
 
-function renderOutput(res, resultBox) {
-    const actionTxt = document.getElementById('actionText');
-    const logicTxt = document.getElementById('logicText');
-    resultBox.classList.remove('hidden');
-
-    if (res.bias === "WAIT") {
-        actionTxt.innerText = "NO TRADE";
-        actionTxt.className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
-        logicTxt.innerText = res.logic;
-    } else {
-        actionTxt.innerText = res.bias;
-        actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
+// --- UI DYNAMICS (SYNC TICK) ---
+function markFile(idx) {
+    const box = document.getElementById(`box${idx}`);
+    const fileInput = document.getElementById(`img${idx}`);
+    
+    if (fileInput && fileInput.files.length > 0) {
+        box.classList.add('has-file');
+        box.style.border = "2px solid #10b981";
         
-        // Dynamic Risk Math
-        const bal = parseFloat(document.getElementById('bal').value) || 10000;
-        const risk = parseFloat(document.getElementById('risk').value) || 1;
-        const slDist = Math.abs(res.entry - res.sl);
-        const lotSize = slDist > 0 ? ((bal * (risk/100)) / (slDist * 10)).toFixed(2) : "0.10";
-
-        document.getElementById('entText').innerText = res.entry.toFixed(5);
-        document.getElementById('slText').innerText = res.sl.toFixed(5);
-        document.getElementById('tpText').innerText = res.tp.toFixed(5);
-        document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
-        document.getElementById('supText').innerText = res.support?.toFixed(2) || "---";
-        document.getElementById('resText').innerText = res.resistance?.toFixed(2) || "---";
-        logicTxt.innerText = res.logic;
+        // Ref: 1000040692.jpg
+        const content = box.querySelector('center') || box;
+        content.innerHTML = `
+            <div style="background:#10b981; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 10px;">
+                <span style="color:white; font-size:1.5rem;">✓</span>
+            </div>
+            <p style="color:#10b981; font-weight:bold; font-size:0.75rem;">CHART SYNCED</p>
+        `;
     }
-    resultBox.scrollIntoView({ behavior: 'smooth' });
 }

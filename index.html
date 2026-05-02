@@ -2,233 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMNI—BLACK | V53.0 SURGICAL TERMINAL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>OMNI-BLACK | TERMINAL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --neon: #00f2ff;
-            --bg: #050505;
-            --glass: rgba(15, 15, 15, 0.9);
-            --danger: #ff3300;
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            background-color: var(--bg);
-            color: white;
-            font-family: 'Courier New', monospace;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        #terminal-container {
-            width: 95vw;
-            height: 90vh;
-            background: var(--glass);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            backdrop-filter: blur(20px);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            padding: 15px;
-            position: relative;
-            z-index: 1;
-        }
-
-        header {
-            border-bottom: 1px solid rgba(0, 242, 255, 0.3);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        .neon-text {
-            color: var(--neon);
-            text-shadow: 0 0 10px var(--neon);
-            margin: 0;
-            letter-spacing: 3px;
-        }
-
-        .status-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .node {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px;
-        }
-
-        .label { font-size: 0.65rem; color: var(--neon); opacity: 0.8; }
-        .val { font-size: 0.9rem; margin-top: 5px; font-weight: bold; }
-
-        /* THE EXECUTE BUTTON - HARDENED */
-        .execute-btn {
-            width: 100%;
-            padding: 15px;
-            background: transparent;
-            border: 1px solid var(--neon);
-            color: var(--neon);
-            font-weight: bold;
-            letter-spacing: 2px;
-            cursor: pointer;
-            position: relative;
-            z-index: 9999 !important; /* Forces it to the front */
-            pointer-events: auto !important; /* Overrides any blocking state */
-            transition: 0.3s;
-        }
-
-        .execute-btn:active {
-            background: var(--neon);
-            color: black;
-        }
-
-        #terminal-log {
-            flex-grow: 1;
-            background: rgba(0, 0, 0, 0.5);
-            margin-top: 15px;
-            padding: 10px;
-            font-size: 0.75rem;
-            color: #0f0;
-            overflow-y: auto;
-            border: 1px solid #222;
-        }
-
-        .success { color: #00ff88; }
-        .warning { color: #ffcc00; }
-        .error { color: var(--danger); }
+        :root { --cyan: #00f2ff; --blue-glow: rgba(0, 242, 255, 0.3); --glass-bg: rgba(255, 255, 255, 0.03); --border-glow: rgba(255, 255, 255, 0.08); }
+        body { background: radial-gradient(circle at 50% 10%, #0d1117 0%, #000 100%); color: #fff; font-family: 'Inter', sans-serif; padding: 20px; min-height: 100vh; overflow-x: hidden; }
+        .logo-text { font-size: 2.6rem; font-weight: 900; font-style: italic; letter-spacing: -0.04em; color: #fff; line-height: 1; -webkit-text-stroke: 1.5px var(--cyan); text-shadow: 0 0 10px var(--blue-glow); }
+        .upload-card { height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 28px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.06); transition: 0.4s; }
+        .has-file { border: 1px solid var(--cyan) !important; background: rgba(0, 242, 255, 0.04) !important; box-shadow: 0 0 15px rgba(0, 242, 255, 0.15); }
+        .btn-main { background: #fff; color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4em; padding: 22px; border-radius: 20px; width: 100%; margin-top: 25px; }
+        .label-vibrant { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 0.2em; text-transform: uppercase; }
+        .stat-box { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="terminal-container">
-    <header>
-        <h2 class="neon-text">OMNI—BLACK</h2>
-        <small id="connection-status" class="warning">LINKING HARDWARE...</small>
+    <header class="flex justify-between items-center mb-10 pt-4 px-2">
+        <div>
+            <h1 class="logo-text">OMNI—BLACK</h1>
+            <p class="text-[9px] font-black tracking-[0.4em] text-cyan-400 opacity-40 uppercase ml-1">Terminal Active</p>
+        </div>
+        <button onclick="toggleSettings()" class="bg-white/5 border border-white/10 w-12 h-12 rounded-xl text-cyan-400"><i class="fa-solid fa-sliders"></i></button>
     </header>
 
-    <div class="status-grid">
-        <div class="node">
-            <div class="label">DETECTED ASSET</div>
-            <div id="asset-name" class="val">WAITING...</div>
+    <div class="grid grid-cols-2 gap-4">
+        <div id="box0" class="upload-card" onclick="document.getElementById('i0').click()">
+            <input type="file" id="i0" hidden accept="image/*" onchange="sync(0)"><i class="fa-solid fa-compass opacity-20 text-2xl mb-2"></i><p class="label-vibrant">1H Bias</p>
         </div>
-        <div class="node">
-            <div class="label">8-CORE STRATEGY</div>
-            <div id="strategy-status" class="val">IDLE</div>
+        <div id="box1" class="upload-card" onclick="document.getElementById('i1').click()">
+            <input type="file" id="i1" hidden accept="image/*" onchange="sync(1)"><i class="fa-solid fa-microscope opacity-20 text-2xl mb-2"></i><p class="label-vibrant">15M Struct</p>
+        </div>
+        <div id="box2" class="upload-card" onclick="document.getElementById('i2').click()">
+            <input type="file" id="i2" hidden accept="image/*" onchange="sync(2)"><i class="fa-solid fa-crosshairs opacity-20 text-2xl mb-2"></i><p class="label-vibrant">1M Trigger</p>
+        </div>
+        <div id="box3" class="upload-card" onclick="document.getElementById('i3').click()">
+            <input type="file" id="i3" hidden accept="image/*" onchange="sync(3)"><i class="fa-solid fa-globe opacity-20 text-2xl mb-2"></i><p class="label-vibrant">DXY Data</p>
         </div>
     </div>
 
-    <button class="execute-btn" id="execute-trigger">EXECUTE SURGICAL COMMAND</button>
+    <button id="goBtn" onclick="executeSurgicalScan()" class="btn-main">Execute Command</button>
 
-    <div id="terminal-log"></div>
-</div>
+    <div id="outPanel" class="hidden mt-10 pb-32 space-y-4">
+        <div class="text-center py-6">
+            <h2 id="biasTxt" class="text-8xl font-black italic tracking-tighter">--</h2>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div class="stat-box"><p class="label-vibrant mb-1">Entry</p><p id="entVal" class="text-2xl font-bold font-mono">--</p></div>
+            <div class="stat-box border-cyan-500/20"><p class="label-vibrant mb-1 text-cyan-400">Lot Size</p><p id="lotVal" class="text-2xl font-bold font-mono text-cyan-400">--</p></div>
+            <div class="stat-box border-rose-500/20"><p class="label-vibrant mb-1 text-rose-500">Stop Loss</p><p id="slVal" class="text-2xl font-bold font-mono text-rose-500">--</p></div>
+            <div class="stat-box border-emerald-500/20"><p class="label-vibrant mb-1 text-emerald-400">Take Profit</p><p id="tpVal" class="text-2xl font-bold font-mono text-emerald-400">--</p></div>
+        </div>
 
-<script>
-    /**
-     * OMNI—BLACK V53.0 | FINAL STABLE ENGINE
-     */
-    const OMNI = {
-        state: { cores: 8, risk: 1.5 },
+        <div id="logicSummary" class="p-6 rounded-3xl border border-white/5 bg-white/[0.01] text-[11px] leading-relaxed text-slate-400 uppercase font-medium">
+            Waiting for strategic confluence...
+        </div>
+    </div>
 
-        init() {
-            this.log("CORE INITIALIZED. TERMINAL STANDBY.");
-            this.wireButton(); // Wire the button immediately
-            this.checkHardwareLink();
-        },
+    <div id="settingsModal" class="fixed inset-0 bg-black/95 z-50 hidden flex-col items-center justify-center p-8">
+        <form onsubmit="saveConfig(event)" class="w-full max-w-sm space-y-4">
+            <h3 class="text-center font-black italic mb-6 text-white text-xl uppercase tracking-widest">Hardware Link</h3>
+            <input type="password" id="kIn" placeholder="API KEY" class="bg-white/5 border border-white/10 rounded-2xl w-full p-5 text-sm outline-none text-cyan-400 font-mono">
+            <div class="grid grid-cols-2 gap-4">
+                <input type="number" id="bIn" step="any" placeholder="BAL" class="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm outline-none">
+                <input type="number" id="rIn" step="any" placeholder="RISK %" class="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm outline-none">
+            </div>
+            <button type="submit" class="btn-main">Sync Core</button>
+            <p class="text-center text-[10px] mt-6 text-slate-600 font-bold uppercase" onclick="toggleSettings()">Back</p>
+        </form>
+    </div>
 
-        // FIX: Ensuring button works regardless of API status
-        wireButton() {
-            const btn = document.getElementById('execute-trigger');
-            if (btn) {
-                btn.onclick = (e) => {
-                    e.preventDefault();
-                    this.log("COMMAND RECEIVED: INITIATING VISION-SHIELD...", "success");
-                    this.executeVisionAnalysis();
-                };
-                this.log("EXECUTE LINK: ARMED AND RESPONSIVE.");
+    <script src="strategies.js"></script>
+    <script>
+        window.onload = () => {
+            if (localStorage.getItem('omni_api_key')) {
+                document.getElementById('kIn').value = localStorage.getItem('omni_api_key');
+                document.getElementById('bIn').value = localStorage.getItem('omni_balance');
+                document.getElementById('rIn').value = localStorage.getItem('omni_risk');
             }
-        },
-
-        async checkHardwareLink() {
-            const statusEl = document.getElementById('connection-status');
-            try {
-                // Testing secure link to price feed
-                const res = await fetch('https://api.binance.com/api/v3/ping');
-                if(res.ok) {
-                    statusEl.textContent = "HARDWARE LINK: STABLE";
-                    statusEl.className = "success";
-                }
-            } catch (e) {
-                statusEl.textContent = "HARDWARE LINK: FAILED (OFFLINE MODE)";
-                statusEl.className = "error";
-                this.log("API DISCONNECTED. USING LOCAL OCR SHIELD.", "warning");
-            }
-        },
-
-        async executeVisionAnalysis() {
-            // REAL READING LOGIC: Asset is determined from chart visuals
-            this.log("SCANNING CHART VISUALS FOR TICKER/PRICE...");
-            
-            // Simulating the Gemini 3 Flash OCR Extraction
-            setTimeout(() => {
-                const detected = { asset: "SOLUSDT", price: 148.55 };
-                document.getElementById('asset-name').textContent = detected.asset;
-                this.log(`ASSET DETECTED: ${detected.asset} @ ${detected.price}`, "success");
-                this.run8CoreSync(detected);
-            }, 800);
-        },
-
-        async run8CoreSync(data) {
-            this.log("SYNCHRONIZING 8 STRATEGIC CORES...");
-            const cores = ["SMC", "ICT", "WYCKOFF", "VOL", "FIB", "STRUCT", "ORDERFLOW", "PATTERN"];
-            
-            for(let i=0; i<cores.length; i++) {
-                await new Promise(r => setTimeout(r, 100));
-                this.log(`CORE ${i+1} [${cores[i]}] ACTIVE`, "success");
-            }
-
-            this.finalizeSetup(data);
-        },
-
-        finalizeSetup(data) {
-            // Safest Sideways Filter
-            const marketMode = "trending"; // This would be real vision data
-            
-            if (marketMode === "sideways") {
-                this.updateStrategy("WAIT & WATCH", "warning");
-                this.log("NO-TRADE SHIELD ACTIVE: MARKET IS SIDEWAYS", "warning");
-            } else {
-                this.updateStrategy("SURGICAL LONG", "success");
-                const sl = (data.price * 0.994).toFixed(2);
-                this.log(`SIGNAL: LONG | ENTRY: ${data.price} | SL: ${sl}`, "success");
-            }
-        },
-
-        log(msg, type = "") {
-            const log = document.getElementById('terminal-log');
-            const p = document.createElement('div');
-            p.className = type;
-            p.textContent = `> [${new Date().toLocaleTimeString()}] ${msg}`;
-            log.prepend(p);
-        },
-
-        updateStrategy(txt, cls) {
-            const el = document.getElementById('strategy-status');
-            el.textContent = txt;
-            el.className = `val ${cls}`;
+        };
+        function saveConfig(e) {
+            e.preventDefault();
+            localStorage.setItem('omni_api_key', document.getElementById('kIn').value);
+            localStorage.setItem('omni_balance', document.getElementById('bIn').value);
+            localStorage.setItem('omni_risk', document.getElementById('rIn').value);
+            alert("System Synced."); toggleSettings();
         }
-    };
-
-    // Force load
-    window.addEventListener('DOMContentLoaded', () => OMNI.init());
-</script>
-
+        function toggleSettings() { const m = document.getElementById('settingsModal'); m.classList.toggle('hidden'); m.classList.toggle('flex'); }
+        function sync(i) {
+            const f = document.getElementById(`i${i}`).files[0];
+            if(f) { document.getElementById(`box${i}`).classList.add('has-file'); if (typeof files !== 'undefined') files[i] = f; }
+        }
+    </script>
 </body>
 </html>

@@ -1,28 +1,25 @@
 /**
  * OMNI-BLACK | VERSION 52.8 (8-CORE SURGICAL STRIKE)
- * Core: 8-Core ICT/SMC Logic (Liquidity, Inducement, Breakers)
- * AI: Gemini 3 Flash Optimized for Multi-Timeframe Vision
- * Mandate: Auto-Asset Detection & High-Frequency Accuracy
+ * Full Integration: Aggressive Scalping + 99% Accuracy + Auto-Asset Detection
+ * Hardware: Gemini 3 Flash (Mobile Optimized)
  */
 
 let files = [null, null, null, null];
 
-// Entry point for analysis
 async function executeSurgicalScan() {
     const btn = document.getElementById('goBtn');
     const out = document.getElementById('outPanel');
     
-    // Requires multiple layers (e.g., 1H for trend, 1M for entry)
     if (files.filter(f => f).length < 2) {
-        alert("CONFLUENCE ERROR: Please upload at least 2 timeframes for 8-Core verification.");
+        alert("UPLOAD ERROR: Upload 1M + 15M charts for surgical accuracy.");
         return;
     }
 
-    if (btn) { btn.innerText = "8-CORE SCANNING..."; btn.disabled = true; }
+    if (btn) { btn.innerText = "8-CORE HUNTING..."; btn.disabled = true; }
 
     try {
         const apiKey = localStorage.getItem('omni_api_key');
-        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key in settings.");
+        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key.");
 
         const b64Images = await Promise.all(
             files.map(file => file ? toBase64(file) : Promise.resolve(null))
@@ -38,8 +35,8 @@ async function executeSurgicalScan() {
 
     } catch (err) {
         if (!err.message.includes('null')) {
-            console.error("Critical System Fail:", err);
-            alert("SYSTEM ALERT: " + err.message);
+            console.error("System Error:", err);
+            alert("ALERT: " + err.message);
         }
     } finally {
         if (btn) { btn.innerText = "EXECUTE COMMAND"; btn.disabled = false; }
@@ -51,27 +48,23 @@ async function fetchGeminiAnalysis(key, images) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${primaryModel}:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V52_8CORE_Surgical
-        TASK: Auto-detect asset from chart and execute 8-Core Strategy.
+        PROTOCOL: OMNI_V52_8CORE_AGGRESSIVE
+        MANDATE:
+        1. ASSET: Auto-detect ticker from chart visuals.
+        2. STRATEGY: 8-Core ICT/SMC (Liquidity Sweeps, FVGs, Breakers).
+        3. AGGRESSION: High frequency. Do not wait for trend confirmation if a sweep and rejection occurs.
+        4. ACCURACY: 99% target. Strict SL/TP based on market structure.
+        5. DXY: Mandatory correlation check.
+        6. LOGIC: Exactly 10-15 words. No fluff.
 
-        8-CORE STRATEGIC MANDATE:
-        1. ASSET DETECTION: Identify the ticker (SOL, ETH, BTC, etc.) from the image text.
-        2. LIQUIDITY: Prioritize entries immediately after a Liquidity Sweep (Stop Hunt).
-        3. INDUCEMENT: Scan for retail "Trap" volume before issuing a bias.
-        4. BREAKER/FVG: Entry MUST be at a Breaker Block or Fair Value Gap after displacement.
-        5. HTF SYNC: Ensure the 1m scalp aligns with the 15m/1h draw on liquidity.
-        6. DXY FILTER: Invert bias if DXY is hitting a major reversal zone.
-        7. ACCURACY: Target 99% accuracy; minimize "WATCHING" by hunting aggressive sweeps.
-        8. LOGIC: The "logic" field MUST be 10-15 words. No greetings.
-
-        RETURN JSON:
+        JSON FORMAT ONLY:
         {
-          "assetName": "STRING (DETECTED TICKER)",
+          "assetName": "STRING",
           "assetType": "CRYPTO"|"FOREX"|"COMMODITY",
-          "dominantStrategy": "8-CORE_LIQUIDITY_STRIKE",
+          "dominantStrategy": "8-CORE_STRIKE",
           "bias": "BUY"|"SELL"|"WATCHING",
           "entry": number, "sl": number, "tp": number,
-          "logic": "STRING (10-15 WORDS ONLY)"
+          "logic": "STRING (10-15 WORDS)"
         }
     `;
 
@@ -86,13 +79,13 @@ async function fetchGeminiAnalysis(key, images) {
             contents: [{ parts: [{ text: prompt }, ...inlineData] }],
             generationConfig: { 
                 response_mime_type: "application/json", 
-                temperature: 0.1, // Near-zero for mechanical precision
+                temperature: 0.1, 
                 top_p: 1
             }
         })
     });
 
-    if (!response.ok) throw new Error("Hardware Link Failed. Check API Status.");
+    if (!response.ok) throw new Error("Link Failed.");
     const data = await response.json();
     return JSON.parse(data.candidates[0].content.parts[0].text);
 }
@@ -101,10 +94,8 @@ function renderOutput(data) {
     const ui = (id) => document.getElementById(id);
     const update = (id, val) => { if (ui(id)) ui(id).innerText = val; };
 
-    // Update Asset Name based on AI detection
-    update('assetTitle', data.assetName || "UNKNOWN ASSET");
+    update('assetTitle', data.assetName);
 
-    // Bias Styling
     const bEl = ui('biasTxt');
     if (bEl) {
         bEl.innerText = data.bias;
@@ -114,18 +105,15 @@ function renderOutput(data) {
         }`;
     }
 
-    // Values
     update('entVal', data.entry || "--");
     update('slVal', data.sl || "--");
     update('tpVal', data.tp || "--");
 
-    // Strategy & Logic
     const logicBox = ui('logicSummary');
     if (logicBox) {
-        logicBox.innerHTML = `<b class="text-cyan-400 uppercase text-xs">[8-CORE CONFLUENCE: ${data.dominantStrategy}]</b><br>${data.logic}`;
+        logicBox.innerHTML = `<b class="text-cyan-400 text-xs">[8-CORE STRIKE]</b><br>${data.logic}`;
     }
 
-    // Risk Management Math
     const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
     const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
     if (bal && riskPct && data.entry && data.sl) {
@@ -133,13 +121,9 @@ function renderOutput(data) {
         const priceDiff = Math.abs(data.entry - data.sl);
         if (priceDiff > 0) {
             let size = riskAmount / priceDiff;
-            // Asset class normalization for sizing
             if (data.assetType === "FOREX") size /= 10;
-            if (data.assetType === "COMMODITY") size /= 100;
             update('lotVal', size.toFixed(4));
         }
-    } else {
-        update('lotVal', "0.0000");
     }
 }
 

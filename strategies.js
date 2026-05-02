@@ -1,51 +1,41 @@
 /**
- * OMNI-BLACK ANALYTIC ENGINE | VERSION 42 (SURGICAL MASTER)
- * Optimized for: High-Res Mobile OCR, 8-Strategy Confluence, & Persistent Risk Math.
+ * OMNI-BLACK ANALYTIC ENGINE | VERSION 46
+ * Architecture: Surgical Scalper / 8-Strategy Confluence
+ * Target Hardware: Gemini 2.5 Flash & 2.5 Flash-Lite
  */
 
 let files = [null, null, null, null];
-
-/**
- * INITIALIZATION: Load Persistent Settings
- * Ensures API Key, Balance, and Risk are always ready.
- */
-window.onload = () => {
-    console.log("OMNI-BLACK Core Linked. Ready for Execution.");
-};
 
 async function executeSurgicalScan() {
     const btn = document.getElementById('goBtn');
     const out = document.getElementById('outPanel');
     
-    // 1. Minimum Data Check
+    // Safety check for timeframe layers
     if (files.filter(f => f).length < 2) {
-        alert("UPLOAD ERROR: Minimum 2 timeframe layers required for confluence.");
+        alert("UPLOAD ERROR: Confluence requires at least 2 timeframe layers.");
         return;
     }
 
-    btn.innerText = "HUNTING LIQUIDITY...";
+    btn.innerText = "AGGREGATING STRATEGIES...";
     btn.disabled = true;
 
     try {
         const apiKey = localStorage.getItem('omni_api_key');
-        if (!apiKey) throw new Error("Hardware Link Offline: API Key missing in Settings.");
+        if (!apiKey) throw new Error("Hardware Link Offline: Link API in Settings.");
 
-        // 2. Vision Pre-Processing
         const b64Images = await Promise.all(
             files.map(file => file ? toBase64(file) : Promise.resolve(null))
         );
 
-        // 3. Neural Strategy Request
+        // Targeted 2.5-Flash Logic
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
-        // 4. Result Rendering
         renderOutput(analysis);
         out.classList.remove('hidden');
         out.scrollIntoView({ behavior: 'smooth' });
 
     } catch (err) {
-        console.error("OMNI CORE FAIL:", err);
-        alert("ANALYSIS FAILED: " + err.message);
+        alert("SYSTEM ERROR: " + err.message);
     } finally {
         btn.innerText = "EXECUTE COMMAND";
         btn.disabled = false;
@@ -53,36 +43,76 @@ async function executeSurgicalScan() {
 }
 
 async function fetchGeminiAnalysis(key, images) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const primaryModel = "gemini-2.5-flash"; 
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${primaryModel}:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: VISION_SHIELD_V42
-        MANDATE: Aggressive Scalping Logic. Minimize "No Trade" unless structurally invalid.
+        PROTOCOL: OMNI_SURGICAL_V46
+        MODEL_LOCK: GEMINI_2.5_FLASH
         
-        VISION INSTRUCTION:
-        - Identify Ticker (e.g. ETHUSD, SOL, XAUUSD).
-        - OCR FOCUS: Scan the Right-hand Y-axis AND the Top-Left Price Label.
-        - IGNORE: All UI buttons, browser bars, and drawing tools.
+        MANDATE: Analyze charts through the 8-CORE STRATEGIC ENGINE:
+        1. SMC (Liquidity/Orderblocks)
+        2. ICT (Fair Value Gaps/Silver Bullet)
+        3. Support & Resistance (Classic S&R)
+        4. Supply & Demand (Zone Mitigations)
+        5. Wyckoff (Accumulation/Distribution Phases)
+        6. Elliott Wave (Trend Maturity)
+        7. Price Action (Candlestick Formations)
+        8. Market Correlation (DXY Inverse Influence)
+
+        SCALPER SETTINGS: 
+        - Prioritize Momentum and Entries. Do NOT favor "No Trade" unless structurally broken.
+        - Analyze the 1M/15M for immediate execution.
         
-        STRATEGIC ENGINE (Scan all 8):
-        1. SMC (Liquidity/OB) 2. S&R 3. S&D 4. ICT (FVG/MSS) 
-        5. Wyckoff 6. Elliott Wave 7. Price Action 8. Correlation (DXY).
-        
-        DECISION RULES:
-        - Pick the DOMINANT strategy for current conditions.
-        - Trigger BUY/SELL if momentum is clear. Accept RR as low as 1:1.5.
-        
-        OUTPUT ONLY JSON:
+        VISION INSTRUCTIONS: 
+        - Read Price Scales (Y-axis) with 10/10 precision.
+        - Detect Ticker (e.g., SOL, ETH, XAUUSD) to select math formula.
+        - Disregard UI overlays. Focus on Candle Wicks and Price Labels.
+
+        RETURN JSON ONLY:
         {
-          "assetName": "Detected Ticker",
+          "assetName": "STRING",
           "assetType": "CRYPTO"|"FOREX"|"COMMODITY",
-          "dominantStrategy": "Strategy Name",
+          "dominantStrategy": "STRING",
           "bias": "BUY"|"SELL"|"NO TRADE",
           "entry": number, "sl": number, "tp": number,
-          "logic": "Explain confluence briefly."
+          "logic": "Detailed confluence reasoning."
         }
     `;
 
+    const inlineData = images.filter(img => img).map(b => ({ 
+        inline_data: { mime_type: "image/jpeg", data: b.split(',')[1] } 
+    }));
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }, ...inlineData] }],
+                generationConfig: { 
+                    response_mime_type: "application/json", 
+                    temperature: 0.2 // Balanced for creative strategy + math precision
+                }
+            })
+        });
+
+        if (!response.ok) {
+            // REDUNDANCY: Try 2.5-Flash-Lite if Primary fails
+            return await fetchFallbackLite(key, images, prompt);
+        }
+
+        const data = await response.json();
+        return JSON.parse(data.candidates[0].content.parts[0].text);
+    } catch (e) {
+        throw new Error("NEURAL LINK FAILURE: Verify API Key and 2.5 Access.");
+    }
+}
+
+async function fetchFallbackLite(key, images, promptText) {
+    const liteModel = "gemini-2.5-flash-lite";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${liteModel}:generateContent?key=${key}`;
+    
     const inlineData = images.filter(img => img).map(b => ({ 
         inline_data: { mime_type: "image/jpeg", data: b.split(',')[1] } 
     }));
@@ -91,43 +121,39 @@ async function fetchGeminiAnalysis(key, images) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }, ...inlineData] }],
-            generationConfig: { 
-                response_mime_type: "application/json", 
-                temperature: 0.1, // Near-zero for mathematical accuracy
-                top_p: 1
-            }
+            contents: [{ parts: [{ text: promptText }, ...inlineData] }],
+            generationConfig: { response_mime_type: "application/json", temperature: 0.2 }
         })
     });
 
-    if (!response.ok) throw new Error("API Connection Failed. Check your Key.");
+    if (!response.ok) throw new Error("CRITICAL FAILURE: 2.5-Flash Architecture Unresponsive.");
 
     const data = await response.json();
     return JSON.parse(data.candidates[0].content.parts[0].text);
 }
 
 function renderOutput(data) {
-    const biasEl = document.getElementById('biasTxt');
+    // 1. Pull Saved Hardware Data
     const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
     const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
 
-    // Visual Updates
+    // 2. Update UI with Strategy Header
     document.querySelector('.label-vibrant').innerText = `${data.assetName || 'Market'} - ${data.dominantStrategy}`;
     
+    const biasEl = document.getElementById('biasTxt');
     biasEl.innerText = data.bias;
     biasEl.className = `text-8xl font-black italic tracking-tighter ${
-        data.bias === 'BUY' ? 'text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.4)]' : 
-        data.bias === 'SELL' ? 'text-rose-500 drop-shadow-[0_0_20px_rgba(244,63,94,0.4)]' : 
-        'text-slate-500'
+        data.bias === 'BUY' ? 'text-emerald-400' : 
+        data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500'
     }`;
 
-    // Price Display
+    // 3. Populate Price Fields
     document.getElementById('entVal').innerText = data.entry || "--";
     document.getElementById('slVal').innerText = data.sl || "--";
     document.getElementById('tpVal').innerText = data.tp || "--";
-    document.getElementById('logicSummary').innerHTML = `<b class="text-cyan-400 font-bold uppercase text-[10px] tracking-widest">[Strategy: ${data.dominantStrategy}]</b><br>${data.logic}`;
+    document.getElementById('logicSummary').innerHTML = `<b class="text-cyan-400 uppercase text-xs tracking-tighter">[MODE: ${data.dominantStrategy}]</b><br>${data.logic}`;
 
-    // ⚡️ QUANT RISK ENGINE (Multi-Asset Calculation)
+    // 4. Surgical Lot Calculation
     if (bal && riskPct && data.entry && data.sl) {
         const riskAmount = bal * (riskPct / 100);
         const priceDiff = Math.abs(data.entry - data.sl);
@@ -137,13 +163,10 @@ function renderOutput(data) {
             if (data.assetType === "CRYPTO") {
                 finalSize = riskAmount / priceDiff;
             } else if (data.assetType === "FOREX") {
-                // Formula for standard lots (100k units)
                 finalSize = riskAmount / (priceDiff * 10);
             } else if (data.assetType === "COMMODITY") {
-                // Gold/XAUUSD: 1 Lot = $100 per $1 move
                 finalSize = riskAmount / (priceDiff * 100);
             }
-            // Display result with high precision for scalpers
             document.getElementById('lotVal').innerText = finalSize.toFixed(4);
         }
     } else {
@@ -151,14 +174,10 @@ function renderOutput(data) {
     }
 }
 
-/**
- * UTILITY: Helper functions for Base64 conversion
- */
 function toBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
+    return new Promise((res) => {
+        const r = new FileReader();
+        r.readAsDataURL(file);
+        r.onload = () => res(r.result);
     });
 }

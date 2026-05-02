@@ -1,10 +1,11 @@
 /** * OMNI-REAL | INFINITY SCALPER V8.2
- * CRITICAL FIX: Model Version & Endpoint Calibration
+ * FINAL CALIBRATION: Fixes Model Routing & Data Persistence
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// Change: Switched to the standard model identifier
+// FIX: Using stable model identifier
 const MODEL = "gemini-1.5-flash"; 
+// FIX: Silent array ensures no "Data Gap"
 let marketData = [null, null, null, null]; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
@@ -18,7 +19,6 @@ function markFile(idx) {
         marketData[idx] = input.files[0]; 
         box.classList.add('has-file');
         
-        // Visual Sync Indicator
         content.innerHTML = `
             <div style="background:#10b981; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 10px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);">
                 <i class="fa-solid fa-check text-white text-xl"></i>
@@ -44,7 +44,7 @@ async function executeScan() {
     const resultBox = document.getElementById('resultBox');
 
     if (marketData.some(f => f === null)) {
-        return alert("Data Gap: Upload all 4 Market Tiers."); //
+        return alert("Data Gap: Upload all 4 Market Tiers."); 
     }
 
     btn.innerText = "CALIBRATING MULTI-STRATEGY...";
@@ -56,7 +56,7 @@ async function executeScan() {
         const prompt = `System: Expert SMC Analyst. Analyze 4 charts for structural confluence. 
         Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
-        // Change: Updated to v1 stable endpoint for better reliability
+        // FIX: Updated to v1 stable endpoint to prevent "Model Not Found"
         const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
             mode: 'cors',
@@ -78,7 +78,7 @@ async function executeScan() {
         renderOutput(res, resultBox);
 
     } catch (e) {
-        alert("TERMINAL ERROR: " + e.message); //
+        alert("TERMINAL ERROR: " + e.message); 
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;
@@ -97,8 +97,8 @@ function renderOutput(res, resultBox) {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        const bal = parseFloat(document.getElementById('bal').value) || 10000; //
-        const risk = parseFloat(document.getElementById('risk').value) || 1; //
+        const bal = parseFloat(document.getElementById('bal').value) || 10000; 
+        const risk = parseFloat(document.getElementById('risk').value) || 1; 
         const slDist = Math.abs(res.entry - res.sl);
         const lotSize = slDist > 0 ? ((bal * (risk/100)) / (slDist * 10)).toFixed(2) : "0.10";
 

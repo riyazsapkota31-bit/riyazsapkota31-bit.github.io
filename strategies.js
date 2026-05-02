@@ -1,23 +1,19 @@
 /**
  * OMNI-REAL | PRECISION V11 (ULTRA-DYNAMIC ENGINE)
+ * STABLE PRODUCTION BUILD
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// STABLE MODEL: Fixed to bypass naming errors
+// STABLE MODEL: Fixed to bypass "Model Not Found" and "v1beta" errors
 const MODEL = "gemini-1.5-flash"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI DYNAMICS ---
+// --- UI DYNAMICS & PERSISTENCE ---
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
-    const label = document.getElementById(`label${idx}`);
-    const icon = document.getElementById(`icon${idx}`);
-
     if (document.getElementById(`img${idx}`).files.length > 0) {
         box.classList.add('has-file');
-        if (label) label.classList.add('hidden');
-        if (icon) icon.classList.remove('hidden');
     }
 }
 
@@ -51,6 +47,7 @@ function enableEdit() {
 function saveApiKey() {
     const val = document.getElementById('apiInput').value.trim();
     if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
+    // PERSISTENCE: Saves key to local memory
     localStorage.setItem('omni_api_v3', val);
     API_KEY = val;
     lockUI();
@@ -61,7 +58,7 @@ function toggleDrawer() {
     document.getElementById('sideDrawer').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('hidden');
     
-    // FIX: Ensures Master Control fields are editable
+    // UNFREEZE: Ensures Master Control inputs are clickable
     ['bal', 'risk', 'apiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -94,11 +91,12 @@ async function executeScan() {
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
-        // MULTI-STRATEGY PROMPT: Includes SMC, ICT, and Price Action
+        // MULTI-STRATEGY CONFLUENCE PROMPT
         const prompt = `System: High-Precision SMC Analyst. 
         Analyze 4 charts for structural alignment. 
-        1. If HTF/LTF trend mismatch or low volatility, return: {"bias":"WAIT","logic":"Market in consolidation"}
-        2. If aligned, identify SMC/ICT POI.
+        1. Check SMC Order Blocks and ICT Liquidity Sweeps.
+        2. If HTF/LTF trend mismatch or low volatility, return: {"bias":"WAIT","logic":"Market in consolidation"}
+        3. If aligned, identify entry/SL/TP.
         Return ONLY JSON: {"strategy":"INFINITY-V11","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -107,6 +105,7 @@ async function executeScan() {
             body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] })
         });
 
+        // QUOTA & ERROR HANDLING
         if (!response.ok) {
             const err = await response.json();
             throw new Error(err.error.message);
@@ -119,7 +118,7 @@ async function executeScan() {
 
     } catch (e) {
         console.error(e);
-        alert(`TERMINAL ERROR: ${e.message}`);
+        alert(`TERMINAL ERROR: ${e.message}. Check API Studio settings.`);
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;
@@ -137,34 +136,30 @@ function renderOutput(res, resultBox) {
         actionTxt.innerText = "NO TRADE";
         actionTxt.className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
         logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Pending Setup"} | ${res.logic}`;
-        ['entText','slText','tpText','lotText','supText','resText'].forEach(id => document.getElementById(id).innerText = "---");
-        return;
+        ['entText','slText','tpText','lotText','supText','resText'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = "---";
+        });
+    } 
+    // --- BUY / SELL LOGIC ---
+    else {
+        actionTxt.innerText = res.bias;
+        actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
+        
+        // RISK MANAGEMENT CALCULATIONS
+        const bal = parseFloat(document.getElementById('bal').value) || 10000;
+        const risk = parseFloat(document.getElementById('risk').value) || 1;
+        const slDist = Math.abs(res.entry - res.sl);
+        const lotSize = slDist > 0 ? ((bal * (risk/100)) / (slDist * 10)).toFixed(2) : "0.10";
+
+        document.getElementById('entText').innerText = res.entry.toFixed(5);
+        document.getElementById('slText').innerText = res.sl.toFixed(5);
+        document.getElementById('tpText').innerText = res.tp.toFixed(5);
+        document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
+        document.getElementById('supText').innerText = res.support?.toFixed(2) || "---";
+        document.getElementById('resText').innerText = res.resistance?.toFixed(2) || "---";
+        logicTxt.innerText = res.logic;
     }
-
-    // --- TRADE EXECUTION FEATURE ---
-    const slDist = Math.abs(res.entry - res.sl);
-    const bal = parseFloat(document.getElementById('bal').value) || 10000;
-    const riskVal = bal * (parseFloat(document.getElementById('risk').value) / 100);
-    
-    // Auto RR Correction for safety
-    let tpVal = res.tp;
-    if (slDist > 0 && Math.abs(res.entry - tpVal) / slDist < 1.5) {
-        tpVal = res.bias === 'BUY' ? res.entry + (slDist * 1.5) : res.entry - (slDist * 1.5);
-    }
-
-    const lotSize = slDist > 0 ? (riskVal / (slDist * 10)).toFixed(2) : "0.10";
-
-    document.getElementById('strategyType').innerText = res.strategy;
-    actionTxt.innerText = res.bias;
-    actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
-    
-    document.getElementById('entText').innerText = res.entry.toFixed(5);
-    document.getElementById('slText').innerText = res.sl.toFixed(5);
-    document.getElementById('tpText').innerText = tpVal.toFixed(5);
-    document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
-    document.getElementById('supText').innerText = res.support?.toFixed(2) || "---";
-    document.getElementById('resText').innerText = res.resistance?.toFixed(2) || "---";
-    logicTxt.innerText = res.logic;
 
     resultBox.scrollIntoView({ behavior: 'smooth' });
 }

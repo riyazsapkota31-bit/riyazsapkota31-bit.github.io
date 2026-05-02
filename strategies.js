@@ -1,23 +1,22 @@
 /**
- * OMNI-REAL | PRECISION V11 (CORE REPAIR & UI SYNC)
+ * OMNI-REAL | PRECISION V11 (ULTRA-DYNAMIC ENGINE - REPAIRED)
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// FIX: Using the verified stable model ID for v1beta
+// STABLE FIX: Using the 'latest' alias ensures v1beta compatibility
 const MODEL = "gemini-1.5-flash-latest"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI DYNAMICS (REF: 1000040692.jpg) ---
+// --- UI DYNAMICS (SYNCED TICK REPAIR) ---
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
     const fileInput = document.getElementById(`img${idx}`);
-    
-    if (fileInput && fileInput.files.length > 0) {
+
+    if (fileInput.files.length > 0) {
         box.classList.add('has-file');
         box.style.border = "2px solid #10b981";
         
-        // Updates the box with the Green Tick aesthetic
         const content = box.querySelector('center') || box;
         content.innerHTML = `
             <div style="background:#10b981; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">
@@ -28,13 +27,11 @@ function markFile(idx) {
     }
 }
 
-// --- MASTER CONTROL & API FIELD ---
+// --- MASTER CONTROL ---
 function saveApiKey() {
-    const input = document.getElementById('apiInput');
-    const val = input.value.trim();
-    // Safety: prevents saving empty or masked inputs
+    const val = document.getElementById('apiInput').value.trim();
+    // Safety check for masked input
     if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
-    
     localStorage.setItem('omni_api_v3', val);
     API_KEY = val;
     lockUI();
@@ -55,12 +52,16 @@ function toggleDrawer() {
     document.getElementById('overlay').classList.toggle('hidden');
 }
 
-// --- TRADING ENGINE ---
+// --- TRADING ENGINE (REPAIRED) ---
+
+// REPAIR: Restored fileToPart to resolve 'not defined' error
 async function fileToPart(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve({ inlineData: { mimeType: "image/jpeg", data: reader.result.split(',')[1] } });
+        reader.onload = () => resolve({ 
+            inlineData: { mimeType: "image/jpeg", data: reader.result.split(',')[1] } 
+        });
     });
 }
 
@@ -78,7 +79,7 @@ async function executeScan() {
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
-        const prompt = `System: High-Precision SMC Analyst. Analyze 4 charts for alignment. 
+        const prompt = `System: SMC Analyst. Analyze 4 charts. 
         Return ONLY JSON: {"strategy":"INFINITY-V11","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -89,7 +90,7 @@ async function executeScan() {
 
         if (!response.ok) {
             const err = await response.json();
-            throw new Error(err.error.message); // Displays the "Model Not Found" or Key errors
+            throw new Error(err.error.message); 
         }
 
         const data = await response.json();

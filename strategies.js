@@ -1,15 +1,51 @@
+// --- CONFIGURATION ---
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-const MODEL = "gemini-2.5-flash-exp"; 
+const MODEL = "gemini-2.0-flash-exp"; // 2.5 is currently exp, ensure ID matches your dashboard
 
-window.onload = () => { if (API_KEY) lockUI(); };
+// --- UI CONTROLS ---
+function toggleDrawer() {
+    const d = document.getElementById('sideDrawer');
+    const o = document.getElementById('overlay');
+    d.classList.toggle('open');
+    o.classList.toggle('show');
+    
+    // UI FIX: Ensure fields are clickable when drawer opens
+    const inputs = ['bal', 'risk', 'apiInput'];
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if(el) {
+            el.disabled = false;
+            el.style.pointerEvents = 'auto';
+        }
+    });
+}
 
+function saveApiKey() {
+    const val = document.getElementById('apiInput').value.trim();
+    if (!val) return alert("Please enter a valid API key.");
+    localStorage.setItem('omni_api_v3', val);
+    API_KEY = val;
+    alert("Terminal Synchronized Successfully.");
+    toggleDrawer();
+}
+
+function markFile(idx) {
+    const box = document.getElementById(`box${idx}`);
+    if (document.getElementById(`img${idx}`).files.length > 0) {
+        box.classList.add('has-file');
+    }
+}
+
+// --- MULTI-STRATEGY ENGINE ---
 async function executeScan() {
-    if (!API_KEY) return alert("Terminal Link Required.");
+    if (!API_KEY) return alert("Terminal not linked. Enter API Key in Master Control.");
+    
     const btn = document.getElementById('scanBtn');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
-    if (files.some(f => !f)) return alert("Upload all 4 Confluence Charts.");
+    
+    if (files.some(f => !f)) return alert("Upload all 4 chart timeframes for confluence.");
 
-    btn.innerText = "RUNNING MULTI-STRATEGY ENGINE...";
+    btn.innerText = "RUNNING MULTI-STRATEGY SCAN...";
     btn.disabled = true;
 
     try {
@@ -22,21 +58,18 @@ async function executeScan() {
                 contents: [{
                     role: "user",
                     parts: [
-                        { text: `Perform a Multi-Strategy Institutional Scan on these charts. 
-                        1. SMC: Identify Fair Value Gaps (FVG) and Order Blocks.
-                        2. ICT: Check for Liquidity Sweeps (Buy-side/Sell-side) and Market Structure Shifts (MSS).
-                        3. Price Action: Identify key Support/Resistance and Trend Confluence.
+                        { text: `Institutional Confluence Scan:
+                        1. SMC: Check Order Blocks & FVGs.
+                        2. ICT: Detect Liquidity Sweeps & MSS.
+                        3. Price Action: Analyze Trend & S/R.
                         
-                        Return ONLY raw JSON: {
-                            "strategy_breakdown": {
-                                "smc": "string",
-                                "ict": "string",
-                                "pa": "string"
-                            },
+                        Return ONLY JSON: {
                             "bias": "BUY|SELL|WAIT",
-                            "score": number(1-10),
-                            "entry": number, "sl": number, "tp": number,
-                            "logic": "1 sentence confluence summary"
+                            "score": number,
+                            "entry": number,
+                            "sl": number,
+                            "tp": number,
+                            "logic": "Confluence summary including SMC/ICT/PA data"
                         }` },
                         ...imageParts
                     ]
@@ -45,29 +78,28 @@ async function executeScan() {
         });
 
         const data = await response.json();
-        const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json|```/gi, '').trim());
-        renderMultiStrategyResults(res);
+        const rawText = data.candidates[0].content.parts[0].text;
+        const res = JSON.parse(rawText.replace(/```json|```/gi, '').trim());
+        
+        renderResults(res);
     } catch (e) {
-        console.error(e);
-        alert("ENGINE ERROR: Model rejected the confluence scan.");
+        console.error("Scan Error:", e);
+        alert("ENGINE ERROR: Verify API Key and Model permissions.");
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;
     }
 }
 
-function renderMultiStrategyResults(res) {
+function renderResults(res) {
     const resultBox = document.getElementById('resultBox');
     const actionTxt = document.getElementById('actionText');
     const card = document.getElementById('signalCard');
     
     resultBox.style.display = 'block';
     actionTxt.innerText = res.bias;
-    document.getElementById('scoreBadge').innerText = `CONFLUENCE: ${res.score}/10`;
-    
-    // Combine the strategy breakdown into the logic view
-    const breakdown = `[SMC: ${res.strategy_breakdown.smc}] [ICT: ${res.strategy_breakdown.ict}] [PA: ${res.strategy_breakdown.pa}]`;
-    document.getElementById('logicText').innerText = `${res.logic} | ${breakdown}`;
+    document.getElementById('scoreBadge').innerText = `CONFLUENCE ${res.score}/10`;
+    document.getElementById('logicText').innerText = res.logic;
 
     if (res.bias === 'WAIT') {
         document.getElementById('tradeGrid').style.display = 'none';
@@ -78,14 +110,14 @@ function renderMultiStrategyResults(res) {
     } else {
         document.getElementById('tradeGrid').style.display = 'block';
         document.getElementById('waitGrid').style.display = 'none';
-        card.className = res.bias === 'BUY' ? "signal-card" : "signal-card sell-card";
-        actionTxt.style.color = res.bias === 'BUY' ? "#10b981" : "#ef4444";
+        card.className = (res.bias === 'BUY') ? "signal-card" : "signal-card sell-card";
+        actionTxt.style.color = (res.bias === 'BUY') ? "#10b981" : "#ef4444";
         
         document.getElementById('entText').innerText = res.entry.toLocaleString();
         document.getElementById('slText').innerText = res.sl.toLocaleString();
         document.getElementById('tpText').innerText = res.tp.toLocaleString();
 
-        // Calculate Position Size
+        // Position Sizing Logic
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1;
         const pips = Math.abs(res.entry - res.sl);

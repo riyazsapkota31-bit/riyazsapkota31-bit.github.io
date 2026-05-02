@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OMNI-BLACK | VECTOR</title>
+    <title>OMNI-BLACK | TERMINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -20,29 +20,19 @@
             padding: 20px; min-height: 100vh; overflow-x: hidden;
         }
 
-        /* 🛡️ CUSTOM SVG LOGO & BRANDING 🛡️ */
-        .brand-header {
-            display: flex; align-items: center; gap: 12px;
-        }
+        /* 🛡️ BRANDING & LOGO [Ref: 1000040854.jpg] */
+        .brand-header { display: flex; align-items: center; gap: 12px; }
+        .logo-svg { width: 42px; height: 42px; filter: drop-shadow(0 0 8px var(--blue-glow)); }
 
-        .logo-svg {
-            width: 42px; height: 42px;
-            filter: drop-shadow(0 0 8px var(--blue-glow));
-        }
-
-        /* ⚡️ HIGH-VOLTAGE TEXT BORDER ⚡️ */
         .logo-text {
             font-size: 2.6rem; font-weight: 900; font-style: italic; letter-spacing: -0.04em;
             color: #fff; line-height: 1;
-            /* Multi-layer stroke for eye-catching depth */
             paint-order: stroke fill;
             -webkit-text-stroke: 1.5px var(--cyan);
-            text-shadow: 
-                0 0 10px var(--blue-glow),
-                0 0 20px rgba(0, 242, 255, 0.1);
+            text-shadow: 0 0 10px var(--blue-glow);
         }
 
-        /* 🧪 GLASS TILES (Subtle intensity) */
+        /* ⚡️ INTERFACE ELEMENTS */
         .upload-card {
             height: 150px; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
@@ -51,7 +41,6 @@
             transition: 0.4s cubic-bezier(0.2, 1, 0.2, 1);
         }
 
-        /* UPLOADED STATE [Ref: 1000040692.jpg] */
         .has-file {
             border: 1px solid var(--cyan) !important;
             background: rgba(0, 242, 255, 0.04) !important;
@@ -123,50 +112,64 @@
         <div class="text-center mb-8">
             <h2 id="biasTxt" class="text-8xl font-black italic tracking-tighter" style="filter: drop-shadow(0 0 20px currentColor);"></h2>
         </div>
-        
         <div class="grid grid-cols-2 rounded-[30px] overflow-hidden border border-white/5 bg-white/[0.02] backdrop-blur-md">
             <div class="p-8 text-center border-r border-white/5">
                 <p class="label-vibrant mb-1">Entry</p>
                 <p id="entVal" class="text-3xl font-bold font-mono">--</p>
             </div>
             <div class="p-8 text-center">
-                <p class="label-vibrant mb-1">Lot Size</p>
+                <p class="label-vibrant mb-1 text-cyan-400">Lot Size</p>
                 <p id="lotVal" class="text-3xl font-bold font-mono text-cyan-400">--</p>
             </div>
-            <div class="p-8 text-center border-t border-white/5 border-r">
-                <p class="label-vibrant mb-1 text-rose-500/40">Stop</p>
-                <p id="slVal" class="text-3xl font-bold font-mono text-rose-500">--</p>
-            </div>
-            <div class="p-8 text-center border-t border-white/5">
-                <p class="label-vibrant mb-1 text-emerald-400/40">Target</p>
-                <p id="tpVal" class="text-3xl font-bold font-mono text-emerald-400">--</p>
-            </div>
-        </div>
-
-        <div class="p-8 rounded-[30px] bg-white/[0.01] border border-white/5 border-l-[6px] border-cyan-500/40">
-            <p id="logicSummary" class="text-lg text-slate-300 leading-relaxed italic font-medium"></p>
         </div>
     </div>
 
     <div id="settingsModal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center p-8 backdrop-blur-3xl">
-        <div class="w-full max-w-sm rounded-[35px] p-10 border-white/5 border bg-white/[0.02]">
+        <form onsubmit="saveConfig(event)" class="w-full max-w-sm rounded-[35px] p-10 border-white/5 border bg-white/[0.02]">
             <h3 class="text-center font-black italic mb-10 tracking-tighter text-white text-xl uppercase">Core Configuration</h3>
             <input type="password" id="kIn" placeholder="API KEY" class="bg-black/40 border border-white/10 rounded-2xl w-full mb-4 p-5 text-sm outline-none text-cyan-400 font-mono">
             <div class="grid grid-cols-2 gap-4">
-                <input type="number" id="bIn" placeholder="BAL" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
-                <input type="number" id="rIn" placeholder="RISK %" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
+                <input type="number" id="bIn" step="any" placeholder="BAL" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
+                <input type="number" id="rIn" step="any" placeholder="RISK %" class="bg-black/40 border border-white/10 rounded-2xl p-5 text-sm outline-none">
             </div>
-            <button onclick="saveConfig()" class="btn-main mt-8 text-[10px] py-5">Link Hardware</button>
+            <button type="submit" class="btn-main mt-8 text-[10px] py-5">Link Hardware</button>
             <p class="text-center text-[10px] mt-10 text-slate-600 font-bold uppercase cursor-pointer" onclick="toggleSettings()">Back</p>
-        </div>
+        </form>
     </div>
 
     <script src="strategies.js"></script>
     <script>
+        // 1. Persistence Logic: Load data on startup
+        window.onload = function() {
+            if (localStorage.getItem('omni_api_key')) {
+                document.getElementById('kIn').value = localStorage.getItem('omni_api_key');
+                document.getElementById('bIn').value = localStorage.getItem('omni_balance');
+                document.getElementById('rIn').value = localStorage.getItem('omni_risk');
+                console.log("Hardware Link Restored.");
+            }
+        };
+
+        // 2. Save Logic: Prevent refresh and store locally [Ref: 1000040855.jpg]
+        function saveConfig(event) {
+            event.preventDefault(); // CRITICAL: Stops the page refresh
+            
+            const apiKey = document.getElementById('kIn').value;
+            const balance = document.getElementById('bIn').value;
+            const risk = document.getElementById('rIn').value;
+
+            localStorage.setItem('omni_api_key', apiKey);
+            localStorage.setItem('omni_balance', balance);
+            localStorage.setItem('omni_risk', risk);
+
+            alert("System Core Synced.");
+            toggleSettings();
+        }
+
         function toggleSettings() {
             const m = document.getElementById('settingsModal');
             m.classList.toggle('hidden'); m.classList.toggle('flex');
         }
+
         function sync(i) {
             const f = document.getElementById(`i${i}`).files[0];
             if(f) {

@@ -1,10 +1,10 @@
 /**
- * OMNI-REAL | PRECISION V11 (FINAL DEPLOY)
+ * OMNI-REAL | PRECISION V11 (STABLE DEPLOY)
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-// STABLE MODEL: Fixed to bypass naming errors
-const MODEL = "gemini-1.5-flash"; 
+// UNIVERSAL MODEL: Using -latest to bypass endpoint rejection
+const MODEL = "gemini-1.5-flash-latest"; 
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
@@ -13,28 +13,16 @@ function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
     const fileInput = document.getElementById(`img${idx}`);
     
-    // Selecting the "Cloud" icon inside your box
-    const uploadIcon = box.querySelector('.fa-cloud-upload-alt') || box.querySelector('svg') || box.querySelector('i');
-
     if (fileInput && fileInput.files.length > 0) {
-        // 1. Add green border/glow
+        // Apply visual "Uploaded" state
         box.classList.add('has-file');
-        box.style.borderColor = "#10b981"; // Emerald Green
-        box.style.boxShadow = "0 0 15px rgba(16, 185, 129, 0.4)";
+        box.style.border = "2px solid #10b981";
+        box.style.background = "rgba(16, 185, 129, 0.1)";
 
-        // 2. Transform the Icon into a Green Tick
-        if (uploadIcon) {
-            uploadIcon.innerHTML = "✅"; // Swaps cloud for tick
-            uploadIcon.style.fontSize = "2rem";
-            uploadIcon.style.color = "#10b981";
-        }
-        
-        // 3. Update the Label text to "Ready"
-        const label = box.querySelector('p') || box.querySelector('span');
-        if (label) {
-            label.innerText = "DATA LOADED";
-            label.style.color = "#10b981";
-        }
+        // Force the checkmark to appear
+        const iconContainer = box.querySelector('center') || box;
+        iconContainer.innerHTML = `<div style="font-size:2.5rem; color:#10b981; margin-bottom:10px;">✅</div>
+                                   <p style="color:#10b981; font-weight:bold;">DATA SYNCED</p>`;
     }
 }
 
@@ -42,7 +30,7 @@ function toggleDrawer() {
     document.getElementById('sideDrawer').classList.toggle('open');
     document.getElementById('overlay').classList.toggle('hidden');
     
-    // UNFREEZE: Ensures inputs are interactive in Master Control
+    // Ensure inputs are interactive
     ['bal', 'risk', 'apiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -92,8 +80,7 @@ async function executeScan() {
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
-        const prompt = `Act as an Institutional SMC Analyst. Analyze 4 charts.
-        If HTF/LTF trend mismatch or consolidation, return bias 'WAIT'.
+        const prompt = `Act as an Institutional SMC Analyst. Analyze 4 charts. 
         Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
@@ -104,6 +91,7 @@ async function executeScan() {
 
         if (!response.ok) {
             const err = await response.json();
+            // Specific alert for the "Not Found" error
             throw new Error(err.error.message);
         }
 
@@ -130,16 +118,11 @@ function renderOutput(res, resultBox) {
     if (res.bias === "WAIT") {
         actionTxt.innerText = "NO TRADE";
         actionTxt.className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
-        logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Pending Setup"} | ${res.logic}`;
-        ['entText','slText','tpText','lotText'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.innerText = "---";
-        });
+        logicTxt.innerText = `WATCH LEVEL: ${res.entry || "Pending"} | ${res.logic}`;
     } else {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
-        // Math logic for position sizing
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1;
         const slDist = Math.abs(res.entry - res.sl);
@@ -151,6 +134,5 @@ function renderOutput(res, resultBox) {
         document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
         logicTxt.innerText = res.logic;
     }
-
     resultBox.scrollIntoView({ behavior: 'smooth' });
 }

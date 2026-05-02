@@ -1,7 +1,6 @@
 /**
- * OMNI-BLACK ANALYTIC ENGINE | VERSION 46
- * Architecture: Surgical Scalper / 8-Strategy Confluence
- * Target Hardware: Gemini 2.5 Flash & 2.5 Flash-Lite
+ * OMNI-BLACK | VERSION 46 MASTER BUILD
+ * 8-CORE STRATEGIC AGGREGATOR + VISION SHIELD
  */
 
 let files = [null, null, null, null];
@@ -10,9 +9,8 @@ async function executeSurgicalScan() {
     const btn = document.getElementById('goBtn');
     const out = document.getElementById('outPanel');
     
-    // Safety check for timeframe layers
     if (files.filter(f => f).length < 2) {
-        alert("UPLOAD ERROR: Confluence requires at least 2 timeframe layers.");
+        alert("UPLOAD ERROR: Confluence requires at least 2 layers.");
         return;
     }
 
@@ -27,10 +25,9 @@ async function executeSurgicalScan() {
             files.map(file => file ? toBase64(file) : Promise.resolve(null))
         );
 
-        // Targeted 2.5-Flash Logic
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
-        
         renderOutput(analysis);
+        
         out.classList.remove('hidden');
         out.scrollIntoView({ behavior: 'smooth' });
 
@@ -61,13 +58,12 @@ async function fetchGeminiAnalysis(key, images) {
         8. Market Correlation (DXY Inverse Influence)
 
         SCALPER SETTINGS: 
-        - Prioritize Momentum and Entries. Do NOT favor "No Trade" unless structurally broken.
-        - Analyze the 1M/15M for immediate execution.
+        - Prioritize Momentum and Entries. Do NOT favor "No Trade."
+        - Analyze the 1M/15M for immediate re-entries.
         
         VISION INSTRUCTIONS: 
-        - Read Price Scales (Y-axis) with 10/10 precision.
-        - Detect Ticker (e.g., SOL, ETH, XAUUSD) to select math formula.
-        - Disregard UI overlays. Focus on Candle Wicks and Price Labels.
+        - Read Price Scales (Y-axis) and Tickers (ETH, SOL, XAUUSD) with 10/10 precision.
+        - If the Y-axis is compressed, use local pixel inference to locate the current price label.
 
         RETURN JSON ONLY:
         {
@@ -76,7 +72,7 @@ async function fetchGeminiAnalysis(key, images) {
           "dominantStrategy": "STRING",
           "bias": "BUY"|"SELL"|"NO TRADE",
           "entry": number, "sl": number, "tp": number,
-          "logic": "Detailed confluence reasoning."
+          "logic": "Detailed confluence reasoning across 8 strategies."
         }
     `;
 
@@ -90,22 +86,16 @@ async function fetchGeminiAnalysis(key, images) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }, ...inlineData] }],
-                generationConfig: { 
-                    response_mime_type: "application/json", 
-                    temperature: 0.2 // Balanced for creative strategy + math precision
-                }
+                generationConfig: { response_mime_type: "application/json", temperature: 0.2 }
             })
         });
 
-        if (!response.ok) {
-            // REDUNDANCY: Try 2.5-Flash-Lite if Primary fails
-            return await fetchFallbackLite(key, images, prompt);
-        }
+        if (!response.ok) return await fetchFallbackLite(key, images, prompt);
 
         const data = await response.json();
         return JSON.parse(data.candidates[0].content.parts[0].text);
     } catch (e) {
-        throw new Error("NEURAL LINK FAILURE: Verify API Key and 2.5 Access.");
+        throw new Error("NEURAL LINK FAILURE: Verify 2.5-Flash model availability.");
     }
 }
 
@@ -126,18 +116,16 @@ async function fetchFallbackLite(key, images, promptText) {
         })
     });
 
-    if (!response.ok) throw new Error("CRITICAL FAILURE: 2.5-Flash Architecture Unresponsive.");
+    if (!response.ok) throw new Error("CRITICAL FAILURE: 2.5-Flash Architecture Offline.");
 
     const data = await response.json();
     return JSON.parse(data.candidates[0].content.parts[0].text);
 }
 
 function renderOutput(data) {
-    // 1. Pull Saved Hardware Data
     const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
     const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
 
-    // 2. Update UI with Strategy Header
     document.querySelector('.label-vibrant').innerText = `${data.assetName || 'Market'} - ${data.dominantStrategy}`;
     
     const biasEl = document.getElementById('biasTxt');
@@ -147,30 +135,23 @@ function renderOutput(data) {
         data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500'
     }`;
 
-    // 3. Populate Price Fields
     document.getElementById('entVal').innerText = data.entry || "--";
     document.getElementById('slVal').innerText = data.sl || "--";
     document.getElementById('tpVal').innerText = data.tp || "--";
-    document.getElementById('logicSummary').innerHTML = `<b class="text-cyan-400 uppercase text-xs tracking-tighter">[MODE: ${data.dominantStrategy}]</b><br>${data.logic}`;
+    document.getElementById('logicSummary').innerHTML = `<b class="text-cyan-400 uppercase text-xs">[STRATEGY: ${data.dominantStrategy}]</b><br>${data.logic}`;
 
-    // 4. Surgical Lot Calculation
     if (bal && riskPct && data.entry && data.sl) {
         const riskAmount = bal * (riskPct / 100);
         const priceDiff = Math.abs(data.entry - data.sl);
         let finalSize = 0;
 
         if (priceDiff > 0) {
-            if (data.assetType === "CRYPTO") {
-                finalSize = riskAmount / priceDiff;
-            } else if (data.assetType === "FOREX") {
-                finalSize = riskAmount / (priceDiff * 10);
-            } else if (data.assetType === "COMMODITY") {
-                finalSize = riskAmount / (priceDiff * 100);
-            }
+            if (data.assetType === "CRYPTO") finalSize = riskAmount / priceDiff;
+            else if (data.assetType === "FOREX") finalSize = riskAmount / (priceDiff * 10);
+            else if (data.assetType === "COMMODITY") finalSize = riskAmount / (priceDiff * 100);
+            
             document.getElementById('lotVal').innerText = finalSize.toFixed(4);
         }
-    } else {
-        document.getElementById('lotVal').innerText = "0.00";
     }
 }
 

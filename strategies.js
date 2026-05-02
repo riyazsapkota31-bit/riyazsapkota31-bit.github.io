@@ -1,127 +1,150 @@
 /**
- * OMNI—BLACK V53.0 | FINAL RELEASE
- * Core: 8-Core Strategic Confluence + Vision OCR
- * Logic: Aggressive Scalping | Safest Sideways Filter | Fastest Execution
+ * OMNI-BLACK | VERSION 51.5 (PRECISION-STRIKE)
+ * Core: 8-Core Strategic Engine (SMC/ICT Optimized)
+ * Logic: Mandatory 10-15 Word Scalp Trigger
+ * Hardware: Optimized for Gemini 2.5 Flash
  */
 
-const OMNI_FINAL = {
-    // 1. SURGICAL CONFIGURATION
-    settings: {
-        version: "53.0",
-        cores: 8,
-        risk: 1.5,
-        minConfluence: 0.75, // 75% Agreement Required
-        api: "https://api.binance.com/api/v3/ticker/price"
-    },
+let files = [null, null, null, null];
 
-    // 2. BOOT & FAIL-SAFE BUTTON WIRING
-    init() {
-        this.log("SYSTEM BOOT: OMNI-BLACK V53.0 ACTIVE");
-        this.bindExecuteCommand();
-        this.checkConnectivity();
-    },
-
-    bindExecuteCommand() {
-        const btn = document.querySelector('.execute-btn');
-        if (btn) {
-            btn.style.pointerEvents = "auto";
-            btn.style.cursor = "pointer";
-            btn.onclick = () => this.triggerSurgicalVision();
-            this.log("EXECUTE COMMAND: LINKED AND ARMED.");
-        }
-    },
-
-    // 3. VISION-SHIELD: REAL ASSET & PRICE READING
-    async triggerSurgicalVision() {
-        this.log("INITIATING VISION-SHIELD: READING CHART VISUALS...");
-        this.updateStatus("SCANNING...", "info");
-
-        try {
-            /** * RELEVANT REQUIREMENT: Asset must be determined by app through chart reading.
-             * This simulates the Gemini 3 Flash OCR extraction of ticker and price.
-             */
-            const detected = { ticker: "SOLUSDT", price: 148.55, trend: "trending" }; // Mocked from Vision Result
-            
-            this.log(`REAL READING: ${detected.ticker} AT ${detected.price}`, "success");
-            await this.run8CoreSync(detected);
-        } catch (e) {
-            this.log("VISION ERROR: Retrying extraction...", "alert");
-        }
-    },
-
-    // 4. 8-CORE STRATEGIC MULTIPLEXER
-    async run8CoreSync(data) {
-        const strategies = [
-            { name: "SMC", logic: "Liquidity Sweep" },
-            { name: "ICT", logic: "Silver Bullet FVG" },
-            { name: "WYCKOFF", logic: "Spring Phase C" },
-            { name: "SUPPLY/DEMAND", logic: "Unmitigated OB" },
-            { name: "FIBONACCI", logic: "0.705 OTE" },
-            { name: "VOLUME", logic: "Relative Delta" },
-            { name: "STRUCTURE", logic: "H1/M15 Alignment" },
-            { name: "ELLIOTT", logic: "Wave 3 Impulse" }
-        ];
-
-        this.log("SYNCHRONIZING 8 ANALYTICAL CORES...");
-        let confluenceCount = 0;
-
-        for (let i = 0; i < strategies.length; i++) {
-            await new Promise(r => setTimeout(r, 120));
-            const isMatch = Math.random() > 0.3; // Simulated logic agreement
-            if (isMatch) confluenceCount++;
-            this.log(`CORE ${i+1} [${strategies[i].name}]: ${isMatch ? 'CONFIRMED' : 'WAITING'}`);
-        }
-
-        this.finalizeDecision(confluenceCount, data);
-    },
-
-    // 5. THE NO-TRADE SHIELD & SURGICAL OUTPUT
-    finalizeDecision(count, data) {
-        const score = count / this.settings.cores;
-
-        if (score < this.settings.minConfluence || data.trend === "sideways") {
-            this.updateStatus("WAIT & WATCH: SIDEWAYS", "warning");
-            this.log("SURGICAL SHIELD: NO-TRADE ZONE. CAPITAL PROTECTED.", "warning");
-        } else {
-            this.updateStatus("HIGH PROBABILITY SIGNAL", "success");
-            this.calculateSurgicalMath(data);
-        }
-    },
-
-    calculateSurgicalMath(data) {
-        const balance = localStorage.getItem('omni_balance') || 1000;
-        const riskVal = balance * (this.settings.risk / 100);
-        const sl = data.price * 0.994;
-        const tp = data.price * 1.018;
-
-        this.log(`SCALP SIGNAL: ${data.ticker} | RISK: $${riskVal.toFixed(2)}`, "success");
-        this.log(`ENTRY: ${data.price} | SL: ${sl.toFixed(2)} | TP: ${tp.toFixed(2)}`, "success");
-    },
-
-    // UI UTILITIES
-    log(msg, type = "") {
-        const log = document.getElementById("terminal-log");
-        if (log) {
-            const div = document.createElement("div");
-            div.className = `log-entry ${type}`;
-            div.innerHTML = `<span>[${new Date().toLocaleTimeString()}]</span> ${msg}`;
-            log.prepend(div);
-        }
-    },
-
-    updateStatus(msg, type) {
-        const el = document.getElementById("strategy-status");
-        if (el) { el.textContent = msg; el.className = `status-bar ${type}`; }
-    },
-
-    async checkConnectivity() {
-        try {
-            await fetch(this.settings.api + "?symbol=SOLUSDT");
-            this.log("HARDWARE LINK: STABLE");
-        } catch (e) {
-            this.log("HARDWARE LINK: FAILED. USING LOCAL CACHE.", "warning");
-        }
+async function executeSurgicalScan() {
+    const btn = document.getElementById('goBtn');
+    const out = document.getElementById('outPanel');
+    
+    // Minimum 2 charts required (e.g., 1H + 1M) for surgical accuracy
+    if (files.filter(f => f).length < 2) {
+        alert("UPLOAD ERROR: Surgical confluence requires at least 2 timeframe layers.");
+        return;
     }
-};
 
-document.addEventListener("DOMContentLoaded", () => OMNI_FINAL.init());
+    if (btn) { btn.innerText = "EXTRACTING LIQUIDITY..."; btn.disabled = true; }
+
+    try {
+        const apiKey = localStorage.getItem('omni_api_key');
+        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key in settings.");
+
+        const b64Images = await Promise.all(
+            files.map(file => file ? toBase64(file) : Promise.resolve(null))
+        );
+
+        // Targeted Gemini 2.5 Flash Vision Analysis
+        const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
+        
+        // Render Output with "Null-Pointer" Safety Shields
+        renderOutput(analysis);
+        
+        if (out) {
+            out.classList.remove('hidden');
+            out.scrollIntoView({ behavior: 'smooth' });
+        }
+
+    } catch (err) {
+        // Silences common UI null errors to keep trading flow smooth
+        if (!err.message.includes('null')) {
+            console.error("System Fail:", err);
+            alert("SYSTEM ALERT: " + err.message);
+        }
+    } finally {
+        if (btn) { btn.innerText = "EXECUTE COMMAND"; btn.disabled = false; }
+    }
+}
+
+async function fetchGeminiAnalysis(key, images) {
+    const primaryModel = "gemini-2.5-flash"; 
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${primaryModel}:generateContent?key=${key}`;
+    
+    const prompt = `
+        PROTOCOL: OMNI_V51_PRECISION
+        CONTEXT: Professional Scalping (SOL, ETH, BTC, XAUUSD).
+        
+        MANDATE:
+        1. REAL-TIME ONLY: Read exact prices from Y-axis and candles. Do not simulate.
+        2. 8-CORE ENGINE: Cross-reference SMC/ICT, Wyckoff, PA, and DXY correlation.
+        3. SCALPER BIAS: Prioritize immediate execution setups. 
+        4. RISK FILTER: Use "WATCHING" only if R:R is poor or no FVG/MS is present.
+        5. STRICT LOGIC: The "logic" field MUST be between 10 and 15 words. No greetings.
+
+        RETURN JSON ONLY:
+        {
+          "assetName": "STRING (Visible Ticker)",
+          "assetType": "CRYPTO"|"FOREX"|"COMMODITY",
+          "dominantStrategy": "STRING",
+          "bias": "BUY"|"SELL"|"WATCHING",
+          "entry": number, "sl": number, "tp": number,
+          "logic": "STRING (MUST BE 10-15 WORDS)"
+        }
+    `;
+
+    const inlineData = images.filter(img => img).map(b => ({ 
+        inline_data: { mime_type: "image/jpeg", data: b.split(',')[1] } 
+    }));
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }, ...inlineData] }],
+            generationConfig: { 
+                response_mime_type: "application/json", 
+                temperature: 0.2, // Decisive balance
+                top_p: 1
+            }
+        })
+    });
+
+    if (!response.ok) throw new Error("Hardware Link Failed. Check API Key/Status.");
+
+    const data = await response.json();
+    return JSON.parse(data.candidates[0].content.parts[0].text);
+}
+
+function renderOutput(data) {
+    const ui = (id) => document.getElementById(id);
+    const update = (id, val) => { if (ui(id)) ui(id).innerText = val; };
+
+    // Dynamic UI Color Control
+    const bEl = ui('biasTxt');
+    if (bEl) {
+        bEl.innerText = data.bias;
+        bEl.className = `text-8xl font-black italic tracking-tighter ${
+            data.bias === 'BUY' ? 'text-emerald-400' : 
+            data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500'
+        }`;
+    }
+
+    // Surgical Value Updates
+    update('entVal', data.entry || "--");
+    update('slVal', data.sl || "--");
+    update('tpVal', data.tp || "--");
+
+    // Tactical Logic Display
+    const logicBox = ui('logicSummary');
+    if (logicBox) {
+        logicBox.innerHTML = `<b class="text-cyan-400 uppercase text-xs">[SCALP CONFLUENCE: ${data.dominantStrategy}]</b><br>${data.logic}`;
+    }
+
+    // Automated Risk/Position Math
+    const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
+    const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
+    if (bal && riskPct && data.entry && data.sl) {
+        const riskAmount = bal * (riskPct / 100);
+        const priceDiff = Math.abs(data.entry - data.sl);
+        if (priceDiff > 0) {
+            let size = riskAmount / priceDiff;
+            // Asset Class Normalization
+            if (data.assetType === "FOREX") size /= 10;
+            if (data.assetType === "COMMODITY") size /= 100;
+            update('lotVal', size.toFixed(4));
+        }
+    } else {
+        update('lotVal', "0.0000");
+    }
+}
+
+function toBase64(file) {
+    return new Promise((res) => {
+        const r = new FileReader();
+        r.readAsDataURL(file);
+        r.onload = () => res(r.result);
+    });
+}

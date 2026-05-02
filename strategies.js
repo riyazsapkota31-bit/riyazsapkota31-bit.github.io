@@ -1,19 +1,21 @@
 /**
- * OMNI-REAL | PRECISION V11 (CORE STABLE ENGINE)
+ * OMNI-REAL | INFINITY SCALPER V8.2
+ * FEATURES: Multi-Strategy SMC, Watch Levels, DXY Correlation
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
-const MODEL = "gemini-1.5-flash-latest"; // Fixed: Standard stable model
+const MODEL = "gemini-1.5-flash-latest"; // Stable version for v1beta
 
 window.onload = () => { if (API_KEY) lockUI(); };
 
-// --- UI DYNAMICS ---
+// --- UI DYNAMICS (GREEN TICK SYNC) ---
 function markFile(idx) {
     const box = document.getElementById(`box${idx}`);
     const input = document.getElementById(`img${idx}`);
     
     if (input.files && input.files[0]) {
         box.classList.add('has-file');
+        // Visual Sync from reference
         box.innerHTML = `
             <input type="file" id="img${idx}" accept="image/*" class="hidden" onchange="markFile(${idx})">
             <div style="background:#10b981; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:10px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);">
@@ -24,6 +26,7 @@ function markFile(idx) {
     }
 }
 
+// --- MASTER CONTROL & API ACCESS ---
 function lockUI() {
     const input = document.getElementById('apiInput');
     document.getElementById('lockBtn').classList.add('hidden');
@@ -74,15 +77,22 @@ async function executeScan() {
     const btn = document.getElementById('scanBtn');
     const resultBox = document.getElementById('resultBox');
     const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
+    
     if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
-    btn.innerText = "CALIBRATING INSTITUTIONAL BIAS...";
+    btn.innerText = "CALIBRATING MULTI-STRATEGY...";
     btn.disabled = true;
 
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
-        const prompt = `System: High-Precision SMC Analyst. Analyze 4 charts for structural alignment. 
-        Return ONLY JSON: {"strategy":"INFINITY-V11","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
+        
+        // Multi-Strategy System Instruction
+        const prompt = `System: Expert SMC & Price Action Analyst. 
+        Analyze 4 charts (HTF, LTF, Entry, DXY). 
+        1. STRATEGY: Identify BOS, CHoCH, and FVG mitigation.
+        2. CONFLUENCE: If DXY opposes the trade or trend is unclear, BIAS must be 'WAIT'.
+        3. WATCH LEVEL: If bias is WAIT, identify the specific price level to monitor in logic.
+        Return ONLY JSON: {"bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -90,7 +100,7 @@ async function executeScan() {
             body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] })
         });
 
-        if (!response.ok) throw new Error("API Connection Failed");
+        if (!response.ok) throw new Error("API Connection Error");
 
         const data = await response.json();
         const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
@@ -111,13 +121,17 @@ function renderOutput(res, resultBox) {
     const logicTxt = document.getElementById('logicText');
 
     if (res.bias === "WAIT") {
-        actionTxt.innerText = "NO TRADE";
-        actionTxt.className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
-        logicTxt.innerText = res.logic;
+        actionTxt.innerText = "WAIT & WATCH";
+        actionTxt.className = "text-5xl font-extrabold italic mb-10 text-amber-500 glow-text";
+        logicTxt.innerText = `WATCH LEVEL: ${res.support || res.entry} | ${res.logic}`;
+        ['entText','slText','tpText','lotText','supText','resText'].forEach(id => {
+            document.getElementById(id).innerText = "---";
+        });
     } else {
         actionTxt.innerText = res.bias;
         actionTxt.className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
         
+        // Dynamic Risk Management
         const bal = parseFloat(document.getElementById('bal').value) || 10000;
         const risk = parseFloat(document.getElementById('risk').value) || 1.0;
         const slDist = Math.abs(res.entry - res.sl);

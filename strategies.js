@@ -1,11 +1,10 @@
 /**
- * OMNI-BLACK | VERSION 61.0 — MULTI-STRATEGY QUANT TERMINAL
+ * OMNI-BLACK | VERSION 62.0 — STABLE DEFINITIVE
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * ✓ Model: Gemini 2.5 Flash (Strict Enforcement)
  * ✓ 8-Strategy Matrix: SMC, ICT, PA, DXY, SR, SD, Elliott, Wyckoff
- * ✓ Active Scout: POI-based planning during non-trade windows
- * ✓ Two-Pass Engine: Zero-hallucination data verification (Gemini 3)
- * ✓ RR Scaling: 1:2.5 Min Floor up to 1:8+ Structural Ceiling
- * ✓ Auto-Asset Logic: Dynamic Spread/Lot sizing for Crypto, Forex, Gold
+ * ✓ Frequency Boost: 1M Displacement + Sweep triggers enabled
+ * ✓ RR Matrix: 1:2.5 Minimum Floor to 1:8 Structural Target
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  */
 
@@ -20,12 +19,12 @@ const ASSET_SPECS = {
 async function executeSurgicalScan() {
     const btn = document.getElementById('goBtn');
     const out = document.getElementById('outPanel');
-    if (files.filter(f => f).length < 2) { showAlert("UPLOAD ERROR: Need 15M + 1M charts."); return; }
+    if (files.filter(f => f).length < 2) { showAlert("UPLOAD ERROR: 15M + 1M required."); return; }
 
-    setButtonState(btn, true, "EVALUATING STRATEGIES...");
+    setButtonState(btn, true, "SCANNING LIQUIDITY...");
     try {
         const apiKey = localStorage.getItem('omni_api_key');
-        if (!apiKey) throw new Error("API Key missing. Enter in Hardware Link.");
+        if (!apiKey) throw new Error("API Key missing.");
 
         const b64Images = await Promise.all(
             files.map(file => file ? toBase64(file) : Promise.resolve(null))
@@ -42,38 +41,36 @@ async function executeSurgicalScan() {
 }
 
 async function fetchGeminiAnalysis(key, images) {
-    const model = "gemini-3-flash";
+    const model = "gemini-2.5-flash"; // Reverted to 2.5 Flash as requested
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     const inlineData = images.filter(Boolean).map(b => ({ inline_data: { mime_type: "image/jpeg", data: b.split(',')[1] } }));
 
-    // PASS 1: RAW DATA EXTRACTION (NO HALLUCINATION)
-    const p1Prompt = `Extract raw facts: Asset ticker, exact currentPrice, 1H trend, 15M structure (BOS/OB/FVG), 1M micro-levels (Sweep/MSS), and DXY bias. Return JSON only: { "assetType": "CRYPTO"|"FOREX"|"COMMODITY", "currentPrice": number, "readings": { "1H": string, "15M": { "struct": string, "ob": number, "fvg": number }, "1M": { "sweep": boolean, "mss": boolean, "high": number, "low": number } } }`;
-    const p1res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: p1Prompt }, ...inlineData] }], generationConfig: { response_mime_type: "application/json" } }) });
+    // PASS 1: RAW EXTRACTION
+    const p1Prompt = `Extract raw facts: Asset ticker, exact live price, 1H trend, 15M structure, 1M sweep/mss levels. Return JSON only: { "assetType": "CRYPTO"|"FOREX"|"COMMODITY", "currentPrice": number, "readings": { "1H": string, "15M": { "struct": string, "ob": number, "fvg": number }, "1M": { "sweep": boolean, "mss": boolean, "high": number, "low": number } } }`;
+    const p1res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: p1Prompt }, ...inlineData] }], generationConfig: { response_mime_type: "application/json", temperature: 0.05 } }) });
     const facts = JSON.parse((await p1res.json()).candidates[0].content.parts[0].text);
 
-    // PASS 2: 8-STRATEGY EVALUATION + ACTIVE SCOUTING
+    // PASS 2: STRATEGY + FREQUENCY BOOST
     const p2Prompt = `You are OMNI-BLACK. Facts: ${JSON.stringify(facts)}.
     EVALUATE 8 STRATEGIES: SMC, ICT, PA, DXY_CORR, SR, SD, ELLIOTT, WYCKOFF.
-    1. Select DominantStrategy with most confluence.
+    1. AGGRESSIVE: If 1M chart shows Sweep + Displacement, trigger even if HTF is neutral.
     2. Minimum 3 confluences for trade firing. 
-    3. If 15M/1H align, seek Aggressive Entry. If 1M shows MSS reversal, seek Counter-Trend Scalp.
-    4. If bias is WATCHING, identify POI targetLevel.
+    3. RR SCALING: Prioritize targets at 15M FVGs or Liquidity Voids for 1:4 to 1:8 setups.
+    4. If WATCHING, provide Scout POI level.
     Return JSON: { "bias": "BUY"|"SELL"|"WATCHING", "entry": number, "sl": number, "tp": number, "strategy": string, "confluences": number, "conf": number, "logic": string, "scout": { "level": number, "msg": string } }`;
     
-    const p2res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: p2Prompt }] }], generationConfig: { response_mime_type: "application/json" } }) });
+    const p2res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: p2Prompt }] }], generationConfig: { response_mime_type: "application/json", temperature: 0.1 } }) });
     let sig = JSON.parse((await p2res.json()).candidates[0].content.parts[0].text);
 
-    // JS ENFORCEMENT: RR (1:2.5 to 1:8) + SPREAD
+    // QUANT ENFORCEMENT
     const sp = ASSET_SPECS[facts.assetType] || ASSET_SPECS.CRYPTO;
     if (sig.bias !== 'WATCHING') {
         const risk = Math.abs(sig.entry - sig.sl) || 1;
         const rr = Math.abs(sig.tp - sig.entry) / risk;
         
-        // Enforce Floor (1:2.5) & Ceiling (1:8.0)
         if (rr < 2.5) sig.tp = sig.bias === 'BUY' ? sig.entry + (risk * 2.5) : sig.entry - (risk * 2.5);
         if (rr > 8.0) sig.tp = sig.bias === 'BUY' ? sig.entry + (risk * 8.0) : sig.entry - (risk * 8.0);
         
-        // Enforce Volatility Cap per Asset Type
         const dist = Math.abs(sig.tp - sig.entry);
         if (dist > sp.maxTP) sig.tp = sig.bias === 'BUY' ? sig.entry + sp.maxTP : sig.entry - sp.maxTP;
     }
@@ -99,7 +96,7 @@ function renderOutput(data) {
     let scoutHtml = (data.bias === 'WATCHING' && data.scout) ? `
         <div class="mt-4 p-4 border border-cyan-500/30 bg-cyan-500/5 rounded-2xl border-dashed">
             <p class="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-1">Scout POI: ${data.scout.level || '--'}</p>
-            <p class="text-[12px] text-white italic font-medium">"${data.scout.msg}"</p>
+            <p class="text-[12px] text-white font-medium italic">"${data.scout.msg}"</p>
         </div>` : '';
 
     logicBox.innerHTML = `
@@ -108,9 +105,8 @@ function renderOutput(data) {
             <span class="px-3 py-1 rounded-full text-[9px] font-black bg-white/10 text-white">RR 1:${rr}</span>
             <span class="px-3 py-1 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400">${data.confluences}/8 CONF</span>
         </div>
-        <p class="text-[13px] text-white/80 leading-relaxed font-normal">${data.logic}</p>${scoutHtml}`;
+        <p class="text-[13px] text-white/80 leading-relaxed">${data.logic}</p>${scoutHtml}`;
 
-    // POSITION SIZING MATH
     const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
     const rsk = parseFloat(localStorage.getItem('omni_risk')) || 0;
     if (bal && rsk && risk > 0) {

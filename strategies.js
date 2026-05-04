@@ -1,7 +1,7 @@
 /**
- * OMNI-BLACK | VERSION 52.0 (THE SURGICAL POI PROTOCOL)
- * Core: 8-Core Aggregator + Proximity Logic
- * Mandate: Asset Recognition + 1:2 RR Gate + POI Protocol
+ * OMNI-BLACK | VERSION 52.5 (THE SURGICAL CORRECTION)
+ * Core: 8-Core Aggregator (SMC, ICT, VSA, PA)
+ * Mandate: Fix Bias Misidentification + Surgical Asset Math
  */
 
 let files = [null, null, null, null];
@@ -27,25 +27,24 @@ async function executeSurgicalScan() {
 
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
-        // --- PROXIMITY GATE: IF PRICE IS TOO FAR, FORCE WATCHING ---
+        // --- PROXIMITY GATE ---
         const priceToEntryGap = Math.abs(analysis.currentPrice - analysis.entry);
-        const allowedGap = Math.abs(analysis.entry - analysis.sl) * 0.5; // Only 50% risk-gap allowed
+        const allowedGap = Math.abs(analysis.entry - analysis.sl) * 0.5;
 
         if (priceToEntryGap > allowedGap && analysis.bias !== "WATCHING") {
             analysis.bias = "WATCHING";
-            analysis.logic = `Price is ${priceToEntryGap.toFixed(2)} pts away from POI. Await retracement to ${analysis.entry} for high-probability entry.`;
+            analysis.logic = `Price is far from POI. Await retracement to ${analysis.entry}.`;
             analysis.poi = analysis.entry;
         }
 
-        // --- HARD-CODED RR CALCULATION ---
+        // --- 1:2 RR HARD-GATE ---
         const riskPoints = Math.abs(analysis.entry - analysis.sl);
         const rewardPoints = Math.abs(analysis.tp - analysis.entry);
         const currentRR = riskPoints > 0 ? (rewardPoints / riskPoints) : 0;
 
-        // --- 1:2 RR HARD-GATE ---
         if (analysis.bias !== "WATCHING" && currentRR < 2) {
             analysis.bias = "WATCHING";
-            analysis.logic = "RR ratio below 1:2 threshold. Setup invalidated for safety.";
+            analysis.logic = "RR below 1:2 threshold. Setup downgraded.";
             analysis.poi = analysis.entry;
         }
 
@@ -57,7 +56,7 @@ async function executeSurgicalScan() {
         }
 
     } catch (err) {
-        console.error("System Crash Prevented:", err);
+        console.error("System Crash:", err);
         alert("CRITICAL ERROR: " + err.message);
     } finally {
         if (btn) { btn.innerText = "Perform Surgical Scan"; btn.disabled = false; }
@@ -68,12 +67,13 @@ async function fetchGeminiAnalysis(key, images) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V52_SURGICAL
+        PROTOCOL: OMNI_V52_5_STRICT
         MANDATE:
-        1. ASSET: Read top-left corner (GOLD/XAU, BTC, etc).
-        2. PRICE: Identify CURRENT market price exactly.
-        3. POI: If price is not at a Liquidity Sweep or Order Block, set BIAS to "WATCHING".
-        4. ACCURACY: Precision Grade A. JSON ONLY.
+        1. BIAS: Identify structural breakdown (MSS/BOS). Do not ignore SELL pressure at resistance.
+        2. ASSET: Detect ticker (GOLD, XAU, BTC, ETH, Forex) from top-left OCR.
+        3. PRICE: Read CURRENT market price exactly.
+        4. ACCURACY: Precision Grade A. Read raw Y-axis coordinates.
+        5. JSON ONLY.
 
         RETURN FORMAT:
         {
@@ -127,7 +127,7 @@ function renderOutput(data, currentRR) {
     update('resText', data.res);
     update('rrText', `1:${currentRR.toFixed(1)}`);
 
-    // --- DYNAMIC ASSET-BASED LOT MATH ---
+    // --- DYNAMIC ASSET-BASED MATH ---
     const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
     const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
     
@@ -139,9 +139,9 @@ function renderOutput(data, currentRR) {
         let lotSize = riskCash / priceDiff;
 
         if (asset.includes("GOLD") || asset.includes("XAU")) {
-            lotSize /= 100; // Gold Normalization
+            lotSize /= 100;
         } else if (priceDiff < 1) {
-            lotSize /= 10; // Forex Normalization
+            lotSize /= 10;
         }
 
         update('lotText', lotSize.toFixed(3));
@@ -153,7 +153,7 @@ function renderOutput(data, currentRR) {
     if (pz) data.bias === 'WATCHING' ? pz.classList.remove('hidden') : pz.classList.add('hidden');
 }
 
-// --- AUTO-LOAD SAVED HARDWARE LINK ---
+// --- AUTO-LOAD SAVED PARAMETERS ---
 window.addEventListener('DOMContentLoaded', () => {
     const keys = ['omni_api_key', 'omni_balance', 'omni_risk'];
     const ids = ['apiInput', 'bal', 'risk'];

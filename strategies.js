@@ -1,8 +1,9 @@
 /** * OMNI-REAL V11 | FINAL INSTITUTIONAL ENGINE
- * FEATURES: Aggressive Scalping, 1:2 RR Guard, 8-Strategy Confluence
+ * UPDATED: May 5, 2026 - Enhanced JSON Extraction & 2.5 Logic
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
+// Strictly using the supported model from your Compatibility Report
 const MODEL = "gemini-2.5-flash-lite"; 
 
 window.onload = () => {
@@ -12,7 +13,6 @@ window.onload = () => {
 };
 
 // --- UI HANDLERS ---
-
 function markFile(idx) {
     document.getElementById(`box${idx}`).classList.add('has-file');
     document.getElementById(`label${idx}`).classList.add('hidden');
@@ -60,7 +60,6 @@ async function fileToPart(file) {
 }
 
 // --- CORE ANALYSIS ENGINE ---
-
 async function executeScan() {
     if (!API_KEY) return alert("System Offline: Sync Terminal Key.");
     
@@ -76,18 +75,20 @@ async function executeScan() {
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
 
-        // THE ULTIMATE PROMPT
+        // THE ULTIMATE PROMPT - Updated for stricter formatting
         const prompt = `System: Expert Aggressive Scalper.
-        Analyze using: SMC, ICT, Wyckoff, Price Action, VSA, Fibonacci, Mean Reversion, Elliott Wave.
+        Analyze using: SMC, ICT, Wyckoff, Price Action, VSA, Fibonacci.
+        
+        STRICT FORMATTING:
+        Return ONLY a raw JSON object. NO markdown, NO backticks, NO prose.
         
         STRICT RULES:
-        1. Accuracy is priority. Only trade 1M/5M high-confluence liquidity traps or FVG fills.
-        2. MANDATORY RR: Must be 1:2 or higher. 
-        3. If RR < 1:2 or market is sideways without clear trap, return bias: "WAIT" and provide "poi" price.
-        4. "poi" is the price to watch for a re-scan or a limit entry to achieve 1:2 RR.
-        5. "logic" MUST be exactly 15-20 words describing the specific institutional footprint.
+        1. Accuracy is priority. 1M/5M liquidity traps only.
+        2. MANDATORY RR: 1:2 or higher.
+        3. If RR < 1:2, return bias: "WAIT" and provide "poi".
+        4. "logic" MUST be 15-20 words on institutional footprint.
         
-        Return ONLY JSON: {"strategy":"STRAT_NAME","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"poi":number,"logic":"string"}`;
+        JSON Structure: {"strategy":"STRAT_NAME","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"poi":number,"logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -96,8 +97,21 @@ async function executeScan() {
         });
 
         const data = await response.json();
-        const rawResponse = data.candidates[0].content.parts[0].text;
-        const res = JSON.parse(rawResponse.replace(/```json/g, '').replace(/```/g, '').trim());
+        
+        if (!data.candidates || !data.candidates[0].content.parts[0].text) {
+             throw new Error("Invalid API Response Structure");
+        }
+
+        const rawText = data.candidates[0].content.parts[0].text;
+        
+        // --- ROBUST JSON EXTRACTION ---
+        let res;
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            res = JSON.parse(jsonMatch[0]);
+        } else {
+            throw new Error("AI failed to output JSON");
+        }
 
         // RR SECURITY CHECK
         const risk = Math.abs(res.entry - res.sl);
@@ -109,7 +123,7 @@ async function executeScan() {
         // Logic Override for Low RR
         if (res.bias !== "WAIT" && actualRR < 1.98) {
             res.bias = "WAIT";
-            res.logic = "Institutional setup identified but entry price requires retracement to POI to maintain professional 1:2 risk-to-reward ratio metrics.";
+            res.logic = "Institutional setup identified but entry price requires retracement to POI to maintain professional 1:2 risk-to-reward ratio.";
             res.poi = res.bias === "BUY" ? (res.entry - (risk * 0.3)) : (res.entry + (risk * 0.3));
         }
 
@@ -129,7 +143,6 @@ async function executeScan() {
             document.getElementById('actionText').innerText = res.bias;
             document.getElementById('actionText').className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
             
-            // Scalping Lot Calculation
             const bal = parseFloat(document.getElementById('bal').value);
             const riskPct = parseFloat(document.getElementById('risk').value);
             const lotSize = (risk > 0) ? ((bal * (riskPct/100)) / (risk * 1000)).toFixed(2) : "0.10";
@@ -137,7 +150,7 @@ async function executeScan() {
             document.getElementById('entText').innerText = res.entry.toFixed(5);
             document.getElementById('slText').innerText = res.sl.toFixed(5);
             document.getElementById('tpText').innerText = res.tp.toFixed(5);
-            document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
+            document.getElementById('lotText').innerText = Math.max(parseFloat(lotSize), 0.01);
             document.getElementById('supText').innerText = (res.support || 0).toFixed(5);
             document.getElementById('resText').innerText = (res.resistance || 0).toFixed(5);
         }
@@ -145,8 +158,8 @@ async function executeScan() {
         resultBox.scrollIntoView({ behavior: 'smooth' });
 
     } catch (e) {
-        console.error(e);
-        alert("TERMINAL ERROR: Invalid JSON from AI or API Key issue.");
+        console.error("OMNI-ERROR:", e);
+        alert(`TERMINAL ERROR: ${e.message || "Invalid AI Output"}`);
     } finally {
         btn.innerText = "Perform Multi-Chart Scan";
         btn.disabled = false;

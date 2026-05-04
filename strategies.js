@@ -159,3 +159,14 @@ function toBase64(file) {
         r.onload = () => res(r.result);
     });
 }
+
+// --- AUTO-LOAD SAVED HARDWARE LINK ---
+window.addEventListener('DOMContentLoaded', () => {
+    const savedKey = localStorage.getItem('omni_api_key');
+    const savedBal = localStorage.getItem('omni_balance');
+    const savedRisk = localStorage.getItem('omni_risk');
+
+    if (savedKey) document.getElementById('apiInput').value = savedKey;
+    if (savedBal) document.getElementById('bal').value = savedBal;
+    if (savedRisk) document.getElementById('risk').value = savedRisk;
+});

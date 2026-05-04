@@ -1,8 +1,7 @@
 /**
- * OMNI-BLACK | VERSION 51.7 (THE FINAL DIRECTIVE)
- * Core: 8-Core Aggregator (SMC, ICT, VSA, PA, Wyckoff, Fib, Mean Rev, Elliott)
- * Risk: Hard 1:2 RR Gate | XM Broker Normalization
- * Layout Sync: Updated for Surgical Result Box IDs
+ * OMNI-BLACK | VERSION 51.8 (THE ASSET-AWARE DIRECTIVE)
+ * Core: 8-Core Aggregator + Dynamic Asset Recognition
+ * Risk: Hard 1:2 RR Gate | Dynamic Contract Normalization
  */
 
 let files = [null, null, null, null];
@@ -16,7 +15,7 @@ async function executeSurgicalScan() {
         return;
     }
 
-    if (btn) { btn.innerText = "COUNCIL OF 8 ANALYZING..."; btn.disabled = true; }
+    if (btn) { btn.innerText = "DETECTING ASSET & ANALYZING..."; btn.disabled = true; }
 
     try {
         const apiKey = localStorage.getItem('omni_api_key');
@@ -29,15 +28,15 @@ async function executeSurgicalScan() {
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
         // --- HARD-CODED RR CALCULATION ---
-        const risk = Math.abs(analysis.entry - analysis.sl);
-        const reward = Math.abs(analysis.tp - analysis.entry);
-        const currentRR = risk > 0 ? (reward / risk) : 0;
+        const riskPoints = Math.abs(analysis.entry - analysis.sl);
+        const rewardPoints = Math.abs(analysis.tp - analysis.entry);
+        const currentRR = riskPoints > 0 ? (rewardPoints / riskPoints) : 0;
 
-        // --- 1:2 RR HARD-GATE & POI PROTOCOL ---
+        // --- 1:2 RR HARD-GATE ---
         if (analysis.bias !== "WATCHING" && currentRR < 2) {
             analysis.bias = "WATCHING";
             analysis.tradeType = "RR INVALID";
-            analysis.logic = "Setup downgraded to WATCHING; Risk-to-Reward ratio calculated below 1:2 threshold.";
+            analysis.logic = "Setup downgraded; Risk-to-Reward ratio below 1:2 threshold.";
             if (!analysis.poi) analysis.poi = analysis.entry; 
         }
 
@@ -50,7 +49,7 @@ async function executeSurgicalScan() {
 
     } catch (err) {
         console.error("System Crash Prevented:", err);
-        if (!err.message.includes('undefined')) alert("ALERT: " + err.message);
+        alert("CRITICAL ERROR: " + err.message);
     } finally {
         if (btn) { btn.innerText = "Perform Surgical Scan"; btn.disabled = false; }
     }
@@ -60,15 +59,13 @@ async function fetchGeminiAnalysis(key, images) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V51_7_FINAL
-        STRATEGY: 8-CORE AGGREGATOR (SMC, ICT, VSA, Price Action, Wyckoff, Fib, Mean Rev, Elliott)
+        PROTOCOL: OMNI_V51_8_ASSET_DETECT
         MANDATE:
-        1. SELECTION: Evaluate Scalp vs Day Trade. Prioritize HIGHEST profit/RR.
-        2. ACCURACY: Grade A/B+ only. Read raw Y-axis and X-axis OCR data.
-        3. DXY: Analyze Box 4 (DXY) for trend confirmation.
-        4. STRUCTURE: Detect FVG, MSS, Liquidity Sweeps, and Order Blocks.
-        5. LOGIC: Exactly 10-15 words. Describe institutional footprint.
-        6. JSON: Strictly return JSON only. 
+        1. ASSET: Look at the top-left corner text of the charts. Identify if it is GOLD (XAU), BTC, ETH, or a Forex pair. Return exact ticker.
+        2. STRATEGY: 8-Core Aggregator (SMC, ICT, VSA, Wyckoff).
+        3. ACCURACY: Grade A precision. Read raw Y-axis for price coordinates.
+        4. LOGIC: Exactly 10-15 words on institutional footprint.
+        5. JSON ONLY.
 
         RETURN FORMAT:
         {
@@ -76,9 +73,8 @@ async function fetchGeminiAnalysis(key, images) {
           "tradeType": "SCALP"|"DAY TRADE",
           "bias": "BUY"|"SELL"|"WATCHING",
           "entry": number, "sl": number, "tp": number, "poi": number,
-          "logic": "10-15 WORDS ONLY",
-          "sup": "STRING",
-          "res": "STRING"
+          "logic": "STRING",
+          "sup": "STRING", "res": "STRING"
         }
     `;
 
@@ -91,15 +87,11 @@ async function fetchGeminiAnalysis(key, images) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }, ...inlineData] }],
-            generationConfig: { response_mime_type: "application/json", temperature: 0.15 }
+            generationConfig: { response_mime_type: "application/json", temperature: 0.1 }
         })
     });
 
     const data = await response.json();
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        throw new Error("Neural link failed. API returned empty candidate.");
-    }
-    
     return JSON.parse(data.candidates[0].content.parts[0].text);
 }
 
@@ -107,7 +99,6 @@ function renderOutput(data, currentRR) {
     const ui = (id) => document.getElementById(id);
     const update = (id, val) => { if (ui(id)) ui(id).innerText = val; };
 
-    // --- BIAS UI SHIELD (Surgical Layout Sync) ---
     const bEl = ui('actionText');
     if (bEl) {
         bEl.innerText = data.bias;
@@ -117,47 +108,41 @@ function renderOutput(data, currentRR) {
         }`;
     }
 
-    // --- DATA DISPLAY (Mapping to New HTML IDs) ---
-    update('entText', data.entry || "0.0000");
-    update('slText', data.sl || "0.0000");
-    update('tpText', data.tp || "0.0000");
-    update('poiLevel', data.poi || "0.0000");
+    update('entText', data.entry);
+    update('slText', data.sl);
+    update('tpText', data.tp);
+    update('poiLevel', data.poi || data.entry);
     update('logicText', data.logic);
-    update('tradeTypeLabel', data.tradeType);
-    update('supText', data.sup || "---");
-    update('resText', data.res || "---");
+    update('tradeTypeLabel', `${data.assetName} | ${data.tradeType}`);
+    update('supText', data.sup);
+    update('resText', data.res);
     update('rrText', `1:${currentRR.toFixed(1)}`);
 
-    // --- POI ZONE LOGIC ---
-    const pz = ui('poiZone');
-    if (pz) {
-        data.bias === 'WATCHING' ? pz.classList.remove('hidden') : pz.classList.add('hidden');
-    }
-
-    // --- XM-CALIBRATED LOT MATH ---
+    // --- DYNAMIC ASSET-BASED LOT MATH ---
     const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
     const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
     
     if (bal && riskPct && data.entry && data.sl) {
-        const riskAmount = bal * (riskPct / 100);
+        const riskCash = bal * (riskPct / 100);
         const priceDiff = Math.abs(data.entry - data.sl);
-        if (priceDiff > 0) {
-            let lotSize = riskAmount / priceDiff;
-            // Handle common XM symbol normalization (Forex vs Crypto/Gold)
-            if (data.assetName.includes("USD") && priceDiff < 1) lotSize /= 10; 
-            update('lotText', lotSize.toFixed(4));
-        }
-    } else {
-        update('lotText', "0.0000");
-    }
-}
+        const asset = data.assetName.toUpperCase();
+        
+        let lotSize = riskCash / priceDiff;
 
-function toBase64(file) {
-    return new Promise((res) => {
-        const r = new FileReader();
-        r.readAsDataURL(file);
-        r.onload = () => res(r.result);
-    });
+        // Apply Logic based on Asset Detection
+        if (asset.includes("GOLD") || asset.includes("XAU")) {
+            lotSize /= 100; // Normalizes Gold Contract (1 Lot = 100oz)
+        } else if (asset.includes("BTC") || asset.includes("ETH")) {
+            // Standard 1:1 Crypto math
+        } else if (priceDiff < 1) {
+            lotSize /= 10; // Forex Normalization
+        }
+
+        update('lotText', lotSize.toFixed(3));
+    }
+
+    const pz = ui('poiZone');
+    if (pz) data.bias === 'WATCHING' ? pz.classList.remove('hidden') : pz.classList.add('hidden');
 }
 
 // --- AUTO-LOAD SAVED HARDWARE LINK ---
@@ -170,3 +155,11 @@ window.addEventListener('DOMContentLoaded', () => {
     if (savedBal) document.getElementById('bal').value = savedBal;
     if (savedRisk) document.getElementById('risk').value = savedRisk;
 });
+
+function toBase64(file) {
+    return new Promise((res) => {
+        const r = new FileReader();
+        r.readAsDataURL(file);
+        r.onload = () => res(r.result);
+    });
+}

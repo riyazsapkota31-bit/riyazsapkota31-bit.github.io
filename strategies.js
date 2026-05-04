@@ -2,16 +2,15 @@
  * OMNI-BLACK | VERSION 51.7 (THE FINAL DIRECTIVE)
  * Core: 8-Core Aggregator (SMC, ICT, VSA, PA, Wyckoff, Fib, Mean Rev, Elliott)
  * Risk: Hard 1:2 RR Gate | XM Broker Normalization
- * AI: Gemini 2.5 Flash | 10-15 Word Logic Muzzle
+ * Layout Sync: Updated for Surgical Result Box IDs
  */
 
 let files = [null, null, null, null];
 
 async function executeSurgicalScan() {
-    const btn = document.getElementById('goBtn');
-    const out = document.getElementById('outPanel');
+    const btn = document.getElementById('scanBtn');
+    const out = document.getElementById('resultBox');
     
-    // Multi-Timeframe Requirement (Min 2 charts + DXY recommended)
     if (files.filter(f => f).length < 2) {
         alert("UPLOAD ERROR: Surgical confluence requires at least 2 timeframe layers.");
         return;
@@ -29,20 +28,20 @@ async function executeSurgicalScan() {
 
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
-        // --- HARD-CODED RR & POI LOGIC GATE ---
+        // --- HARD-CODED RR CALCULATION ---
         const risk = Math.abs(analysis.entry - analysis.sl);
         const reward = Math.abs(analysis.tp - analysis.entry);
-        const currentRR = reward / risk;
+        const currentRR = risk > 0 ? (reward / risk) : 0;
 
-        // Force WAIT if RR is below 1:2 or setup is low conviction
+        // --- 1:2 RR HARD-GATE & POI PROTOCOL ---
         if (analysis.bias !== "WATCHING" && currentRR < 2) {
             analysis.bias = "WATCHING";
-            analysis.tradeType = "DISCARDED";
+            analysis.tradeType = "RR INVALID";
             analysis.logic = "Setup downgraded to WATCHING; Risk-to-Reward ratio calculated below 1:2 threshold.";
-            if (!analysis.poi) analysis.poi = analysis.entry; // Set entry as POI for later re-scan
+            if (!analysis.poi) analysis.poi = analysis.entry; 
         }
 
-        renderOutput(analysis);
+        renderOutput(analysis, currentRR);
         
         if (out) {
             out.classList.remove('hidden');
@@ -50,29 +49,26 @@ async function executeSurgicalScan() {
         }
 
     } catch (err) {
-        // DEFENSIVE: Undefined/Null Shield (Prevents "reading '0'" alert)
         console.error("System Crash Prevented:", err);
         if (!err.message.includes('undefined')) alert("ALERT: " + err.message);
     } finally {
-        if (btn) { btn.innerText = "EXECUTE COMMAND"; btn.disabled = false; }
+        if (btn) { btn.innerText = "Perform Surgical Scan"; btn.disabled = false; }
     }
 }
 
 async function fetchGeminiAnalysis(key, images) {
-    const model = "gemini-2.5-flash"; 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     
     const prompt = `
         PROTOCOL: OMNI_V51_7_FINAL
         STRATEGY: 8-CORE AGGREGATOR (SMC, ICT, VSA, Price Action, Wyckoff, Fib, Mean Rev, Elliott)
-        
         MANDATE:
-        1. SELECTION: Evaluate Scalp vs Day Trade. Prioritize the one with HIGHEST profit/RR.
-        2. ACCURACY: Grade A/B+ only. Read raw Y-axis and X-axis OCR data from XM Terminal.
-        3. DXY: Analyze Box 4 (DXY) for trend confirmation. Avoid Dollar Traps.
+        1. SELECTION: Evaluate Scalp vs Day Trade. Prioritize HIGHEST profit/RR.
+        2. ACCURACY: Grade A/B+ only. Read raw Y-axis and X-axis OCR data.
+        3. DXY: Analyze Box 4 (DXY) for trend confirmation.
         4. STRUCTURE: Detect FVG, MSS, Liquidity Sweeps, and Order Blocks.
         5. LOGIC: Exactly 10-15 words. Describe institutional footprint.
-        6. JSON: Strictly return JSON only. No greetings.
+        6. JSON: Strictly return JSON only. 
 
         RETURN FORMAT:
         {
@@ -80,7 +76,9 @@ async function fetchGeminiAnalysis(key, images) {
           "tradeType": "SCALP"|"DAY TRADE",
           "bias": "BUY"|"SELL"|"WATCHING",
           "entry": number, "sl": number, "tp": number, "poi": number,
-          "logic": "10-15 WORDS ONLY"
+          "logic": "10-15 WORDS ONLY",
+          "sup": "STRING",
+          "res": "STRING"
         }
     `;
 
@@ -98,7 +96,6 @@ async function fetchGeminiAnalysis(key, images) {
     });
 
     const data = await response.json();
-    // DEFENSIVE: Check for undefined response candidate
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
         throw new Error("Neural link failed. API returned empty candidate.");
     }
@@ -106,29 +103,35 @@ async function fetchGeminiAnalysis(key, images) {
     return JSON.parse(data.candidates[0].content.parts[0].text);
 }
 
-function renderOutput(data) {
+function renderOutput(data, currentRR) {
     const ui = (id) => document.getElementById(id);
     const update = (id, val) => { if (ui(id)) ui(id).innerText = val; };
 
-    // --- BIAS UI SHIELD ---
-    const bEl = ui('biasTxt');
+    // --- BIAS UI SHIELD (Surgical Layout Sync) ---
+    const bEl = ui('actionText');
     if (bEl) {
         bEl.innerText = data.bias;
-        bEl.className = `text-8xl font-black italic tracking-tighter ${
+        bEl.className = `text-7xl font-black italic tracking-tighter uppercase leading-none glow-text ${
             data.bias === 'BUY' ? 'text-emerald-400' : 
-            data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500'
+            data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-400'
         }`;
     }
 
-    // --- DATA DISPLAY ---
-    update('entVal', data.entry || "--");
-    update('slVal', data.sl || "--");
-    update('tpVal', data.tp || "--");
-    update('poiVal', data.poi || "NONE");
+    // --- DATA DISPLAY (Mapping to New HTML IDs) ---
+    update('entText', data.entry || "0.0000");
+    update('slText', data.sl || "0.0000");
+    update('tpText', data.tp || "0.0000");
+    update('poiLevel', data.poi || "0.0000");
+    update('logicText', data.logic);
+    update('tradeTypeLabel', data.tradeType);
+    update('supText', data.sup || "---");
+    update('resText', data.res || "---");
+    update('rrText', `1:${currentRR.toFixed(1)}`);
 
-    const logicBox = ui('logicSummary');
-    if (logicBox) {
-        logicBox.innerHTML = `<b class="text-cyan-400 text-xs">[${data.tradeType}]</b><br>${data.logic}`;
+    // --- POI ZONE LOGIC ---
+    const pz = ui('poiZone');
+    if (pz) {
+        data.bias === 'WATCHING' ? pz.classList.remove('hidden') : pz.classList.add('hidden');
     }
 
     // --- XM-CALIBRATED LOT MATH ---
@@ -139,14 +142,13 @@ function renderOutput(data) {
         const riskAmount = bal * (riskPct / 100);
         const priceDiff = Math.abs(data.entry - data.sl);
         if (priceDiff > 0) {
-            // Standard Lot Calculation
             let lotSize = riskAmount / priceDiff;
-            // Handle common XM symbol normalization (Forex vs Crypto)
+            // Handle common XM symbol normalization (Forex vs Crypto/Gold)
             if (data.assetName.includes("USD") && priceDiff < 1) lotSize /= 10; 
-            update('lotVal', lotSize.toFixed(4));
+            update('lotText', lotSize.toFixed(4));
         }
     } else {
-        update('lotVal', "0.0000");
+        update('lotText', "0.0000");
     }
 }
 

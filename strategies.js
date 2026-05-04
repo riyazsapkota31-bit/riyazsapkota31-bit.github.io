@@ -1,6 +1,6 @@
-/** * OMNI-REAL V16 | FINAL SURGICAL CONFLUENCE ENGINE
+/** * OMNI-REAL V18 | ULTIMATE SURGICAL CONFLUENCE
  * STRATEGIES: SMC, ICT, VSA, Price Action, Wyckoff
- * FEATURES: 5-Strategy Confluence, Sideways Sentry POI, Mobile-Grid UI
+ * FEATURES: Auto-Asset Detection, Profit Prioritization, Sentry POI Mode
  */
 
 let API_KEY = localStorage.getItem('omni_api_v3') || "";
@@ -75,16 +75,14 @@ async function executeScan() {
     try {
         const imageParts = await Promise.all(files.map(fileToPart));
 
-        const prompt = `System: Expert Institutional Quant. Cross-reference SMC, ICT, VSA, Price Action, and Wyckoff.
+        const prompt = `System: Institutional Quantitative Analyst. 
+        1. ASSET: Detect the ticker from chart text (e.g., BTCUSDT, SOLUSDT).
+        2. CONFLUENCE: Evaluate using SMC, ICT, VSA, Price Action, and Wyckoff.
+        3. MODE: Prioritize high-confluence Day Trades (15m+) over Scalps for maximum profit.
+        4. SENTRY: If market is sideways/choppy, return bias: "WAIT". Provide "poi" (Price of Interest) and explain why in 10-15 words.
+        5. RISK: Stop Loss MUST be structural (beyond sweep high/lows). 
         
-        Surgical Task:
-        1. Identify highest probability Scalp or Day Trade based on confluence of 5 methods.
-        2. If market is sideways, chopping, or lacks clear institutional foot-print, return bias: "WAIT".
-        3. For "WAIT", provide a "poi" (Price of Interest) and explain logic in 10-15 words.
-        4. If a Day Trade (15m/1h) is found with higher profit potential than a 1m scalp, prioritize the Day Trade.
-        5. Stop Loss must be structural (behind the sweep/high/low) to prevent stop-outs.
-        
-        Return ONLY RAW JSON: {"type":"SCALP|DAY_TRADE","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"poi":number,"conf":"X/8","logic":"string"}`;
+        Return ONLY RAW JSON: {"asset":"STRING","type":"SCALP|DAY_TRADE","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"poi":number,"conf":"X/8","logic":"string"}`;
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -103,41 +101,48 @@ async function executeScan() {
 
         resultBox.classList.remove('hidden');
         
-        // Dynamic Labeling
         const stratType = document.getElementById('strategyType');
-        stratType.innerText = `${res.type || "MARKET"} | ${res.conf || "0/8"} CONFLUENCE`;
-        
         const actionDisplay = document.getElementById('actionText');
         const logicDisplay = document.getElementById('logicText');
 
+        // Asset-Aware Header
+        stratType.innerText = `${res.asset || "CRYPTO"} | ${res.type || "MARKET"} | ${res.conf || "0/8"} CONF`;
+
         if (res.bias === "WAIT") {
-            // SENTRY (SIDELINES) MODE
+            // SIDELINES MODE
             actionDisplay.innerText = "WAIT";
             actionDisplay.className = "text-8xl font-black italic tracking-tighter text-amber-500 opacity-80";
             
             document.getElementById('tradeDetails').classList.add('hidden');
             document.getElementById('poiZone').classList.remove('hidden');
-            document.getElementById('poiLevel').innerText = res.poi ? res.poi.toFixed(3) : "WATCH";
+            document.getElementById('poiLevel').innerText = res.poi ? res.poi.toFixed(2) : "WATCHING";
             
             logicDisplay.innerText = res.logic;
             logicDisplay.className = "text-[10px] text-amber-400 italic max-w-[200px] text-right leading-tight";
         } else {
-            // SURGICAL EXECUTION MODE
+            // SURGICAL TRADE MODE
             document.getElementById('poiZone').classList.add('hidden');
             document.getElementById('tradeDetails').classList.remove('hidden');
             
             actionDisplay.innerText = res.bias;
             actionDisplay.className = `text-8xl font-black italic tracking-tighter ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
             
+            // Asset-Aware Lot Calculation
             const riskAmount = Math.abs(res.entry - res.sl);
             const bal = parseFloat(document.getElementById('bal').value);
             const riskPct = parseFloat(document.getElementById('risk').value);
-            const lotSize = (riskAmount > 0) ? ((bal * (riskPct/100)) / (riskAmount * 1000)).toFixed(3) : "0.01";
+            
+            // Automatic Multiplier Adjuster
+            let multiplier = 1000; 
+            if (res.asset && res.asset.includes("BTC")) multiplier = 1;
+            if (res.asset && res.asset.includes("SOL")) multiplier = 10;
+            if (res.asset && res.asset.includes("ETH")) multiplier = 100;
+            
+            const lotSize = (riskAmount > 0) ? ((bal * (riskPct/100)) / (riskAmount * multiplier)).toFixed(3) : "0.01";
 
-            // Fixed Decimals for Mobile Clarity
-            document.getElementById('entText').innerText = res.entry.toFixed(3);
-            document.getElementById('slText').innerText = res.sl.toFixed(3);
-            document.getElementById('tpText').innerText = res.tp.toFixed(3);
+            document.getElementById('entText').innerText = res.entry.toFixed(2);
+            document.getElementById('slText').innerText = res.sl.toFixed(2);
+            document.getElementById('tpText').innerText = res.tp.toFixed(2);
             document.getElementById('lotText').innerText = lotSize;
             
             logicDisplay.innerText = res.logic;

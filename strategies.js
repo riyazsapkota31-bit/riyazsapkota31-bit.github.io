@@ -1,142 +1,144 @@
 /**
- * OMNI-BLACK v66.0 — DUAL-CORE HARD-LOCK
- * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- * ✓ Engine 1: gemini-2.5-flash-lite (Fact Extraction)
- * ✓ Engine 2: gemini-2.5-flash (Strategic Synthesis)
- * ✓ Logic: SMC, ICT, PA, DXY, SR, SD, Elliott, Wyckoff
- * ✓ Risk: 1:2 Min RR Hard-Lock
- * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * OMNI-REAL | PRECISION V11 (ULTRA-DYNAMIC ENGINE)
  */
 
-const ASSET_SPECS = {
-    CRYPTO: { div: 1 },
-    FOREX: { div: 10 },
-    COMMODITY: { div: 100 }
-};
+let API_KEY = localStorage.getItem('omni_api_v3') || "";
+const MODEL = "gemini-2.5-flash-lite"; 
 
-async function executeSurgicalScan() {
-    const btn = document.getElementById('goBtn');
-    const out = document.getElementById('outPanel');
-    const files = window.omniFiles.filter(f => f !== null);
-    
-    if (files.length < 2) return alert("UPLOAD MINIMUM 2 CHARTS.");
+window.onload = () => { if (API_KEY) lockUI(); };
 
-    setBtnState(btn, true, "STABILIZING BRIDGE...");
-    try {
-        const key = localStorage.getItem('omni_api_key');
-        if (!key) throw new Error("API Key Missing.");
+// --- UI DYNAMICS ---
+function markFile(idx) {
+    const box = document.getElementById(`box${idx}`);
+    const label = document.getElementById(`label${idx}`);
+    const icon = document.getElementById(`icon${idx}`);
 
-        const facts = [];
-        const labels = ["1H", "15M", "1M", "DXY"];
-
-        // STEP 1: FACT EXTRACTION (Using Flash-Lite for speed and high-volume data)
-        for (let i = 0; i < window.omniFiles.length; i++) {
-            if (window.omniFiles[i]) {
-                setBtnState(btn, true, `OPTIMIZING ${labels[i]}...`);
-                const compressed = await compressImage(window.omniFiles[i]);
-                
-                setBtnState(btn, true, `SCANNING ${labels[i]} (LITE)...`);
-                const data = await callAPI(key, "gemini-2.5-flash-lite", compressed, 
-                    `Extract ${labels[i]} Chart Data: Ticker, Price, Market Structure (BOS/CHoCH). 
-                    Return JSON: {"tf":"${labels[i]}", "ticker":"string", "price":number, "structure":"string", "type":"CRYPTO"|"FOREX"}`);
-                facts.push(data);
-            }
-        }
-
-        // STEP 2: STRATEGIC MATRIX (Using Flash for high-reasoning synthesis)
-        setBtnState(btn, true, "EXECUTING MATRIX (FLASH)...");
-        const signal = await callAPI(key, "gemini-2.5-flash", null, 
-            `You are OMNI-BLACK v66.0. Facts: ${JSON.stringify(facts)}.
-            Apply 8-Core Matrix: SMC, ICT, PA, DXY, SR, SD, Elliott, Wyckoff.
-            Enforce Min RR 1:2. Identify Entry, SL, TP. 
-            Return JSON: {"bias":"BUY"|"SELL"|"WATCHING", "entry":number, "sl":number, "tp":number, "strategy":string, "conf":number, "logic":string, "type":"CRYPTO"|"FOREX"}`);
-
-        renderOutput(signal);
-        out.classList.remove('hidden');
-    } catch (err) {
-        alert("TERMINAL ERROR: " + err.message);
-    } finally {
-        setBtnState(btn, false, "Execute Scan");
+    if (document.getElementById(`img${idx}`).files.length > 0) {
+        box.classList.add('has-file');
+        label.classList.add('hidden');
+        icon.classList.remove('hidden');
     }
 }
 
-async function callAPI(key, model, b64, prompt) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-    const payload = {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { response_mime_type: "application/json", temperature: 0.1 }
-    };
-
-    if (b64) {
-        payload.contents[0].parts.push({
-            inline_data: { mime_type: "image/jpeg", data: b64.split(',')[1] }
-        });
-    }
-
-    const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
-    const json = await res.json();
-    
-    // Null-safety gate for candidates
-    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error(`${model} Bridge Blocked. Check Key/Network.`);
-    
-    return JSON.parse(text);
+function lockUI() {
+    const input = document.getElementById('apiInput');
+    const lockBtn = document.getElementById('lockBtn');
+    const editBtn = document.getElementById('editBtn');
+    input.value = "••••••••••••••••••••";
+    input.disabled = true;
+    input.classList.add('opacity-40');
+    lockBtn.classList.add('hidden');
+    editBtn.classList.remove('hidden');
 }
 
-async function compressImage(file) {
-    return new Promise(res => {
+function enableEdit() {
+    const input = document.getElementById('apiInput');
+    const lockBtn = document.getElementById('lockBtn');
+    const editBtn = document.getElementById('editBtn');
+    input.value = "";
+    input.disabled = false;
+    input.classList.remove('opacity-40');
+    input.focus();
+    lockBtn.classList.remove('hidden');
+    editBtn.classList.add('hidden');
+}
+
+function saveApiKey() {
+    const val = document.getElementById('apiInput').value.trim();
+    if (!val || val.includes("•")) return alert("Invalid Terminal Key.");
+    localStorage.setItem('omni_api_v3', val);
+    API_KEY = val;
+    lockUI();
+    toggleDrawer();
+}
+
+function toggleDrawer() {
+    document.getElementById('sideDrawer').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('hidden');
+}
+
+function openSub(id) { document.getElementById(id).classList.add('active'); }
+function closeSub(id) { document.getElementById(id).classList.remove('active'); }
+
+// --- TRADING ENGINE ---
+async function fileToPart(file) {
+    return new Promise((resolve) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = (e) => {
-            const img = new Image();
-            img.src = e.target.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX = 1000;
-                const scale = MAX / img.width;
-                canvas.width = MAX;
-                canvas.height = img.height * scale;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                res(canvas.toBaseURL('image/jpeg', 0.6));
-            };
-        };
+        reader.onload = () => resolve({ inlineData: { mimeType: "image/jpeg", data: reader.result.split(',')[1] } });
     });
 }
 
-function renderOutput(data) {
-    const bTxt = document.getElementById('biasTxt');
-    bTxt.innerText = data.bias;
-    bTxt.className = `text-8xl font-black italic tracking-tighter ${data.bias === 'BUY' ? 'text-emerald-400' : data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500'}`;
+async function executeScan() {
+    if (!API_KEY) return alert("System Offline: Sync Terminal Key.");
     
-    document.getElementById('entVal').innerText = data.entry || '--';
-    document.getElementById('slVal').innerText = data.sl || '--';
-    document.getElementById('tpVal').innerText = data.tp || '--';
+    const btn = document.getElementById('scanBtn');
+    const resultBox = document.getElementById('resultBox');
+    const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
+    
+    if (files.some(f => !f)) return alert("Data Gap: Upload all 4 Market Tiers.");
 
-    const risk = Math.abs(data.entry - data.sl) || 0.0001;
-    let rr = (Math.abs(data.tp - data.entry) / risk).toFixed(1);
+    btn.innerText = "CALIBRATING INSTITUTIONAL BIAS...";
+    btn.disabled = true;
 
-    // Hard-Lock 1:2 RR enforcement
-    if (data.bias !== 'WATCHING' && rr < 2.0) {
-        rr = "2.0 (HARD-LOCK)";
-        data.tp = data.bias === 'BUY' ? data.entry + (risk * 2) : data.entry - (risk * 2);
-        document.getElementById('tpVal').innerText = data.tp.toFixed(5);
-    }
+    try {
+        const imageParts = await Promise.all(files.map(fileToPart));
+        const prompt = `System: High-Precision SMC Analyst. 
+        Analyze 4 charts for structural alignment. 
+        1. If HTF/LTF trend mismatch or low volatility, return: {"bias":"WAIT","logic":"Market in consolidation"}
+        2. If aligned, target logical liquidity pools. Min RR 1.5x, max 8.0x.
+        Return ONLY JSON: {"strategy":"INFINITY-V11","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"support":number,"resistance":number,"logic":"string"}`;
 
-    document.getElementById('logicSummary').innerHTML = `
-        <div class="flex gap-2 mb-3">
-            <span class="px-3 py-1 rounded-full text-[9px] font-black bg-cyan-500/20 text-cyan-400">${data.strategy}</span>
-            <span class="px-3 py-1 rounded-full text-[9px] font-black bg-white/10 text-white">RR 1:${rr}</span>
-            <span class="px-3 py-1 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400">${data.conf}/8 CONF</span>
-        </div>
-        <p class="leading-relaxed opacity-90">${data.logic}</p>`;
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] })
+        });
 
-    const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
-    const rsk = parseFloat(localStorage.getItem('omni_risk')) || 0;
-    if (bal && rsk && risk > 0) {
-        const s = ASSET_SPECS[data.type] || ASSET_SPECS.CRYPTO;
-        document.getElementById('lotVal').innerText = ((bal * (rsk/100)) / (risk * (s.div || 1))).toFixed(4);
+        const data = await response.json();
+        const res = JSON.parse(data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim());
+
+        if (res.bias === "WAIT") {
+            document.getElementById('actionText').innerText = "NO TRADE";
+            document.getElementById('actionText').className = "text-5xl font-extrabold italic mb-10 text-slate-500 glow-text";
+            document.getElementById('logicText').innerText = res.logic;
+            ['entText','slText','tpText','lotText','supText','resText'].forEach(id => document.getElementById(id).innerText = "---");
+            resultBox.classList.remove('hidden');
+            return;
+        }
+
+        // Logic & Math
+        const slDist = Math.abs(res.entry - res.sl);
+        const bal = parseFloat(document.getElementById('bal').value) || 10000;
+        const riskVal = bal * (parseFloat(document.getElementById('risk').value) / 100);
+        
+        let tpVal = res.tp;
+        if (Math.abs(res.entry - tpVal) / slDist < 1.5) {
+            tpVal = res.bias === 'BUY' ? res.entry + (slDist * 1.5) : res.entry - (slDist * 1.5);
+        }
+
+        const lotSize = slDist > 0 ? (riskVal / (slDist * 10)).toFixed(2) : "0.10";
+
+        // Update UI
+        document.getElementById('strategyType').innerText = res.strategy;
+        document.getElementById('actionText').innerText = res.bias;
+        document.getElementById('actionText').className = `text-5xl font-extrabold italic mb-10 glow-text ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
+        document.getElementById('entText').innerText = res.entry.toFixed(5);
+        document.getElementById('slText').innerText = res.sl.toFixed(5);
+        document.getElementById('tpText').innerText = tpVal.toFixed(5);
+        document.getElementById('lotText').innerText = Math.max(lotSize, 0.01);
+        document.getElementById('supText').innerText = res.support.toFixed(2);
+        document.getElementById('resText').innerText = res.resistance.toFixed(2);
+        document.getElementById('logicText').innerText = res.logic;
+
+        resultBox.classList.remove('hidden');
+        resultBox.scrollIntoView({ behavior: 'smooth' });
+
+    } catch (e) {
+        alert("TERMINAL ERROR: Check Key & Connection.");
+    } finally {
+        btn.innerText = "Perform Multi-Chart Scan";
+        btn.disabled = false;
     }
 }
 
-function setBtnState(b, d, t) { b.disabled = d; b.innerText = t; b.style.opacity = d ? "0.5" : "1"; }

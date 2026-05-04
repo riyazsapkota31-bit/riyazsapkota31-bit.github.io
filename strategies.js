@@ -1,133 +1,142 @@
 /**
- * OMNI-BLACK | VERSION 63.1 — FINAL STABLE
+ * OMNI-BLACK v66.0 — DUAL-CORE HARD-LOCK
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- * ✓ Model: gemini-2.5-flash (STRICT HARD-LOCK)
+ * ✓ Engine 1: gemini-2.5-flash-lite (Fact Extraction)
+ * ✓ Engine 2: gemini-2.5-flash (Strategic Synthesis)
  * ✓ Logic: SMC, ICT, PA, DXY, SR, SD, Elliott, Wyckoff
- * ✓ Risk: 1:2.5 Min RR Enforcement
- * ✓ Defense: Global Buffer & Null-Safety Gate
+ * ✓ Risk: 1:2 Min RR Hard-Lock
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  */
 
 const ASSET_SPECS = {
-    CRYPTO: { maxSL: 150, maxTP: 800, lotDivisor: 1 },
-    FOREX: { maxSL: 0.0010, maxTP: 0.0050, lotDivisor: 10 },
-    COMMODITY: { maxSL: 100, maxTP: 500, lotDivisor: 100 }
+    CRYPTO: { div: 1 },
+    FOREX: { div: 10 },
+    COMMODITY: { div: 100 }
 };
 
 async function executeSurgicalScan() {
     const btn = document.getElementById('goBtn');
     const out = document.getElementById('outPanel');
+    const files = window.omniFiles.filter(f => f !== null);
     
-    // Fix for 'reading 0' error: validate global buffer
-    const activeFiles = window.omniFiles ? window.omniFiles.filter(f => f !== null) : [];
-    if (activeFiles.length < 2) { 
-        showAlert("LACK OF CONFLUENCE: Upload 15M + 1M charts."); 
-        return; 
-    }
+    if (files.length < 2) return alert("UPLOAD MINIMUM 2 CHARTS.");
 
-    setButtonState(btn, true, "STABILIZING BRIDGE...");
+    setBtnState(btn, true, "STABILIZING BRIDGE...");
     try {
-        const apiKey = localStorage.getItem('omni_api_key');
-        if (!apiKey) throw new Error("API Key missing. Check Hardware Link.");
+        const key = localStorage.getItem('omni_api_key');
+        if (!key) throw new Error("API Key Missing.");
 
-        const b64Images = await Promise.all(
-            window.omniFiles.map(file => file ? toBase64(file) : Promise.resolve(null))
-        );
+        const facts = [];
+        const labels = ["1H", "15M", "1M", "DXY"];
 
-        const signal = await fetchGeminiAnalysis(apiKey, b64Images);
-        if (!signal || !signal.bias) throw new Error("Strategic Matrix returned null.");
+        // STEP 1: FACT EXTRACTION (Using Flash-Lite for speed and high-volume data)
+        for (let i = 0; i < window.omniFiles.length; i++) {
+            if (window.omniFiles[i]) {
+                setBtnState(btn, true, `OPTIMIZING ${labels[i]}...`);
+                const compressed = await compressImage(window.omniFiles[i]);
+                
+                setBtnState(btn, true, `SCANNING ${labels[i]} (LITE)...`);
+                const data = await callAPI(key, "gemini-2.5-flash-lite", compressed, 
+                    `Extract ${labels[i]} Chart Data: Ticker, Price, Market Structure (BOS/CHoCH). 
+                    Return JSON: {"tf":"${labels[i]}", "ticker":"string", "price":number, "structure":"string", "type":"CRYPTO"|"FOREX"}`);
+                facts.push(data);
+            }
+        }
+
+        // STEP 2: STRATEGIC MATRIX (Using Flash for high-reasoning synthesis)
+        setBtnState(btn, true, "EXECUTING MATRIX (FLASH)...");
+        const signal = await callAPI(key, "gemini-2.5-flash", null, 
+            `You are OMNI-BLACK v66.0. Facts: ${JSON.stringify(facts)}.
+            Apply 8-Core Matrix: SMC, ICT, PA, DXY, SR, SD, Elliott, Wyckoff.
+            Enforce Min RR 1:2. Identify Entry, SL, TP. 
+            Return JSON: {"bias":"BUY"|"SELL"|"WATCHING", "entry":number, "sl":number, "tp":number, "strategy":string, "conf":number, "logic":string, "type":"CRYPTO"|"FOREX"}`);
 
         renderOutput(signal);
-        out?.classList.remove('hidden');
-        out?.scrollIntoView({ behavior: 'smooth' });
+        out.classList.remove('hidden');
     } catch (err) {
-        showAlert("TERMINAL ERROR: " + err.message);
+        alert("TERMINAL ERROR: " + err.message);
     } finally {
-        setButtonState(btn, false, "EXECUTE COMMAND");
+        setBtnState(btn, false, "Execute Scan");
     }
 }
 
-async function fetchGeminiAnalysis(key, images, retryCount = 0) {
-    const model = "gemini-2.5-flash"; 
+async function callAPI(key, model, b64, prompt) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-    const inlineData = images.filter(Boolean).map(b => ({ 
-        inline_data: { mime_type: "image/jpeg", data: b.split(',')[1] } 
-    }));
+    const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { response_mime_type: "application/json", temperature: 0.1 }
+    };
 
-    try {
-        const p1Prompt = `Extract raw data: Ticker, price, 1H trend, 15M structure, 1M sweep/mss. Return JSON only: { "assetType": "CRYPTO"|"FOREX", "currentPrice": number, "readings": { "1H": string, "15M": object, "1M": object } }`;
-        const p1res = await fetch(url, { 
-            method: 'POST', 
-            body: JSON.stringify({ 
-                contents: [{ parts: [{ text: p1Prompt }, ...inlineData] }], 
-                generationConfig: { response_mime_type: "application/json", temperature: 0.1 } 
-            }) 
+    if (b64) {
+        payload.contents[0].parts.push({
+            inline_data: { mime_type: "image/jpeg", data: b64.split(',')[1] }
         });
-
-        const p1Data = await p1res.json();
-
-        // Null-safety gate to prevent Bridge Failure crash
-        if (!p1Data?.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("Bridge Failure");
-        const facts = JSON.parse(p1Data.candidates[0].content.parts[0].text);
-
-        const p2Prompt = `You are OMNI-BLACK Core. Facts: ${JSON.stringify(facts)}.
-        ENGINE: SMC, ICT, PA, DXY_CORR, SR, SD, ELLIOTT, WYCKOFF.
-        Min RR 1:2.5. Return JSON: { "bias": "BUY"|"SELL"|"WATCHING", "entry": number, "sl": number, "tp": number, "strategy": string, "confluences": number, "logic": string }`;
-        
-        const p2res = await fetch(url, { 
-            method: 'POST', 
-            body: JSON.stringify({ 
-                contents: [{ parts: [{ text: p2Prompt }] }], 
-                generationConfig: { response_mime_type: "application/json", temperature: 0.1 } 
-            }) 
-        });
-
-        const p2Data = await p2res.json();
-        if (!p2Data?.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("Strategic Timeout");
-        let sig = JSON.parse(p2Data.candidates[0].content.parts[0].text);
-
-        // RR 1:2.5 Floor Enforcement
-        if (sig.bias !== 'WATCHING') {
-            const risk = Math.abs(sig.entry - sig.sl) || 0.01;
-            const rr = Math.abs(sig.tp - sig.entry) / risk;
-            if (rr < 2.5) sig.tp = sig.bias === 'BUY' ? sig.entry + (risk * 2.5) : sig.entry - (risk * 2.5);
-        }
-        sig.assetType = facts.assetType;
-        return sig;
-    } catch (e) {
-        if (retryCount < 2) return fetchGeminiAnalysis(key, images, retryCount + 1);
-        throw e;
     }
+
+    const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
+    const json = await res.json();
+    
+    // Null-safety gate for candidates
+    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error(`${model} Bridge Blocked. Check Key/Network.`);
+    
+    return JSON.parse(text);
+}
+
+async function compressImage(file) {
+    return new Promise(res => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX = 1000;
+                const scale = MAX / img.width;
+                canvas.width = MAX;
+                canvas.height = img.height * scale;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                res(canvas.toBaseURL('image/jpeg', 0.6));
+            };
+        };
+    });
 }
 
 function renderOutput(data) {
     const bTxt = document.getElementById('biasTxt');
     bTxt.innerText = data.bias;
     bTxt.className = `text-8xl font-black italic tracking-tighter ${data.bias === 'BUY' ? 'text-emerald-400' : data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500'}`;
-    document.getElementById('entVal').innerText = data.entry?.toLocaleString() || '--';
-    document.getElementById('slVal').innerText = data.sl?.toLocaleString() || '--';
-    document.getElementById('tpVal').innerText = data.tp?.toLocaleString() || '--';
-
-    const risk = Math.abs(data.entry - data.sl) || 0;
-    const rr = risk > 0 ? (Math.abs(data.tp - data.entry) / risk).toFixed(1) : '0.0';
     
+    document.getElementById('entVal').innerText = data.entry || '--';
+    document.getElementById('slVal').innerText = data.sl || '--';
+    document.getElementById('tpVal').innerText = data.tp || '--';
+
+    const risk = Math.abs(data.entry - data.sl) || 0.0001;
+    let rr = (Math.abs(data.tp - data.entry) / risk).toFixed(1);
+
+    // Hard-Lock 1:2 RR enforcement
+    if (data.bias !== 'WATCHING' && rr < 2.0) {
+        rr = "2.0 (HARD-LOCK)";
+        data.tp = data.bias === 'BUY' ? data.entry + (risk * 2) : data.entry - (risk * 2);
+        document.getElementById('tpVal').innerText = data.tp.toFixed(5);
+    }
+
     document.getElementById('logicSummary').innerHTML = `
         <div class="flex gap-2 mb-3">
             <span class="px-3 py-1 rounded-full text-[9px] font-black bg-cyan-500/20 text-cyan-400">${data.strategy}</span>
             <span class="px-3 py-1 rounded-full text-[9px] font-black bg-white/10 text-white">RR 1:${rr}</span>
-            <span class="px-3 py-1 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400">${data.confluences}/8 CONF</span>
+            <span class="px-3 py-1 rounded-full text-[9px] font-black bg-emerald-500/20 text-emerald-400">${data.conf}/8 CONF</span>
         </div>
-        <p class="text-[13px] text-white/80 leading-relaxed uppercase font-bold">${data.logic}</p>`;
+        <p class="leading-relaxed opacity-90">${data.logic}</p>`;
 
     const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
     const rsk = parseFloat(localStorage.getItem('omni_risk')) || 0;
     if (bal && rsk && risk > 0) {
-        const sp = ASSET_SPECS[data.assetType] || ASSET_SPECS.CRYPTO;
-        const size = (bal * (rsk / 100)) / (risk * sp.lotDivisor);
-        document.getElementById('lotVal').innerText = size.toFixed(4);
+        const s = ASSET_SPECS[data.type] || ASSET_SPECS.CRYPTO;
+        document.getElementById('lotVal').innerText = ((bal * (rsk/100)) / (risk * (s.div || 1))).toFixed(4);
     }
 }
 
-function setButtonState(btn, d, t) { if(btn) { btn.disabled = d; btn.innerText = t; btn.style.opacity = d ? '0.6' : '1'; } }
-function toBase64(f) { return new Promise(r => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result); }); }
-function showAlert(m) { alert(m); }
+function setBtnState(b, d, t) { b.disabled = d; b.innerText = t; b.style.opacity = d ? "0.5" : "1"; }

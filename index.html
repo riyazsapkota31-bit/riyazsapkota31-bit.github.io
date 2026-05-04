@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMNI-BLACK | VERSION 51.7</title>
+    <title>OMNI-BLACK | V52.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -13,7 +13,7 @@
         .terminal-border { border: 1px solid rgba(255,255,255,0.08); background: rgba(10, 15, 25, 0.7); backdrop-filter: blur(20px); }
         .drawer { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #0a0f1b; transition: 0.5s ease; z-index: 1000; border-left: 1px solid rgba(255,255,255,0.1); }
         .drawer.open { right: 0; }
-        .chart-box { aspect-ratio: 1/1; border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 2rem; transition: all 0.4s ease; background: rgba(255,255,255,0.02); }
+        .chart-box { aspect-ratio: 1/1; border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 2rem; transition: all 0.4s ease; background: rgba(255,255,255,0.02); cursor: pointer; }
         .chart-box.has-file { border: 2px solid var(--accent); background: rgba(99, 102, 241, 0.1); }
         .scan-btn { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); transition: all 0.3s ease; }
         .glow-text { text-shadow: 0 0 25px currentColor; }
@@ -24,7 +24,7 @@
     <header class="flex justify-between items-center mb-10">
         <div>
             <h1 class="text-2xl font-extrabold italic text-white">OMNI—BLACK</h1>
-            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Surgical Protocol V51.7</p>
+            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Surgical Protocol V52.5</p>
         </div>
         <button onclick="toggleDrawer()" class="w-12 h-12 terminal-border rounded-2xl flex items-center justify-center text-slate-400">
             <i class="fa-solid fa-sliders text-lg"></i>
@@ -61,11 +61,11 @@
     <div id="resultBox" class="hidden mt-8 terminal-border rounded-[2.5rem] p-8 bg-black/40 border border-white/5">
         <div class="flex justify-between items-center mb-8">
             <div class="flex flex-col">
-                <span id="strategyType" class="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase">8-CORE AGGREGATOR</span>
+                <span class="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase">8-CORE AGGREGATOR</span>
                 <span id="tradeTypeLabel" class="text-[9px] font-bold text-slate-500 uppercase mt-1">---</span>
             </div>
             <div class="text-right">
-                <p id="logicText" class="text-[11px] text-slate-400 italic max-w-[180px] leading-tight">Waiting for data...</p>
+                <p id="logicText" class="text-[11px] text-slate-400 italic max-w-[180px] leading-tight">Waiting...</p>
             </div>
         </div>
         
@@ -81,22 +81,22 @@
         <div class="grid grid-cols-3 gap-0 border-y border-white/5 mb-8">
             <div class="py-8 text-center border-r border-white/5">
                 <label class="text-[9px] uppercase text-slate-500 font-black block mb-2 tracking-widest">Entry</label>
-                <span id="entText" class="text-xl font-extrabold text-white">0.0000</span>
+                <span id="entText" class="text-xl font-extrabold text-white">0.00</span>
             </div>
             <div class="py-8 text-center border-r border-white/5">
                 <label class="text-[9px] uppercase text-rose-500 font-black block mb-2 tracking-widest">Stop Loss</label>
-                <span id="slText" class="text-xl font-extrabold text-rose-500">0.0000</span>
+                <span id="slText" class="text-xl font-extrabold text-rose-500">0.00</span>
             </div>
             <div class="py-8 text-center">
                 <label class="text-[9px] uppercase text-emerald-500 font-black block mb-2 tracking-widest">Take Profit</label>
-                <span id="tpText" class="text-xl font-extrabold text-emerald-500">0.0000</span>
+                <span id="tpText" class="text-xl font-extrabold text-emerald-500">0.00</span>
             </div>
         </div>
 
         <div class="grid grid-cols-2 gap-6 items-center">
             <div class="bg-indigo-500/5 border border-indigo-500/10 p-6 rounded-[2rem]">
                 <label class="text-[9px] uppercase text-indigo-400 font-black mb-1 block tracking-widest">Calculated Lot</label>
-                <span id="lotText" class="text-4xl font-black text-white">0.00</span>
+                <span id="lotText" class="text-4xl font-black text-white">WAITING</span>
             </div>
             <div class="space-y-3 px-2">
                 <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Support</span><span id="supText" class="text-[12px] font-bold text-white">---</span></div>
@@ -112,13 +112,18 @@
         <h3 class="text-xs font-black uppercase text-indigo-400 mb-10">System Terminal</h3>
         <div class="space-y-6">
             <div class="bg-white/5 p-6 rounded-[2rem]">
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Gemini Key (v1beta)</label>
+                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Hardware Link (API)</label>
                 <input type="password" id="apiInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-4 outline-none">
-                <button id="lockBtn" onclick="saveApiKey()" class="scan-btn w-full py-3 rounded-xl font-bold text-[10px] uppercase">Lock Key</button>
-            </div>
-            <div class="space-y-4">
-                <input type="number" id="bal" placeholder="Balance" class="w-full bg-white/5 border border-white/10 rounded-xl p-3">
-                <input type="number" id="risk" placeholder="Risk %" class="w-full bg-white/5 border border-white/10 rounded-xl p-3">
+                
+                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Account Settings</label>
+                <div class="space-y-4 mb-6">
+                    <input type="number" id="bal" placeholder="Balance (e.g. 7000)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none">
+                    <input type="number" id="risk" placeholder="Risk % (e.g. 0.5)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none">
+                </div>
+
+                <button id="lockBtn" onclick="saveSystemSettings()" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-white">
+                    Lock Surgical Params
+                </button>
             </div>
         </div>
     </div>
@@ -127,7 +132,14 @@
     <script>
         function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
         function markFile(i) { const b = document.getElementById('box'+i); b.classList.add('has-file'); document.getElementById('label'+i).classList.add('hidden'); document.getElementById('icon'+i).classList.remove('hidden'); files[i] = document.getElementById('img'+i).files[0]; }
-        function saveApiKey() { localStorage.setItem('omni_api_key', document.getElementById('apiInput').value); localStorage.setItem('omni_balance', document.getElementById('bal').value); localStorage.setItem('omni_risk', document.getElementById('risk').value); toggleDrawer(); }
+        
+        function saveSystemSettings() { 
+            localStorage.setItem('omni_api_key', document.getElementById('apiInput').value); 
+            localStorage.setItem('omni_balance', document.getElementById('bal').value); 
+            localStorage.setItem('omni_risk', document.getElementById('risk').value); 
+            alert("PARAMETERS SECURED: Memory updated.");
+            toggleDrawer(); 
+        }
     </script>
 </body>
 </html>

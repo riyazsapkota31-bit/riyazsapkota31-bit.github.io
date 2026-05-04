@@ -1,161 +1,159 @@
-/** * OMNI-REAL V18 | ULTIMATE SURGICAL CONFLUENCE
- * STRATEGIES: SMC, ICT, VSA, Price Action, Wyckoff
- * FEATURES: Auto-Asset Detection, Profit Prioritization, Sentry POI Mode
+/**
+ * OMNI-BLACK | VERSION 51.7 (THE FINAL DIRECTIVE)
+ * Core: 8-Core Aggregator (SMC, ICT, VSA, PA, Wyckoff, Fib, Mean Rev, Elliott)
+ * Risk: Hard 1:2 RR Gate | XM Broker Normalization
+ * AI: Gemini 2.5 Flash | 10-15 Word Logic Muzzle
  */
 
-let API_KEY = localStorage.getItem('omni_api_v3') || "";
-const MODEL = "gemini-2.5-flash-lite"; 
+let files = [null, null, null, null];
 
-window.onload = () => {
-    if (API_KEY) lockUI();
-    document.getElementById('bal').value = localStorage.getItem('omni_bal') || 10000;
-    document.getElementById('risk').value = localStorage.getItem('omni_risk') || 1.0;
-};
-
-// --- UI HANDLERS ---
-function markFile(idx) {
-    document.getElementById(`box${idx}`).classList.add('has-file');
-    document.getElementById(`label${idx}`).classList.add('hidden');
-    document.getElementById(`icon${idx}`).classList.remove('hidden');
-}
-
-function lockUI() {
-    const input = document.getElementById('apiInput');
-    input.value = "••••••••••••••••••••";
-    input.disabled = true;
-    document.getElementById('lockBtn').classList.add('hidden');
-    document.getElementById('editBtn').classList.remove('hidden');
-}
-
-function enableEdit() {
-    const input = document.getElementById('apiInput');
-    input.value = "";
-    input.disabled = false;
-    document.getElementById('lockBtn').classList.remove('hidden');
-    document.getElementById('editBtn').classList.add('hidden');
-}
-
-function saveApiKey() {
-    const val = document.getElementById('apiInput').value.trim();
-    if (!val) return alert("System requires Terminal Key.");
-    localStorage.setItem('omni_api_v3', val);
-    localStorage.setItem('omni_bal', document.getElementById('bal').value);
-    localStorage.setItem('omni_risk', document.getElementById('risk').value);
-    API_KEY = val;
-    lockUI();
-    toggleDrawer();
-}
-
-function toggleDrawer() {
-    document.getElementById('sideDrawer').classList.toggle('open');
-    document.getElementById('overlay').classList.toggle('hidden');
-}
-
-async function fileToPart(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve({ inlineData: { mimeType: "image/jpeg", data: reader.result.split(',')[1] } });
-    });
-}
-
-// --- CORE SURGICAL ENGINE ---
-async function executeScan() {
-    if (!API_KEY) return alert("System Offline: Sync Terminal Key.");
+async function executeSurgicalScan() {
+    const btn = document.getElementById('goBtn');
+    const out = document.getElementById('outPanel');
     
-    const btn = document.getElementById('scanBtn');
-    const resultBox = document.getElementById('resultBox');
-    const files = [0,1,2,3].map(i => document.getElementById(`img${i}`).files[0]);
-    
-    if (files.some(f => !f)) return alert("Data Gap: 4 Tier Charts Required.");
+    // Multi-Timeframe Requirement (Min 2 charts + DXY recommended)
+    if (files.filter(f => f).length < 2) {
+        alert("UPLOAD ERROR: Surgical confluence requires at least 2 timeframe layers.");
+        return;
+    }
 
-    btn.innerText = "ALGO-CONFLUENCE ACTIVE...";
-    btn.disabled = true;
+    if (btn) { btn.innerText = "COUNCIL OF 8 ANALYZING..."; btn.disabled = true; }
 
     try {
-        const imageParts = await Promise.all(files.map(fileToPart));
+        const apiKey = localStorage.getItem('omni_api_key');
+        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key in settings.");
 
-        const prompt = `System: Institutional Quantitative Analyst. 
-        1. ASSET: Detect the ticker from chart text (e.g., BTCUSDT, SOLUSDT).
-        2. CONFLUENCE: Evaluate using SMC, ICT, VSA, Price Action, and Wyckoff.
-        3. MODE: Prioritize high-confluence Day Trades (15m+) over Scalps for maximum profit.
-        4. SENTRY: If market is sideways/choppy, return bias: "WAIT". Provide "poi" (Price of Interest) and explain why in 10-15 words.
-        5. RISK: Stop Loss MUST be structural (beyond sweep high/lows). 
+        const b64Images = await Promise.all(
+            files.map(file => file ? toBase64(file) : Promise.resolve(null))
+        );
+
+        const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
-        Return ONLY RAW JSON: {"asset":"STRING","type":"SCALP|DAY_TRADE","bias":"BUY|SELL|WAIT","entry":number,"sl":number,"tp":number,"poi":number,"conf":"X/8","logic":"string"}`;
+        // --- HARD-CODED RR & POI LOGIC GATE ---
+        const risk = Math.abs(analysis.entry - analysis.sl);
+        const reward = Math.abs(analysis.tp - analysis.entry);
+        const currentRR = reward / risk;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }],
-                safetySettings: [{ category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }]
-            })
-        });
-
-        const data = await response.json();
-        if (data.error) throw new Error(data.error.message);
-
-        const rawResponse = data.candidates[0].content.parts[0].text;
-        let res = JSON.parse(rawResponse.match(/\{[\s\S]*\}/)[0]);
-
-        resultBox.classList.remove('hidden');
-        
-        const stratType = document.getElementById('strategyType');
-        const actionDisplay = document.getElementById('actionText');
-        const logicDisplay = document.getElementById('logicText');
-
-        // Asset-Aware Header
-        stratType.innerText = `${res.asset || "CRYPTO"} | ${res.type || "MARKET"} | ${res.conf || "0/8"} CONF`;
-
-        if (res.bias === "WAIT") {
-            // SIDELINES MODE
-            actionDisplay.innerText = "WAIT";
-            actionDisplay.className = "text-8xl font-black italic tracking-tighter text-amber-500 opacity-80";
-            
-            document.getElementById('tradeDetails').classList.add('hidden');
-            document.getElementById('poiZone').classList.remove('hidden');
-            document.getElementById('poiLevel').innerText = res.poi ? res.poi.toFixed(2) : "WATCHING";
-            
-            logicDisplay.innerText = res.logic;
-            logicDisplay.className = "text-[10px] text-amber-400 italic max-w-[200px] text-right leading-tight";
-        } else {
-            // SURGICAL TRADE MODE
-            document.getElementById('poiZone').classList.add('hidden');
-            document.getElementById('tradeDetails').classList.remove('hidden');
-            
-            actionDisplay.innerText = res.bias;
-            actionDisplay.className = `text-8xl font-black italic tracking-tighter ${res.bias === 'BUY' ? 'text-emerald-400' : 'text-rose-500'}`;
-            
-            // Asset-Aware Lot Calculation
-            const riskAmount = Math.abs(res.entry - res.sl);
-            const bal = parseFloat(document.getElementById('bal').value);
-            const riskPct = parseFloat(document.getElementById('risk').value);
-            
-            // Automatic Multiplier Adjuster
-            let multiplier = 1000; 
-            if (res.asset && res.asset.includes("BTC")) multiplier = 1;
-            if (res.asset && res.asset.includes("SOL")) multiplier = 10;
-            if (res.asset && res.asset.includes("ETH")) multiplier = 100;
-            
-            const lotSize = (riskAmount > 0) ? ((bal * (riskPct/100)) / (riskAmount * multiplier)).toFixed(3) : "0.01";
-
-            document.getElementById('entText').innerText = res.entry.toFixed(2);
-            document.getElementById('slText').innerText = res.sl.toFixed(2);
-            document.getElementById('tpText').innerText = res.tp.toFixed(2);
-            document.getElementById('lotText').innerText = lotSize;
-            
-            logicDisplay.innerText = res.logic;
-            logicDisplay.className = "text-[10px] text-slate-400 italic max-w-[200px] text-right leading-tight";
+        // Force WAIT if RR is below 1:2 or setup is low conviction
+        if (analysis.bias !== "WATCHING" && currentRR < 2) {
+            analysis.bias = "WATCHING";
+            analysis.tradeType = "DISCARDED";
+            analysis.logic = "Setup downgraded to WATCHING; Risk-to-Reward ratio calculated below 1:2 threshold.";
+            if (!analysis.poi) analysis.poi = analysis.entry; // Set entry as POI for later re-scan
         }
 
-        resultBox.scrollIntoView({ behavior: 'smooth' });
+        renderOutput(analysis);
+        
+        if (out) {
+            out.classList.remove('hidden');
+            out.scrollIntoView({ behavior: 'smooth' });
+        }
 
-    } catch (e) {
-        console.error("OMNI-ERROR:", e);
-        alert("TERMINAL ERROR: " + e.message);
+    } catch (err) {
+        // DEFENSIVE: Undefined/Null Shield (Prevents "reading '0'" alert)
+        console.error("System Crash Prevented:", err);
+        if (!err.message.includes('undefined')) alert("ALERT: " + err.message);
     } finally {
-        btn.innerText = "EXECUTE COMMAND";
-        btn.disabled = false;
+        if (btn) { btn.innerText = "EXECUTE COMMAND"; btn.disabled = false; }
     }
+}
+
+async function fetchGeminiAnalysis(key, images) {
+    const model = "gemini-2.5-flash"; 
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    
+    const prompt = `
+        PROTOCOL: OMNI_V51_7_FINAL
+        STRATEGY: 8-CORE AGGREGATOR (SMC, ICT, VSA, Price Action, Wyckoff, Fib, Mean Rev, Elliott)
+        
+        MANDATE:
+        1. SELECTION: Evaluate Scalp vs Day Trade. Prioritize the one with HIGHEST profit/RR.
+        2. ACCURACY: Grade A/B+ only. Read raw Y-axis and X-axis OCR data from XM Terminal.
+        3. DXY: Analyze Box 4 (DXY) for trend confirmation. Avoid Dollar Traps.
+        4. STRUCTURE: Detect FVG, MSS, Liquidity Sweeps, and Order Blocks.
+        5. LOGIC: Exactly 10-15 words. Describe institutional footprint.
+        6. JSON: Strictly return JSON only. No greetings.
+
+        RETURN FORMAT:
+        {
+          "assetName": "STRING",
+          "tradeType": "SCALP"|"DAY TRADE",
+          "bias": "BUY"|"SELL"|"WATCHING",
+          "entry": number, "sl": number, "tp": number, "poi": number,
+          "logic": "10-15 WORDS ONLY"
+        }
+    `;
+
+    const inlineData = images.filter(img => img).map(b => ({ 
+        inline_data: { mime_type: "image/jpeg", data: b.split(',')[1] } 
+    }));
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }, ...inlineData] }],
+            generationConfig: { response_mime_type: "application/json", temperature: 0.15 }
+        })
+    });
+
+    const data = await response.json();
+    // DEFENSIVE: Check for undefined response candidate
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        throw new Error("Neural link failed. API returned empty candidate.");
+    }
+    
+    return JSON.parse(data.candidates[0].content.parts[0].text);
+}
+
+function renderOutput(data) {
+    const ui = (id) => document.getElementById(id);
+    const update = (id, val) => { if (ui(id)) ui(id).innerText = val; };
+
+    // --- BIAS UI SHIELD ---
+    const bEl = ui('biasTxt');
+    if (bEl) {
+        bEl.innerText = data.bias;
+        bEl.className = `text-8xl font-black italic tracking-tighter ${
+            data.bias === 'BUY' ? 'text-emerald-400' : 
+            data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500'
+        }`;
+    }
+
+    // --- DATA DISPLAY ---
+    update('entVal', data.entry || "--");
+    update('slVal', data.sl || "--");
+    update('tpVal', data.tp || "--");
+    update('poiVal', data.poi || "NONE");
+
+    const logicBox = ui('logicSummary');
+    if (logicBox) {
+        logicBox.innerHTML = `<b class="text-cyan-400 text-xs">[${data.tradeType}]</b><br>${data.logic}`;
+    }
+
+    // --- XM-CALIBRATED LOT MATH ---
+    const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
+    const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
+    
+    if (bal && riskPct && data.entry && data.sl) {
+        const riskAmount = bal * (riskPct / 100);
+        const priceDiff = Math.abs(data.entry - data.sl);
+        if (priceDiff > 0) {
+            // Standard Lot Calculation
+            let lotSize = riskAmount / priceDiff;
+            // Handle common XM symbol normalization (Forex vs Crypto)
+            if (data.assetName.includes("USD") && priceDiff < 1) lotSize /= 10; 
+            update('lotVal', lotSize.toFixed(4));
+        }
+    } else {
+        update('lotVal', "0.0000");
+    }
+}
+
+function toBase64(file) {
+    return new Promise((res) => {
+        const r = new FileReader();
+        r.readAsDataURL(file);
+        r.onload = () => res(r.result);
+    });
 }

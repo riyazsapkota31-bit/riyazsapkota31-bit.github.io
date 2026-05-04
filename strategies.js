@@ -1,7 +1,7 @@
 /**
- * OMNI-BLACK | VERSION 51.8 (THE ASSET-AWARE DIRECTIVE)
- * Core: 8-Core Aggregator + Dynamic Asset Recognition
- * Risk: Hard 1:2 RR Gate | Dynamic Contract Normalization
+ * OMNI-BLACK | VERSION 52.0 (THE SURGICAL POI PROTOCOL)
+ * Core: 8-Core Aggregator + Proximity Logic
+ * Mandate: Asset Recognition + 1:2 RR Gate + POI Protocol
  */
 
 let files = [null, null, null, null];
@@ -15,7 +15,7 @@ async function executeSurgicalScan() {
         return;
     }
 
-    if (btn) { btn.innerText = "DETECTING ASSET & ANALYZING..."; btn.disabled = true; }
+    if (btn) { btn.innerText = "COUNCIL OF 8 ANALYZING..."; btn.disabled = true; }
 
     try {
         const apiKey = localStorage.getItem('omni_api_key');
@@ -27,6 +27,16 @@ async function executeSurgicalScan() {
 
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
+        // --- PROXIMITY GATE: IF PRICE IS TOO FAR, FORCE WATCHING ---
+        const priceToEntryGap = Math.abs(analysis.currentPrice - analysis.entry);
+        const allowedGap = Math.abs(analysis.entry - analysis.sl) * 0.5; // Only 50% risk-gap allowed
+
+        if (priceToEntryGap > allowedGap && analysis.bias !== "WATCHING") {
+            analysis.bias = "WATCHING";
+            analysis.logic = `Price is ${priceToEntryGap.toFixed(2)} pts away from POI. Await retracement to ${analysis.entry} for high-probability entry.`;
+            analysis.poi = analysis.entry;
+        }
+
         // --- HARD-CODED RR CALCULATION ---
         const riskPoints = Math.abs(analysis.entry - analysis.sl);
         const rewardPoints = Math.abs(analysis.tp - analysis.entry);
@@ -35,9 +45,8 @@ async function executeSurgicalScan() {
         // --- 1:2 RR HARD-GATE ---
         if (analysis.bias !== "WATCHING" && currentRR < 2) {
             analysis.bias = "WATCHING";
-            analysis.tradeType = "RR INVALID";
-            analysis.logic = "Setup downgraded; Risk-to-Reward ratio below 1:2 threshold.";
-            if (!analysis.poi) analysis.poi = analysis.entry; 
+            analysis.logic = "RR ratio below 1:2 threshold. Setup invalidated for safety.";
+            analysis.poi = analysis.entry;
         }
 
         renderOutput(analysis, currentRR);
@@ -59,21 +68,21 @@ async function fetchGeminiAnalysis(key, images) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V51_8_ASSET_DETECT
+        PROTOCOL: OMNI_V52_SURGICAL
         MANDATE:
-        1. ASSET: Look at the top-left corner text of the charts. Identify if it is GOLD (XAU), BTC, ETH, or a Forex pair. Return exact ticker.
-        2. STRATEGY: 8-Core Aggregator (SMC, ICT, VSA, Wyckoff).
-        3. ACCURACY: Grade A precision. Read raw Y-axis for price coordinates.
-        4. LOGIC: Exactly 10-15 words on institutional footprint.
-        5. JSON ONLY.
+        1. ASSET: Read top-left corner (GOLD/XAU, BTC, etc).
+        2. PRICE: Identify CURRENT market price exactly.
+        3. POI: If price is not at a Liquidity Sweep or Order Block, set BIAS to "WATCHING".
+        4. ACCURACY: Precision Grade A. JSON ONLY.
 
         RETURN FORMAT:
         {
           "assetName": "STRING",
+          "currentPrice": number,
           "tradeType": "SCALP"|"DAY TRADE",
           "bias": "BUY"|"SELL"|"WATCHING",
           "entry": number, "sl": number, "tp": number, "poi": number,
-          "logic": "STRING",
+          "logic": "10-15 WORDS ONLY",
           "sup": "STRING", "res": "STRING"
         }
     `;
@@ -122,23 +131,22 @@ function renderOutput(data, currentRR) {
     const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
     const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
     
-    if (bal && riskPct && data.entry && data.sl) {
+    if (bal && riskPct && data.entry && data.sl && data.bias !== "WATCHING") {
         const riskCash = bal * (riskPct / 100);
         const priceDiff = Math.abs(data.entry - data.sl);
         const asset = data.assetName.toUpperCase();
         
         let lotSize = riskCash / priceDiff;
 
-        // Apply Logic based on Asset Detection
         if (asset.includes("GOLD") || asset.includes("XAU")) {
-            lotSize /= 100; // Normalizes Gold Contract (1 Lot = 100oz)
-        } else if (asset.includes("BTC") || asset.includes("ETH")) {
-            // Standard 1:1 Crypto math
+            lotSize /= 100; // Gold Normalization
         } else if (priceDiff < 1) {
             lotSize /= 10; // Forex Normalization
         }
 
         update('lotText', lotSize.toFixed(3));
+    } else {
+        update('lotText', "WAITING");
     }
 
     const pz = ui('poiZone');
@@ -147,13 +155,12 @@ function renderOutput(data, currentRR) {
 
 // --- AUTO-LOAD SAVED HARDWARE LINK ---
 window.addEventListener('DOMContentLoaded', () => {
-    const savedKey = localStorage.getItem('omni_api_key');
-    const savedBal = localStorage.getItem('omni_balance');
-    const savedRisk = localStorage.getItem('omni_risk');
-
-    if (savedKey) document.getElementById('apiInput').value = savedKey;
-    if (savedBal) document.getElementById('bal').value = savedBal;
-    if (savedRisk) document.getElementById('risk').value = savedRisk;
+    const keys = ['omni_api_key', 'omni_balance', 'omni_risk'];
+    const ids = ['apiInput', 'bal', 'risk'];
+    keys.forEach((k, i) => {
+        const val = localStorage.getItem(k);
+        if (val) document.getElementById(ids[i]).value = val;
+    });
 });
 
 function toBase64(file) {

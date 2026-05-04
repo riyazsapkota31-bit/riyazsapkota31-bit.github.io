@@ -1,11 +1,10 @@
 /**
- * OMNI-BLACK | VERSION 63.0 — ULTIMATE STABLE
+ * OMNI-BLACK | VERSION 63.1 — FINAL STABLE
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * ✓ Model: gemini-2.5-flash (STRICT HARD-LOCK)
- * ✓ 8-Strategy Matrix: SMC, ICT, PA, DXY, SR, SD, Elliott, Wyckoff
- * ✓ Frequency Boost: 1M Displacement + Sweep triggers
- * ✓ RR Matrix: 1:2.5 Min Floor | 1:8 Structural Target
- * ✓ Fix: Global Buffer Synchronization & Null-Pointer Defense
+ * ✓ Logic: SMC, ICT, PA, DXY, SR, SD, Elliott, Wyckoff
+ * ✓ Risk: 1:2.5 Min RR Enforcement
+ * ✓ Defense: Global Buffer & Null-Safety Gate
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  */
 
@@ -19,6 +18,7 @@ async function executeSurgicalScan() {
     const btn = document.getElementById('goBtn');
     const out = document.getElementById('outPanel');
     
+    // Fix for 'reading 0' error: validate global buffer
     const activeFiles = window.omniFiles ? window.omniFiles.filter(f => f !== null) : [];
     if (activeFiles.length < 2) { 
         showAlert("LACK OF CONFLUENCE: Upload 15M + 1M charts."); 
@@ -35,7 +35,6 @@ async function executeSurgicalScan() {
         );
 
         const signal = await fetchGeminiAnalysis(apiKey, b64Images);
-        
         if (!signal || !signal.bias) throw new Error("Strategic Matrix returned null.");
 
         renderOutput(signal);
@@ -57,25 +56,37 @@ async function fetchGeminiAnalysis(key, images, retryCount = 0) {
 
     try {
         const p1Prompt = `Extract raw data: Ticker, price, 1H trend, 15M structure, 1M sweep/mss. Return JSON only: { "assetType": "CRYPTO"|"FOREX", "currentPrice": number, "readings": { "1H": string, "15M": object, "1M": object } }`;
-        const p1res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: p1Prompt }, ...inlineData] }], generationConfig: { response_mime_type: "application/json", temperature: 0.1 } }) });
+        const p1res = await fetch(url, { 
+            method: 'POST', 
+            body: JSON.stringify({ 
+                contents: [{ parts: [{ text: p1Prompt }, ...inlineData] }], 
+                generationConfig: { response_mime_type: "application/json", temperature: 0.1 } 
+            }) 
+        });
+
         const p1Data = await p1res.json();
 
-        if (!p1Data.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("Bridge Failure");
+        // Null-safety gate to prevent Bridge Failure crash
+        if (!p1Data?.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("Bridge Failure");
         const facts = JSON.parse(p1Data.candidates[0].content.parts[0].text);
 
         const p2Prompt = `You are OMNI-BLACK Core. Facts: ${JSON.stringify(facts)}.
-        1. ENGINE: SMC, ICT, PA, DXY_CORR, SR, SD, ELLIOTT, WYCKOFF.
-        2. SCALPING (1M): If Sweep + Displacement occurs, trigger Aggressive Scalp.
-        3. DAY TRADING (15M): If 1M is noise, pivot to Structural POI on 15M.
-        4. RR SCALING: Min 1:2.5, Max 1:8. 
-        Return JSON: { "bias": "BUY"|"SELL"|"WATCHING", "entry": number, "sl": number, "tp": number, "strategy": string, "confluences": number, "logic": string }`;
+        ENGINE: SMC, ICT, PA, DXY_CORR, SR, SD, ELLIOTT, WYCKOFF.
+        Min RR 1:2.5. Return JSON: { "bias": "BUY"|"SELL"|"WATCHING", "entry": number, "sl": number, "tp": number, "strategy": string, "confluences": number, "logic": string }`;
         
-        const p2res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: p2Prompt }] }], generationConfig: { response_mime_type: "application/json", temperature: 0.1 } }) });
-        const p2Data = await p2res.json();
+        const p2res = await fetch(url, { 
+            method: 'POST', 
+            body: JSON.stringify({ 
+                contents: [{ parts: [{ text: p2Prompt }] }], 
+                generationConfig: { response_mime_type: "application/json", temperature: 0.1 } 
+            }) 
+        });
 
-        if (!p2Data.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("Strategic Timeout");
+        const p2Data = await p2res.json();
+        if (!p2Data?.candidates?.[0]?.content?.parts?.[0]?.text) throw new Error("Strategic Timeout");
         let sig = JSON.parse(p2Data.candidates[0].content.parts[0].text);
 
+        // RR 1:2.5 Floor Enforcement
         if (sig.bias !== 'WATCHING') {
             const risk = Math.abs(sig.entry - sig.sl) || 0.01;
             const rr = Math.abs(sig.tp - sig.entry) / risk;
@@ -83,7 +94,6 @@ async function fetchGeminiAnalysis(key, images, retryCount = 0) {
         }
         sig.assetType = facts.assetType;
         return sig;
-
     } catch (e) {
         if (retryCount < 2) return fetchGeminiAnalysis(key, images, retryCount + 1);
         throw e;
@@ -94,7 +104,6 @@ function renderOutput(data) {
     const bTxt = document.getElementById('biasTxt');
     bTxt.innerText = data.bias;
     bTxt.className = `text-8xl font-black italic tracking-tighter ${data.bias === 'BUY' ? 'text-emerald-400' : data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-500'}`;
-    
     document.getElementById('entVal').innerText = data.entry?.toLocaleString() || '--';
     document.getElementById('slVal').innerText = data.sl?.toLocaleString() || '--';
     document.getElementById('tpVal').innerText = data.tp?.toLocaleString() || '--';

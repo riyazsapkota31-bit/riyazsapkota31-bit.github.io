@@ -1,6 +1,6 @@
 /**
- * OMNI-BLACK | VERSION 53.0 (STRATEGIC PRIORITY & SAFETY)
- * Mandate: Prioritize Safe Day Trades over Risky Scalps + Zero-Undefined UI
+ * OMNI-BLACK | VERSION 63.0 (ACCURACY & UPGRADE PRIORITY)
+ * Mandate: High-Accuracy Scalp + Day Trade Morphing Logic
  */
 
 let files = [null, null, null, null];
@@ -27,43 +27,51 @@ async function executeSurgicalScan() {
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
         // --- 1. MATHEMATICAL SUITE ---
-        const riskPoints = Math.abs(analysis.entry - analysis.sl) || 0.0001; // Avoid div by zero
+        const riskPoints = Math.abs(analysis.entry - analysis.sl) || 0.0001;
         const rewardPoints = Math.abs(analysis.tp - analysis.entry);
-        const currentRR = rewardPoints / riskPoints;
+        let currentRR = rewardPoints / riskPoints;
         const priceToEntryGap = Math.abs(analysis.currentPrice - analysis.entry);
         const allowedGap = riskPoints * 0.5;
 
-        // --- 2. STRATEGIC PRIORITY ENGINE ---
+        // --- 2. SURGICAL UPGRADE & ACCURACY ENGINE ---
         
-        // DEFAULT: Start by checking if any crucial data is missing
         if (!analysis.entry || !analysis.sl) {
             analysis.bias = "WATCHING";
             analysis.logic = "Incomplete chart data. Retake screenshots with clear price axis.";
         }
 
-        // SCALP PRIORITY: Enforce 1:2 RR Floor
-        if (analysis.tradeType === "SCALP" && currentRR < 2 && analysis.bias !== "WATCHING") {
+        // ACCURACY GATE: Check for Liquidity Sweep (SMC/ICT accuracy)
+        if (analysis.isSweep === false && analysis.bias !== "WATCHING") {
             analysis.bias = "WATCHING";
-            analysis.poi = analysis.entry;
-            analysis.logic = `Scalp RR ${currentRR.toFixed(1)} < 1:2 threshold. Awaiting better POI.`;
+            analysis.logic = "No Liquidity Sweep/Trap detected. Accuracy too low to enter.";
         }
 
-        // DAY TRADE PRIORITY: Enforce Safety Over Frequency
-        if (analysis.tradeType === "DAY TRADE") {
-            if (currentRR >= 3) {
-                analysis.logic = `Safe Day Trade detected. High RR (${currentRR.toFixed(1)}) prioritized.`;
-            } else if (currentRR < 2) {
-                analysis.bias = "WATCHING";
-                analysis.poi = analysis.entry;
-                analysis.logic = "Day Trade RR insufficient. Monitoring higher timeframe levels.";
+        // MORPH LOGIC: Prioritize Day Trade if it's better/more profitable
+        if (analysis.dayTradeTp && analysis.bias !== "WATCHING") {
+            const dtReward = Math.abs(analysis.dayTradeTp - analysis.entry);
+            const dtRR = dtReward / riskPoints;
+
+            // If Day Trade is more profitable, upgrade the position automatically
+            if (dtRR > currentRR && dtRR >= 3) {
+                analysis.tradeType = "DAY TRADE (UPGRADED)";
+                analysis.tp = analysis.dayTradeTp;
+                currentRR = dtRR;
+                analysis.logic = `High-accuracy entry found. Upgrading to Day Trade (RR 1:${dtRR.toFixed(1)}).`;
             }
         }
 
-        // PROXIMITY GATE: Check if price has already left the station
+        // FINAL RR FLOOR: Strictly kill low-profit scalps
+        if (analysis.tradeType === "SCALP" && currentRR < 2 && analysis.bias !== "WATCHING") {
+            analysis.bias = "WATCHING";
+            analysis.poi = analysis.entry;
+            analysis.logic = `Scalp RR ${currentRR.toFixed(1)} < 1:2. Awaiting more accurate entry.`;
+        }
+
+        // PROXIMITY GATE: Check if price has already left
         if (priceToEntryGap > allowedGap && analysis.bias !== "WATCHING") {
             analysis.bias = "WATCHING";
             analysis.poi = analysis.entry;
-            analysis.logic = `Price is ${priceToEntryGap.toFixed(2)} pts away. Await retracement to POI.`;
+            analysis.logic = `Price left station (${priceToEntryGap.toFixed(2)} pts). Await POI re-scan.`;
         }
 
         renderOutput(analysis, currentRR);
@@ -82,18 +90,20 @@ async function executeSurgicalScan() {
 }
 
 async function fetchGeminiAnalysis(key, images) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V53_PRIORITY
-        MANDATE: Read charts with 100% precision. Prioritize DAY TRADE over SCALP if profitability is higher.
-        JSON ONLY (Do not include markdown tags):
+        PROTOCOL: OMNI_V63_HYBRID
+        MANDATE: Prioritize accuracy. Detect "Liquidity Sweeps" (Price traps). 
+        UPGRADE: If a scalp entry aligns with the higher trend, provide a higher 'dayTradeTp'.
+        JSON ONLY:
         {
           "assetName": "STRING",
           "currentPrice": number,
           "tradeType": "SCALP"|"DAY TRADE",
+          "isSweep": boolean,
           "bias": "BUY"|"SELL"|"WATCHING",
-          "entry": number, "sl": number, "tp": number, "poi": number,
+          "entry": number, "sl": number, "tp": number, "dayTradeTp": number, "poi": number,
           "logic": "10-15 WORDS MAX",
           "sup": "STRING", "res": "STRING"
         }
@@ -114,8 +124,6 @@ async function fetchGeminiAnalysis(key, images) {
 
     const data = await response.json();
     let textResult = data.candidates[0].content.parts[0].text;
-    
-    // Surgical Sanitization: Remove any markdown code blocks if the AI includes them
     const cleanJson = textResult.replace(/```json|```/g, "").trim();
     return JSON.parse(cleanJson);
 }
@@ -156,7 +164,6 @@ function renderOutput(data, currentRR) {
         const priceDiff = Math.abs(data.entry - data.sl);
         let lotSize = riskCash / priceDiff;
 
-        // Surgical Asset Scaling
         const asset = data.assetName?.toUpperCase() || "";
         if (asset.includes("XAU") || asset.includes("GOLD")) {
             lotSize /= 100;

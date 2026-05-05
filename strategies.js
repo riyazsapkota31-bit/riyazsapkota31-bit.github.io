@@ -1,6 +1,6 @@
 /**
- * OMNI-BLACK | VERSION 64.0 (HYBRID SURGICAL UPGRADE)
- * Mandate: Accurate Scalps + Automated Day Trade Morphing
+ * OMNI-BLACK | VERSION 53.0 (STRATEGIC PRIORITY & SAFETY)
+ * Mandate: Prioritize Safe Day Trades over Risky Scalps + Zero-Undefined UI
  */
 
 let files = [null, null, null, null];
@@ -26,52 +26,44 @@ async function executeSurgicalScan() {
 
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
-        // --- 1. CORE MATHEMATICAL SUITE ---
-        const riskPoints = Math.abs(analysis.entry - analysis.sl) || 0.0001;
-        let rewardPoints = Math.abs(analysis.tp - analysis.entry);
-        let currentRR = rewardPoints / riskPoints;
+        // --- 1. MATHEMATICAL SUITE ---
+        const riskPoints = Math.abs(analysis.entry - analysis.sl) || 0.0001; // Avoid div by zero
+        const rewardPoints = Math.abs(analysis.tp - analysis.entry);
+        const currentRR = rewardPoints / riskPoints;
         const priceToEntryGap = Math.abs(analysis.currentPrice - analysis.entry);
-        const allowedGap = riskPoints * 0.4; // Slightly tighter entry gate for accuracy
+        const allowedGap = riskPoints * 0.5;
 
-        // --- 2. ACCURACY & MORPH ENGINE ---
+        // --- 2. STRATEGIC PRIORITY ENGINE ---
         
+        // DEFAULT: Start by checking if any crucial data is missing
         if (!analysis.entry || !analysis.sl) {
             analysis.bias = "WATCHING";
-            analysis.logic = "Data incomplete. Awaiting clear chart structure.";
+            analysis.logic = "Incomplete chart data. Retake screenshots with clear price axis.";
         }
 
-        // ACCURACY GATE: Liquidity Sweep Verification
-        // This ensures the scalp isn't just a random touch, but a rejection of a level.
-        if (analysis.isSweep === false && analysis.bias !== "WATCHING") {
+        // SCALP PRIORITY: Enforce 1:2 RR Floor
+        if (analysis.tradeType === "SCALP" && currentRR < 2 && analysis.bias !== "WATCHING") {
             analysis.bias = "WATCHING";
-            analysis.logic = "No Liquidity Trap detected. Accuracy insufficient for scalp.";
+            analysis.poi = analysis.entry;
+            analysis.logic = `Scalp RR ${currentRR.toFixed(1)} < 1:2 threshold. Awaiting better POI.`;
         }
 
-        // DAY TRADE MORPH: Upgrade Scalp if Day Trade potential is higher
-        if (analysis.dayTradeTp && analysis.bias !== "WATCHING") {
-            const dtReward = Math.abs(analysis.dayTradeTp - analysis.entry);
-            const dtRR = dtReward / riskPoints;
-
-            // If Day Trade aligns with trend and offers better RR, prioritize it
-            if (dtRR > currentRR && dtRR >= 3) {
-                analysis.tradeType = "DAY TRADE (UPGRADED)";
-                analysis.tp = analysis.dayTradeTp;
-                currentRR = dtRR;
-                analysis.logic = `Scalp entry upgraded. Day Trade trend confirmed (RR 1:${dtRR.toFixed(1)}).`;
+        // DAY TRADE PRIORITY: Enforce Safety Over Frequency
+        if (analysis.tradeType === "DAY TRADE") {
+            if (currentRR >= 3) {
+                analysis.logic = `Safe Day Trade detected. High RR (${currentRR.toFixed(1)}) prioritized.`;
+            } else if (currentRR < 2) {
+                analysis.bias = "WATCHING";
+                analysis.poi = analysis.entry;
+                analysis.logic = "Day Trade RR insufficient. Monitoring higher timeframe levels.";
             }
         }
 
-        // FINAL PROFITABILITY FLOOR
-        if (currentRR < 2 && analysis.bias !== "WATCHING") {
-            analysis.bias = "WATCHING";
-            analysis.logic = `RR 1:${currentRR.toFixed(1)} below profit threshold. Awaiting POI.`;
-        }
-
-        // PROXIMITY GATE
+        // PROXIMITY GATE: Check if price has already left the station
         if (priceToEntryGap > allowedGap && analysis.bias !== "WATCHING") {
             analysis.bias = "WATCHING";
             analysis.poi = analysis.entry;
-            analysis.logic = "Price left POI station. Await retracement for safe entry.";
+            analysis.logic = `Price is ${priceToEntryGap.toFixed(2)} pts away. Await retracement to POI.`;
         }
 
         renderOutput(analysis, currentRR);
@@ -90,21 +82,19 @@ async function executeSurgicalScan() {
 }
 
 async function fetchGeminiAnalysis(key, images) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V64_SURGICAL
-        MANDATE: Prioritize SMC accuracy (Liquidity Sweeps). Detect price traps.
-        MORPH: If a Scalp setup aligns with H1 market structure, provide a 'dayTradeTp'.
-        JSON ONLY:
+        PROTOCOL: OMNI_V53_PRIORITY
+        MANDATE: Read charts with 100% precision. Prioritize DAY TRADE over SCALP if profitability is higher.
+        JSON ONLY (Do not include markdown tags):
         {
           "assetName": "STRING",
           "currentPrice": number,
           "tradeType": "SCALP"|"DAY TRADE",
-          "isSweep": boolean,
           "bias": "BUY"|"SELL"|"WATCHING",
-          "entry": number, "sl": number, "tp": number, "dayTradeTp": number, "poi": number,
-          "logic": "10-12 WORDS MAX",
+          "entry": number, "sl": number, "tp": number, "poi": number,
+          "logic": "10-15 WORDS MAX",
           "sup": "STRING", "res": "STRING"
         }
     `;
@@ -124,8 +114,79 @@ async function fetchGeminiAnalysis(key, images) {
 
     const data = await response.json();
     let textResult = data.candidates[0].content.parts[0].text;
+    
+    // Surgical Sanitization: Remove any markdown code blocks if the AI includes them
     const cleanJson = textResult.replace(/```json|```/g, "").trim();
     return JSON.parse(cleanJson);
 }
 
-// ... (renderOutput, event listeners, and toBase64 remain unchanged)
+function renderOutput(data, currentRR) {
+    const ui = (id) => document.getElementById(id);
+    const update = (id, val) => { if (ui(id)) ui(id).innerText = val || "---"; };
+
+    const bEl = ui('actionText');
+    if (bEl) {
+        bEl.innerText = data.bias || "WATCHING";
+        bEl.className = `text-7xl font-black italic tracking-tighter uppercase leading-none glow-text ${
+            data.bias === 'BUY' ? 'text-emerald-400' : 
+            data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-400'
+        }`;
+    }
+
+    update('entText', data.entry);
+    update('slText', data.sl);
+    update('tpText', data.tp);
+    update('poiLevel', data.poi || data.entry || "WAITING");
+    update('logicText', data.logic || "Analyzing market structure...");
+    update('tradeTypeLabel', `${data.assetName || "ASSET"} | ${data.tradeType || "SCANNING"}`);
+    update('supText', data.sup);
+    update('resText', data.res);
+    update('rrText', `1:${currentRR.toFixed(1)}`);
+
+    const pz = ui('poiZone');
+    if (pz) {
+        data.bias === 'WATCHING' ? pz.classList.remove('hidden') : pz.classList.add('hidden');
+    }
+
+    const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
+    const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
+    
+    if (bal && riskPct && data.entry && data.sl && data.bias !== "WATCHING") {
+        const riskCash = bal * (riskPct / 100);
+        const priceDiff = Math.abs(data.entry - data.sl);
+        let lotSize = riskCash / priceDiff;
+
+        // Surgical Asset Scaling
+        const asset = data.assetName?.toUpperCase() || "";
+        if (asset.includes("XAU") || asset.includes("GOLD")) {
+            lotSize /= 100;
+        } else if (priceDiff < 1) {
+            lotSize /= 10;
+        }
+        update('lotText', lotSize.toFixed(3));
+    } else {
+        update('lotText', "WAIT");
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const keys = ['omni_api_key', 'omni_balance', 'omni_risk'];
+    const ids = ['apiInput', 'bal', 'risk'];
+    keys.forEach((k, i) => {
+        const val = localStorage.getItem(k);
+        if (val) document.getElementById(ids[i]).value = val;
+    });
+});
+
+function toBase64(file) {
+    return new Promise((res) => {
+        const r = new FileReader();
+        r.readAsDataURL(file);
+        r.onload = () => res(r.result);
+    });
+}
+
+
+This is the current code 
+
+Update this code to give me more but very very very accurate as well as profitable scalping trades but if a better day trade is seen it can prioritize that to make my position more profitable trade

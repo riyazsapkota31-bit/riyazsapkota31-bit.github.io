@@ -1,51 +1,55 @@
 /**
- * OMNI-BLACK | VERSION 54.0 (COUNCIL OF 8 & VISUAL INTEGRITY)
- * Mandate: Structural Accuracy > Forced RR. Zero filler. Zero hallucination.
+ * OMNI-BLACK | VERSION 55.0 (THE CONSTITUTION)
+ * Mandate: 8-Core Strategy, DXY Sync, 100% Visual Scrape.
+ * Hardware: Gemini 2.5 Flash ONLY.
  */
 
-let files = [null, null, null, null]; // [H1, M15, M1, DXY]
+let files = [null, null, null, null]; // H1, M15, M1, DXY
 
 async function executeSurgicalScan() {
     const btn = ui('scanBtn');
     const out = ui('resultBox');
     
-    // REQUIREMENT: DXY Sync (4th Image) and Timeframe Confluence
-    if (files.filter(f => f).length < 4) {
-        alert("CRITICAL ERROR: DXY mandatory filter or timeframe layers missing.");
+    // 1.v & 5.ii: DXY MANDATORY SYNC & DATA INTEGRITY
+    if (files.filter(f => f).length < 4 || !files[3]) {
+        alert("CRITICAL ERROR: Slot 4 (DXY Index) is required for Trend Confirmation.");
         return;
     }
 
-    if (btn) { btn.innerText = "AGGREGATING 8-CORE STRATEGY..."; btn.disabled = true; }
+    if (btn) { btn.innerText = "COUNCIL OF 8 ANALYZING..."; btn.disabled = true; }
 
     try {
         const apiKey = localStorage.getItem('omni_api_key');
-        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key.");
+        const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
+        const rPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
+
+        if (!apiKey || bal === 0) throw new Error("Hardware Link Offline: Check API/Balance.");
 
         const b64Images = await Promise.all(
             files.map(file => file ? toBase64(file) : Promise.resolve(null))
         );
 
-        // --- 1. SYSTEM HARDWARE & DEFENSIVE CODING ---
+        // 5.i: STRICT MODEL LOCK (GEMINI 2.5 FLASH)
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
-        // --- 2. DATA INTEGRITY: NULL SHIELDS ---
-        if (!analysis || typeof analysis !== 'object') throw new Error("API RESPONSE CORRUPTED");
+        // 5.i: ANTI-CRASH NULL SHIELDS
+        if (!analysis || typeof analysis !== 'object') throw new Error("Logic Engine Corrupted.");
 
-        // --- 3. MATHEMATICAL RIGOR: RR GUARD ---
-        const asset = (analysis.assetName || "UNDEFINED").toUpperCase();
-        const spread = calibrateBrokerSpread(asset);
+        // 3.i: MATHEMATICAL RIGOR (1:1.5 RR GUARD)
+        const asset = (analysis.assetName || "UNKNOWN").toUpperCase();
+        const spread = getXMSpread(asset);
         
         const riskPoints = Math.abs(analysis.entry - analysis.sl) + spread;
         const rewardPoints = Math.abs(analysis.tp - analysis.entry) - spread;
         const currentRR = riskPoints > 0 ? (rewardPoints / riskPoints) : 0;
 
-        // Requirement: Hard-coded 1:1.5 RR Filter
+        // Force WAIT status if setup is sub-standard
         if (analysis.bias !== "WAIT" && currentRR < 1.5) {
             analysis.bias = "WAIT";
-            analysis.logic = "RR below 1:1.5 threshold. Setup downgraded to observation.";
+            analysis.logic = "RR below 1:1.5 threshold. Awaiting institutional alignment at POI.";
         }
 
-        renderOutput(analysis, currentRR, spread);
+        renderOutput(analysis, currentRR, spread, bal, rPct);
         
         if (out) {
             out.classList.remove('hidden');
@@ -61,29 +65,25 @@ async function executeSurgicalScan() {
 }
 
 async function fetchGeminiAnalysis(key, images) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
+    // 5.i: MODEL LOCK
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V54_FINAL_STRUCTURAL_LOCK
-        MODEL_LOCK: Gemini 2.0 Flash (Mandatory)
+        PROTOCOL: OMNI_V55_SYSTEM_LOCK
+        1.i: 8-CORE AGGREGATOR (SMC, ICT, VSA, Price Action, Wyckoff, Fibonacci, Mean Reversion, Elliott Wave).
+        1.ii: PROFIT-FIRST SELECTION (Scalp vs Day Trade).
+        1.iv: INSTITUTIONAL DETECTION (Liquidity Sweeps, MSS, FVG, Order Blocks).
+        2.i: 100% VISUAL SCRAPE (OCR Y-axis Price, X-axis Time). No simulated prices.
+        4.i: MUZZLE RULE (Strict JSON only).
         
-        STRATEGY_ENGINE (COUNCIL OF 8): 
-        Cross-reference: SMC, ICT, VSA, Price Action, Wyckoff, Fibonacci, Mean Reversion, Elliott Wave.
-        
-        MANDATE:
-        1. 100% VISUAL SCRAPE: Perform OCR on Y-axis (Price) and X-axis (Time). Identify exact XM Terminal coordinates.
-        2. DXY SYNC: Use 4th image (DXY) to confirm asset bias. If DXY is bullish, short XAU/Crypto.
-        3. INSTITUTIONAL DETECTION: Mark MSS, FVG, and Liquidity Sweeps.
-        4. GRADE-A FILTER: Output "WAIT" if conviction < B+.
-        
-        OUTPUT STRICT JSON ONLY:
+        JSON STRUCTURE:
         {
           "assetName": "STRING",
           "currentPrice": number,
           "tradeType": "SCALP"|"DAY TRADE",
           "bias": "BUY"|"SELL"|"WAIT",
           "entry": number, "sl": number, "tp": number, "poi": number,
-          "logic": "10-15 WORD SUMMARY OF INSTITUTIONAL FOOTPRINT",
+          "logic": "10-15 WORDS ON INSTITUTIONAL FOOTPRINT",
           "sup": "STRING", "res": "STRING"
         }
     `;
@@ -102,59 +102,68 @@ async function fetchGeminiAnalysis(key, images) {
     });
 
     const data = await response.json();
+    if (!data.candidates || !data.candidates[0].content.parts[0].text) throw new Error("Hardware Link Failure.");
+    
     const rawText = data.candidates[0].content.parts[0].text;
     return JSON.parse(rawText.replace(/```json|```/g, "").trim());
 }
 
-function renderOutput(data, rr, spread) {
-    const bEl = ui('actionText');
+function renderOutput(data, rr, spread, bal, rPct) {
     const isWait = data.bias === "WAIT";
+    const update = (id, val) => { if (ui(id)) ui(id).innerText = val || "---"; };
 
-    // --- DYNAMIC UI & OPERATIONAL CONSTRAINTS ---
+    // 4.iv: UI LAYOUT
+    const bEl = ui('actionText');
     if (bEl) {
         bEl.innerText = data.bias || "WAIT";
         bEl.className = `text-7xl font-black italic tracking-tighter uppercase leading-none glow-text ${
-            data.bias === 'BUY' ? 'text-emerald-400' : 
-            data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-400'
+            data.bias === 'BUY' ? 'text-emerald-400' : data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-400'
         }`;
     }
 
+    // 1.iii: GRADE-A FILTERING (MASKING LEVELS IN WAIT)
     update('entText', isWait ? "--" : data.entry);
     update('slText', isWait ? "--" : data.sl);
     update('tpText', isWait ? "--" : data.tp);
-    update('poiLevel', data.poi || data.entry || "RE-SCAN REQ");
-    update('logicText', data.logic);
+    update('poiLevel', data.poi || "MONITORING");
+    update('logicText', data.logic); // 4.ii: 10-15 words
     update('tradeTypeLabel', `${data.assetName} | ${data.tradeType}`);
     update('rrText', isWait ? "1:0.0" : `1:${rr.toFixed(1)}`);
 
-    // --- SURGICAL LOT SIZING (XM-BROKER NORMALIZED) ---
-    const bal = parseFloat(localStorage.getItem('omni_balance')) || 7000;
-    const rPct = parseFloat(localStorage.getItem('omni_risk')) || 0.5;
-    
+    // 4.iii: POI PROTOCOL
+    if (ui('poiZone')) {
+        isWait ? ui('poiZone').classList.remove('hidden') : ui('poiZone').classList.add('hidden');
+    }
+
+    // 3.iii & 3.iv: SURGICAL LOT SIZING & XM NORMALIZATION
     if (!isWait && data.entry && data.sl) {
-        const riskCash = bal * (rPct / 100); 
-        const priceDiff = Math.abs(data.entry - data.sl) + spread;
+        const riskCash = bal * (rPct / 100);
+        const stopDistance = Math.abs(data.entry - data.sl) + spread;
         
-        let brokerScale = 1; // Default Crypto/Forex
-        if (data.assetName.includes("OIL") || data.assetName.includes("GOLD") || data.assetName.includes("XAU")) {
-            brokerScale = 100; // XM MetaTrader Calibration
+        let multiplier = 1;
+        const asset = data.assetName.toUpperCase();
+        
+        // XM-Broker Calibration
+        if (asset.includes("GOLD") || asset.includes("XAU") || asset.includes("OIL") || asset.includes("WTI")) {
+            multiplier = 100; 
+        } else if (stopDistance < 0.1) {
+            multiplier = 10;
         }
 
-        const lotSize = riskCash / (priceDiff * brokerScale);
+        const lotSize = riskCash / (stopDistance * multiplier);
         update('lotText', lotSize.toFixed(3));
     } else {
-        update('lotText', "WAITING");
+        update('lotText', "WAIT");
     }
 }
 
-function calibrateBrokerSpread(asset) {
-    if (asset.includes("OIL") || asset.includes("WTI")) return 0.03;
+function getXMSpread(asset) {
+    if (asset.includes("OIL")) return 0.03;
     if (asset.includes("GOLD") || asset.includes("XAU")) return 0.20;
-    return 0.01;
+    return 0.0001; 
 }
 
 function ui(id) { return document.getElementById(id); }
-function update(id, val) { if (ui(id)) ui(id).innerText = val || "---"; }
 
 function toBase64(file) {
     return new Promise((res) => {

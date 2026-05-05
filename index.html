@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMNI-BLACK | V52.5</title>
+    <title>OMNI-BLACK | V52.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -23,8 +23,8 @@
 
     <header class="flex justify-between items-center mb-10">
         <div>
-            <h1 class="text-2xl font-extrabold italic text-white">OMNI—BLACK</h1>
-            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Surgical Protocol V52.5</p>
+            <h1 class="text-2xl font-extrabold italic text-white uppercase tracking-tighter">OMNI—BLACK</h1>
+            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Protocol Version 52.8</p>
         </div>
         <button onclick="toggleDrawer()" class="w-12 h-12 terminal-border rounded-2xl flex items-center justify-center text-slate-400">
             <i class="fa-solid fa-sliders text-lg"></i>
@@ -54,18 +54,18 @@
         </div>
     </div>
 
-    <button id="scanBtn" onclick="executeSurgicalScan()" class="scan-btn w-full py-6 rounded-[2rem] font-extrabold text-xs uppercase tracking-widest text-white">
+    <button id="scanBtn" onclick="executeSurgicalScan()" class="scan-btn w-full py-6 rounded-[2rem] font-extrabold text-xs uppercase tracking-widest text-white shadow-2xl shadow-indigo-500/20">
         Perform Surgical Scan
     </button>
 
     <div id="resultBox" class="hidden mt-8 terminal-border rounded-[2.5rem] p-8 bg-black/40 border border-white/5">
         <div class="flex justify-between items-center mb-8">
             <div class="flex flex-col">
-                <span class="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase">8-CORE AGGREGATOR</span>
+                <span class="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase">Surgical Analysis</span>
                 <span id="tradeTypeLabel" class="text-[9px] font-bold text-slate-500 uppercase mt-1">---</span>
             </div>
             <div class="text-right">
-                <p id="logicText" class="text-[11px] text-slate-400 italic max-w-[180px] leading-tight">Waiting...</p>
+                <p id="logicText" class="text-[11px] text-slate-400 italic max-w-[180px] leading-tight">Waiting for data...</p>
             </div>
         </div>
         
@@ -74,8 +74,8 @@
         </div>
 
         <div id="poiZone" class="hidden mb-8 bg-amber-500/5 border border-amber-500/20 p-5 rounded-[2rem] text-center">
-            <label class="text-[9px] uppercase text-amber-500 font-black block tracking-widest mb-1">Wait for POI Re-Scan</label>
-            <span id="poiLevel" class="text-3xl font-extrabold text-white">0.00000</span>
+            <label class="text-[9px] uppercase text-amber-500 font-black block tracking-widest mb-1">Wait for POI Level</label>
+            <span id="poiLevel" class="text-3xl font-extrabold text-white">0.000</span>
         </div>
         
         <div class="grid grid-cols-3 gap-0 border-y border-white/5 mb-8">
@@ -84,24 +84,24 @@
                 <span id="entText" class="text-xl font-extrabold text-white">0.00</span>
             </div>
             <div class="py-8 text-center border-r border-white/5">
-                <label class="text-[9px] uppercase text-rose-500 font-black block mb-2 tracking-widest">Stop Loss</label>
+                <label class="text-[9px] uppercase text-rose-500 font-black block mb-2 tracking-widest">SL</label>
                 <span id="slText" class="text-xl font-extrabold text-rose-500">0.00</span>
             </div>
             <div class="py-8 text-center">
-                <label class="text-[9px] uppercase text-emerald-500 font-black block mb-2 tracking-widest">Take Profit</label>
+                <label class="text-[9px] uppercase text-emerald-500 font-black block mb-2 tracking-widest">TP</label>
                 <span id="tpText" class="text-xl font-extrabold text-emerald-500">0.00</span>
             </div>
         </div>
 
         <div class="grid grid-cols-2 gap-6 items-center">
             <div class="bg-indigo-500/5 border border-indigo-500/10 p-6 rounded-[2rem]">
-                <label class="text-[9px] uppercase text-indigo-400 font-black mb-1 block tracking-widest">Calculated Lot</label>
-                <span id="lotText" class="text-4xl font-black text-white">WAITING</span>
+                <label class="text-[9px] uppercase text-indigo-400 font-black mb-1 block tracking-widest">Lot Size</label>
+                <span id="lotText" class="text-4xl font-black text-white">0.00</span>
             </div>
             <div class="space-y-3 px-2">
                 <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Support</span><span id="supText" class="text-[12px] font-bold text-white">---</span></div>
                 <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Resistance</span><span id="resText" class="text-[12px] font-bold text-white">---</span></div>
-                <div class="flex justify-between items-center pt-2 border-t border-white/5"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">RR Ratio</span><span id="rrText" class="text-[12px] font-black text-emerald-400">0:0</span></div>
+                <div class="flex justify-between items-center pt-2 border-t border-white/5"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">RR</span><span id="rrText" class="text-[12px] font-black text-emerald-400">0:0</span></div>
             </div>
         </div>
     </div>
@@ -109,20 +109,20 @@
     <div id="overlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[900]" onclick="toggleDrawer()"></div>
     
     <div id="sideDrawer" class="drawer p-8">
-        <h3 class="text-xs font-black uppercase text-indigo-400 mb-10">System Terminal</h3>
+        <h3 class="text-xs font-black uppercase text-indigo-400 mb-10 tracking-[0.3em]">System Config</h3>
         <div class="space-y-6">
             <div class="bg-white/5 p-6 rounded-[2rem]">
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Hardware Link (API)</label>
-                <input type="password" id="apiInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-4 outline-none">
+                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Hardware Key</label>
+                <input type="password" id="apiInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 outline-none text-white">
                 
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Account Settings</label>
-                <div class="space-y-4 mb-6">
-                    <input type="number" id="bal" placeholder="Balance (e.g. 7000)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none">
-                    <input type="number" id="risk" placeholder="Risk % (e.g. 0.5)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none">
+                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Risk Engine</label>
+                <div class="space-y-4 mb-8">
+                    <input type="number" id="bal" placeholder="Balance ($7000)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
+                    <input type="number" id="risk" placeholder="Risk % (0.5)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
                 </div>
 
-                <button id="lockBtn" onclick="saveSystemSettings()" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-white">
-                    Lock Surgical Params
+                <button onclick="saveSystem()" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-white">
+                    Secure Parameters
                 </button>
             </div>
         </div>
@@ -133,11 +133,11 @@
         function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
         function markFile(i) { const b = document.getElementById('box'+i); b.classList.add('has-file'); document.getElementById('label'+i).classList.add('hidden'); document.getElementById('icon'+i).classList.remove('hidden'); files[i] = document.getElementById('img'+i).files[0]; }
         
-        function saveSystemSettings() { 
+        function saveSystem() { 
             localStorage.setItem('omni_api_key', document.getElementById('apiInput').value); 
             localStorage.setItem('omni_balance', document.getElementById('bal').value); 
             localStorage.setItem('omni_risk', document.getElementById('risk').value); 
-            alert("PARAMETERS SECURED: Memory updated.");
+            alert("SYSTEM SECURED: Risk parameters synced to hardware.");
             toggleDrawer(); 
         }
     </script>

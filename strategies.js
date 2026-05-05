@@ -1,145 +1,167 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMNI-BLACK | V52.8</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
-        :root { --accent: #6366f1; --bg: #030508; }
-        body { background: var(--bg); color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
-        .terminal-border { border: 1px solid rgba(255,255,255,0.08); background: rgba(10, 15, 25, 0.7); backdrop-filter: blur(20px); }
-        .drawer { position: fixed; top: 0; right: -100%; width: 320px; height: 100%; background: #0a0f1b; transition: 0.5s ease; z-index: 1000; border-left: 1px solid rgba(255,255,255,0.1); }
-        .drawer.open { right: 0; }
-        .chart-box { aspect-ratio: 1/1; border: 1.5px dashed rgba(255,255,255,0.12); border-radius: 2rem; transition: all 0.4s ease; background: rgba(255,255,255,0.02); cursor: pointer; }
-        .chart-box.has-file { border: 2px solid var(--accent); background: rgba(99, 102, 241, 0.1); }
-        .scan-btn { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); transition: all 0.3s ease; }
-        .glow-text { text-shadow: 0 0 25px currentColor; }
-    </style>
-</head>
-<body class="p-6 pb-28">
+/**
+ * OMNI-BLACK | VERSION 52.8 (POI PRECISION PROTOCOL)
+ * Mandate: Zero-Undefined UI + Forced POI Logic
+ */
 
-    <header class="flex justify-between items-center mb-10">
-        <div>
-            <h1 class="text-2xl font-extrabold italic text-white uppercase tracking-tighter">OMNI—BLACK</h1>
-            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Protocol Version 52.8</p>
-        </div>
-        <button onclick="toggleDrawer()" class="w-12 h-12 terminal-border rounded-2xl flex items-center justify-center text-slate-400">
-            <i class="fa-solid fa-sliders text-lg"></i>
-        </button>
-    </header>
+let files = [null, null, null, null];
 
-    <div class="grid grid-cols-2 gap-4 mb-8">
-        <div id="box0" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img0').click()">
-            <input type="file" id="img0" accept="image/*" class="hidden" onchange="markFile(0)">
-            <div id="label0" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">HTF BIAS</span></div>
-            <div id="icon0" class="hidden text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
-        </div>
-        <div id="box1" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img1').click()">
-            <input type="file" id="img1" accept="image/*" class="hidden" onchange="markFile(1)">
-            <div id="label1" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">LTF STRUCT</span></div>
-            <div id="icon1" class="hidden text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
-        </div>
-        <div id="box2" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img2').click()">
-            <input type="file" id="img2" accept="image/*" class="hidden" onchange="markFile(2)">
-            <div id="label2" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">ENTRY (1M)</span></div>
-            <div id="icon2" class="hidden text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
-        </div>
-        <div id="box3" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img3').click()">
-            <input type="file" id="img3" accept="image/*" class="hidden" onchange="markFile(3)">
-            <div id="label3" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">DXY DATA</span></div>
-            <div id="icon3" class="hidden text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
-        </div>
-    </div>
-
-    <button id="scanBtn" onclick="executeSurgicalScan()" class="scan-btn w-full py-6 rounded-[2rem] font-extrabold text-xs uppercase tracking-widest text-white shadow-2xl shadow-indigo-500/20">
-        Perform Surgical Scan
-    </button>
-
-    <div id="resultBox" class="hidden mt-8 terminal-border rounded-[2.5rem] p-8 bg-black/40 border border-white/5">
-        <div class="flex justify-between items-center mb-8">
-            <div class="flex flex-col">
-                <span class="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase">Surgical Analysis</span>
-                <span id="tradeTypeLabel" class="text-[9px] font-bold text-slate-500 uppercase mt-1">---</span>
-            </div>
-            <div class="text-right">
-                <p id="logicText" class="text-[11px] text-slate-400 italic max-w-[180px] leading-tight">Waiting for data...</p>
-            </div>
-        </div>
-        
-        <div class="text-center mb-10">
-            <h2 id="actionText" class="text-7xl font-black italic tracking-tighter uppercase leading-none glow-text">---</h2>
-        </div>
-
-        <div id="poiZone" class="hidden mb-8 bg-amber-500/5 border border-amber-500/20 p-5 rounded-[2rem] text-center">
-            <label class="text-[9px] uppercase text-amber-500 font-black block tracking-widest mb-1">Wait for POI Level</label>
-            <span id="poiLevel" class="text-3xl font-extrabold text-white">0.000</span>
-        </div>
-        
-        <div class="grid grid-cols-3 gap-0 border-y border-white/5 mb-8">
-            <div class="py-8 text-center border-r border-white/5">
-                <label class="text-[9px] uppercase text-slate-500 font-black block mb-2 tracking-widest">Entry</label>
-                <span id="entText" class="text-xl font-extrabold text-white">0.00</span>
-            </div>
-            <div class="py-8 text-center border-r border-white/5">
-                <label class="text-[9px] uppercase text-rose-500 font-black block mb-2 tracking-widest">SL</label>
-                <span id="slText" class="text-xl font-extrabold text-rose-500">0.00</span>
-            </div>
-            <div class="py-8 text-center">
-                <label class="text-[9px] uppercase text-emerald-500 font-black block mb-2 tracking-widest">TP</label>
-                <span id="tpText" class="text-xl font-extrabold text-emerald-500">0.00</span>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-6 items-center">
-            <div class="bg-indigo-500/5 border border-indigo-500/10 p-6 rounded-[2rem]">
-                <label class="text-[9px] uppercase text-indigo-400 font-black mb-1 block tracking-widest">Lot Size</label>
-                <span id="lotText" class="text-4xl font-black text-white">0.00</span>
-            </div>
-            <div class="space-y-3 px-2">
-                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Support</span><span id="supText" class="text-[12px] font-bold text-white">---</span></div>
-                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Resistance</span><span id="resText" class="text-[12px] font-bold text-white">---</span></div>
-                <div class="flex justify-between items-center pt-2 border-t border-white/5"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">RR</span><span id="rrText" class="text-[12px] font-black text-emerald-400">0:0</span></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="overlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[900]" onclick="toggleDrawer()"></div>
+async function executeSurgicalScan() {
+    const btn = document.getElementById('scanBtn');
+    const out = document.getElementById('resultBox');
     
-    <div id="sideDrawer" class="drawer p-8">
-        <h3 class="text-xs font-black uppercase text-indigo-400 mb-10 tracking-[0.3em]">System Config</h3>
-        <div class="space-y-6">
-            <div class="bg-white/5 p-6 rounded-[2rem]">
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Hardware Key</label>
-                <input type="password" id="apiInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 outline-none text-white">
-                
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Risk Engine</label>
-                <div class="space-y-4 mb-8">
-                    <input type="number" id="bal" placeholder="Balance ($7000)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
-                    <input type="number" id="risk" placeholder="Risk % (0.5)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
-                </div>
+    if (files.filter(f => f).length < 2) {
+        alert("UPLOAD ERROR: Surgical confluence requires at least 2 timeframe layers.");
+        return;
+    }
 
-                <button onclick="saveSystem()" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-white">
-                    Secure Parameters
-                </button>
-            </div>
-        </div>
-    </div>
+    if (btn) { btn.innerText = "COUNCIL OF 8 ANALYZING..."; btn.disabled = true; }
 
-    <script src="strategies.js"></script>
-    <script>
-        function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
-        function markFile(i) { const b = document.getElementById('box'+i); b.classList.add('has-file'); document.getElementById('label'+i).classList.add('hidden'); document.getElementById('icon'+i).classList.remove('hidden'); files[i] = document.getElementById('img'+i).files[0]; }
+    try {
+        const apiKey = localStorage.getItem('omni_api_key');
+        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key in settings.");
+
+        const b64Images = await Promise.all(
+            files.map(file => file ? toBase64(file) : Promise.resolve(null))
+        );
+
+        const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
-        function saveSystem() { 
-            localStorage.setItem('omni_api_key', document.getElementById('apiInput').value); 
-            localStorage.setItem('omni_balance', document.getElementById('bal').value); 
-            localStorage.setItem('omni_risk', document.getElementById('risk').value); 
-            alert("SYSTEM SECURED: Risk parameters synced to hardware.");
-            toggleDrawer(); 
+        // --- 1. PROXIMITY GATE: Await Retracement Logic ---
+        const priceToEntryGap = Math.abs(analysis.currentPrice - analysis.entry);
+        const allowedGap = Math.abs(analysis.entry - analysis.sl) * 0.5;
+
+        if (priceToEntryGap > allowedGap && analysis.bias !== "WATCHING") {
+            analysis.bias = "WATCHING";
+            analysis.poi = analysis.entry; // Lock the original entry as the POI
+            analysis.logic = `Price overextended. Await retracement to ${analysis.entry} POI.`;
         }
-    </script>
-</body>
-</html>
+
+        // --- 2. RR GATE: 1:2 Minimum Requirement ---
+        const riskPoints = Math.abs(analysis.entry - analysis.sl);
+        const rewardPoints = Math.abs(analysis.tp - analysis.entry);
+        const currentRR = riskPoints > 0 ? (rewardPoints / riskPoints) : 0;
+
+        if (analysis.bias !== "WATCHING" && currentRR < 2) {
+            analysis.bias = "WATCHING";
+            analysis.poi = analysis.entry;
+            analysis.logic = `Risk/Reward ${currentRR.toFixed(1)} below 1:2. Awaiting better entry.`;
+        }
+
+        renderOutput(analysis, currentRR);
+        
+        if (out) {
+            out.classList.remove('hidden');
+            out.scrollIntoView({ behavior: 'smooth' });
+        }
+
+    } catch (err) {
+        console.error("System Crash:", err);
+        alert("CRITICAL ERROR: " + err.message);
+    } finally {
+        if (btn) { btn.innerText = "Perform Surgical Scan"; btn.disabled = false; }
+    }
+}
+
+async function fetchGeminiAnalysis(key, images) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+    
+    const prompt = `
+        PROTOCOL: OMNI_V52_8_SURGICAL
+        MANDATE: Read charts with 100% precision. Identify Asset, Price, and POI levels.
+        JSON ONLY:
+        {
+          "assetName": "STRING",
+          "currentPrice": number,
+          "tradeType": "SCALP"|"DAY TRADE",
+          "bias": "BUY"|"SELL"|"WATCHING",
+          "entry": number, "sl": number, "tp": number, "poi": number,
+          "logic": "10-15 WORDS ONLY",
+          "sup": "STRING", "res": "STRING"
+        }
+    `;
+
+    const inlineData = images.filter(img => img).map(b => ({ 
+        inline_data: { mime_type: "image/jpeg", data: b.split(',')[1] } 
+    }));
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }, ...inlineData] }],
+            generationConfig: { response_mime_type: "application/json", temperature: 0.1 }
+        })
+    });
+
+    const data = await response.json();
+    return JSON.parse(data.candidates[0].content.parts[0].text);
+}
+
+function renderOutput(data, currentRR) {
+    const ui = (id) => document.getElementById(id);
+    const update = (id, val) => { if (ui(id)) ui(id).innerText = val || "---"; };
+
+    // Update Main Bias Text
+    const bEl = ui('actionText');
+    if (bEl) {
+        bEl.innerText = data.bias || "WATCHING";
+        bEl.className = `text-7xl font-black italic tracking-tighter uppercase leading-none glow-text ${
+            data.bias === 'BUY' ? 'text-emerald-400' : 
+            data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-400'
+        }`;
+    }
+
+    // Surgical Level Updates (Fallback to Entry if POI is missing)
+    update('entText', data.entry);
+    update('slText', data.sl);
+    update('tpText', data.tp);
+    update('poiLevel', data.poi || data.entry || "WAITING");
+    update('logicText', data.logic || "Awaiting market confluence at POI.");
+    update('tradeTypeLabel', `${data.assetName || "ASSET"} | ${data.tradeType || "SCANNING"}`);
+    update('supText', data.sup);
+    update('resText', data.res);
+    update('rrText', `1:${currentRR.toFixed(1)}`);
+
+    // Handle the POI Visibility Box
+    const pz = ui('poiZone');
+    if (pz) {
+        data.bias === 'WATCHING' ? pz.classList.remove('hidden') : pz.classList.add('hidden');
+    }
+
+    // Dynamic Lot Math
+    const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
+    const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
+    
+    if (bal && riskPct && data.entry && data.sl && data.bias !== "WATCHING") {
+        const riskCash = bal * (riskPct / 100);
+        const priceDiff = Math.abs(data.entry - data.sl);
+        let lotSize = riskCash / priceDiff;
+
+        if (data.assetName?.toUpperCase().includes("XAU") || data.assetName?.toUpperCase().includes("GOLD")) {
+            lotSize /= 100;
+        } else if (priceDiff < 1) {
+            lotSize /= 10;
+        }
+        update('lotText', lotSize.toFixed(3));
+    } else {
+        update('lotText', "WAIT");
+    }
+}
+
+// Auto-Load Hardware settings
+window.addEventListener('DOMContentLoaded', () => {
+    const keys = ['omni_api_key', 'omni_balance', 'omni_risk'];
+    const ids = ['apiInput', 'bal', 'risk'];
+    keys.forEach((k, i) => {
+        const val = localStorage.getItem(k);
+        if (val) document.getElementById(ids[i]).value = val;
+    });
+});
+
+function toBase64(file) {
+    return new Promise((res) => {
+        const r = new FileReader();
+        r.readAsDataURL(file);
+        r.onload = () => res(r.result);
+    });
+}

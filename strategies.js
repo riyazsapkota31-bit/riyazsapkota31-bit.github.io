@@ -185,8 +185,3 @@ function toBase64(file) {
         r.onload = () => res(r.result);
     });
 }
-
-
-This is the current code 
-
-Update this code to give me more but very very very accurate as well as profitable scalping trades but if a better day trade is seen it can prioritize that to make my position more profitable trade

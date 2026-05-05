@@ -1,5 +1,5 @@
 /**
- * OMNI-BLACK | VERSION 55.0 (THE CONSTITUTION)
+ * OMNI-BLACK | VERSION 62.0 (THE CONSTITUTION)
  * Mandate: 8-Core Strategy, DXY Sync, 100% Visual Scrape.
  * Hardware: Gemini 2.5 Flash ONLY.
  */
@@ -10,7 +10,7 @@ async function executeSurgicalScan() {
     const btn = ui('scanBtn');
     const out = ui('resultBox');
     
-    // 1.v & 5.ii: DXY MANDATORY SYNC & DATA INTEGRITY
+    // 1.v: DXY MANDATORY SYNC
     if (files.filter(f => f).length < 4 || !files[3]) {
         alert("CRITICAL ERROR: Slot 4 (DXY Index) is required for Trend Confirmation.");
         return;
@@ -29,24 +29,25 @@ async function executeSurgicalScan() {
             files.map(file => file ? toBase64(file) : Promise.resolve(null))
         );
 
-        // 5.i: STRICT MODEL LOCK (GEMINI 2.5 FLASH)
+        // 5.i: STRICT MODEL LOCK
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
         // 5.i: ANTI-CRASH NULL SHIELDS
         if (!analysis || typeof analysis !== 'object') throw new Error("Logic Engine Corrupted.");
 
-        // 3.i: MATHEMATICAL RIGOR (1:1.5 RR GUARD)
         const asset = (analysis.assetName || "UNKNOWN").toUpperCase();
         const spread = getXMSpread(asset);
         
-        const riskPoints = Math.abs(analysis.entry - analysis.sl) + spread;
-        const rewardPoints = Math.abs(analysis.tp - analysis.entry) - spread;
+        const riskPoints = Math.abs((analysis.entry || 0) - (analysis.sl || 0)) + spread;
+        const rewardPoints = Math.abs((analysis.tp || 0) - (analysis.entry || 0)) - spread;
         const currentRR = riskPoints > 0 ? (rewardPoints / riskPoints) : 0;
 
-        // Force WAIT status if setup is sub-standard
+        // 3.i: MATHEMATICAL RIGOR (1:1.5 RR GUARD)
+        // Fixed: If forced to WAIT, preserve or generate POI and Logic.
         if (analysis.bias !== "WAIT" && currentRR < 1.5) {
             analysis.bias = "WAIT";
-            analysis.logic = "RR below 1:1.5 threshold. Awaiting institutional alignment at POI.";
+            analysis.poi = analysis.poi || analysis.entry || "RE-SCAN REQUIRED";
+            analysis.logic = "Low reward-to-risk ratio detected. Institutional alignment required at specific Point of Interest.";
         }
 
         renderOutput(analysis, currentRR, spread, bal, rPct);
@@ -65,15 +66,16 @@ async function executeSurgicalScan() {
 }
 
 async function fetchGeminiAnalysis(key, images) {
-    // 5.i: MODEL LOCK
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     
+    // 1.i, 1.ii, 1.iv, 2.i, 4.i, 4.ii Mandates integrated into Prompt
     const prompt = `
-        PROTOCOL: OMNI_V55_SYSTEM_LOCK
+        PROTOCOL: OMNI_V62_SYSTEM_LOCK
         1.i: 8-CORE AGGREGATOR (SMC, ICT, VSA, Price Action, Wyckoff, Fibonacci, Mean Reversion, Elliott Wave).
         1.ii: PROFIT-FIRST SELECTION (Scalp vs Day Trade).
         1.iv: INSTITUTIONAL DETECTION (Liquidity Sweeps, MSS, FVG, Order Blocks).
         2.i: 100% VISUAL SCRAPE (OCR Y-axis Price, X-axis Time). No simulated prices.
+        4.ii: SURGICAL LOGIC: If bias is WAIT, you MUST provide a POI level and 10-15 words explaining the institutional footprint.
         4.i: MUZZLE RULE (Strict JSON only).
         
         JSON STRUCTURE:
@@ -83,7 +85,7 @@ async function fetchGeminiAnalysis(key, images) {
           "tradeType": "SCALP"|"DAY TRADE",
           "bias": "BUY"|"SELL"|"WAIT",
           "entry": number, "sl": number, "tp": number, "poi": number,
-          "logic": "10-15 WORDS ON INSTITUTIONAL FOOTPRINT",
+          "logic": "EXACTLY 10-15 WORDS ON INSTITUTIONAL FOOTPRINT",
           "sup": "STRING", "res": "STRING"
         }
     `;
@@ -110,7 +112,10 @@ async function fetchGeminiAnalysis(key, images) {
 
 function renderOutput(data, rr, spread, bal, rPct) {
     const isWait = data.bias === "WAIT";
-    const update = (id, val) => { if (ui(id)) ui(id).innerText = val || "---"; };
+    const update = (id, val) => { 
+        const el = ui(id);
+        if (el) el.innerText = (val !== undefined && val !== null) ? val : "---"; 
+    };
 
     // 4.iv: UI LAYOUT
     const bEl = ui('actionText');
@@ -121,29 +126,29 @@ function renderOutput(data, rr, spread, bal, rPct) {
         }`;
     }
 
-    // 1.iii: GRADE-A FILTERING (MASKING LEVELS IN WAIT)
+    // 1.iii: GRADE-A FILTERING (Logic and POI must persist in WAIT)
     update('entText', isWait ? "--" : data.entry);
     update('slText', isWait ? "--" : data.sl);
     update('tpText', isWait ? "--" : data.tp);
+    
+    // Fix: Ensure POI and Logic display during WAIT
     update('poiLevel', data.poi || "MONITORING");
-    update('logicText', data.logic); // 4.ii: 10-15 words
-    update('tradeTypeLabel', `${data.assetName} | ${data.tradeType}`);
+    update('logicText', data.logic); 
+    
+    update('tradeTypeLabel', `${data.assetName || 'UNDEFINED'} | ${data.tradeType || 'UNDEFINED'}`);
     update('rrText', isWait ? "1:0.0" : `1:${rr.toFixed(1)}`);
+    update('supText', data.sup);
+    update('resText', data.res);
 
-    // 4.iii: POI PROTOCOL
-    if (ui('poiZone')) {
-        isWait ? ui('poiZone').classList.remove('hidden') : ui('poiZone').classList.add('hidden');
-    }
-
-    // 3.iii & 3.iv: SURGICAL LOT SIZING & XM NORMALIZATION
+    // 3.iii & 3.iv: SURGICAL LOT SIZING
     if (!isWait && data.entry && data.sl) {
         const riskCash = bal * (rPct / 100);
         const stopDistance = Math.abs(data.entry - data.sl) + spread;
         
         let multiplier = 1;
-        const asset = data.assetName.toUpperCase();
+        const asset = (data.assetName || "").toUpperCase();
         
-        // XM-Broker Calibration
+        // XM-Broker Normalization
         if (asset.includes("GOLD") || asset.includes("XAU") || asset.includes("OIL") || asset.includes("WTI")) {
             multiplier = 100; 
         } else if (stopDistance < 0.1) {
@@ -158,8 +163,9 @@ function renderOutput(data, rr, spread, bal, rPct) {
 }
 
 function getXMSpread(asset) {
-    if (asset.includes("OIL")) return 0.03;
-    if (asset.includes("GOLD") || asset.includes("XAU")) return 0.20;
+    const a = asset.toUpperCase();
+    if (a.includes("OIL")) return 0.03;
+    if (a.includes("GOLD") || a.includes("XAU")) return 0.20;
     return 0.0001; 
 }
 

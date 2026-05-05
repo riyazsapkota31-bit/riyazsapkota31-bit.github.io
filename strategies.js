@@ -1,58 +1,51 @@
 /**
- * OMNI-BLACK | VERSION 53.0 (PRECISION RISK & HIGH RR PROTOCOL)
- * Mandate: Asset-specific scaling, Spread inclusion, and Aggressive SL placement.
+ * OMNI-BLACK | VERSION 54.0 (COUNCIL OF 8 & VISUAL INTEGRITY)
+ * Mandate: Structural Accuracy > Forced RR. Zero filler. Zero hallucination.
  */
 
-let files = [null, null, null, null];
+let files = [null, null, null, null]; // [H1, M15, M1, DXY]
 
 async function executeSurgicalScan() {
-    const btn = document.getElementById('scanBtn');
-    const out = document.getElementById('resultBox');
+    const btn = ui('scanBtn');
+    const out = ui('resultBox');
     
-    if (files.filter(f => f).length < 2) {
-        alert("UPLOAD ERROR: Surgical confluence requires at least 2 timeframe layers.");
+    // REQUIREMENT: DXY Sync (4th Image) and Timeframe Confluence
+    if (files.filter(f => f).length < 4) {
+        alert("CRITICAL ERROR: DXY mandatory filter or timeframe layers missing.");
         return;
     }
 
-    if (btn) { btn.innerText = "SURGICAL CALCULATION IN PROGRESS..."; btn.disabled = true; }
+    if (btn) { btn.innerText = "AGGREGATING 8-CORE STRATEGY..."; btn.disabled = true; }
 
     try {
         const apiKey = localStorage.getItem('omni_api_key');
-        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key in settings.");
+        if (!apiKey) throw new Error("Hardware Link Offline: Enter API key.");
 
         const b64Images = await Promise.all(
             files.map(file => file ? toBase64(file) : Promise.resolve(null))
         );
 
+        // --- 1. SYSTEM HARDWARE & DEFENSIVE CODING ---
         const analysis = await fetchGeminiAnalysis(apiKey, b64Images);
         
-        // --- 1. PROXIMITY GATE: Await Retracement Logic ---
-        const priceToEntryGap = Math.abs(analysis.currentPrice - analysis.entry);
-        const allowedGap = Math.abs(analysis.entry - analysis.sl) * 0.3; // Tightened buffer
+        // --- 2. DATA INTEGRITY: NULL SHIELDS ---
+        if (!analysis || typeof analysis !== 'object') throw new Error("API RESPONSE CORRUPTED");
 
-        if (priceToEntryGap > allowedGap && analysis.bias !== "WATCHING") {
-            analysis.bias = "WATCHING";
-            analysis.poi = analysis.entry;
-            analysis.logic = `Price overextended (${priceToEntryGap.toFixed(2)}). Await POI retracement.`;
-        }
-
-        // --- 2. CALCULATE REAL RR (Including Spread) ---
-        const asset = (analysis.assetName || "").toUpperCase();
-        let spreadBuffer = asset.includes("OIL") || asset.includes("WTI") ? 0.03 : 
-                           asset.includes("XAU") || asset.includes("GOLD") ? 0.20 : 0.01;
-
-        const riskPoints = Math.abs(analysis.entry - analysis.sl) + spreadBuffer;
-        const rewardPoints = Math.abs(analysis.tp - analysis.entry) - spreadBuffer;
+        // --- 3. MATHEMATICAL RIGOR: RR GUARD ---
+        const asset = (analysis.assetName || "UNDEFINED").toUpperCase();
+        const spread = calibrateBrokerSpread(asset);
+        
+        const riskPoints = Math.abs(analysis.entry - analysis.sl) + spread;
+        const rewardPoints = Math.abs(analysis.tp - analysis.entry) - spread;
         const currentRR = riskPoints > 0 ? (rewardPoints / riskPoints) : 0;
 
-        // --- 3. RR GATE: High Performance Filter ---
-        if (analysis.bias !== "WATCHING" && currentRR < 2) {
-            analysis.bias = "WATCHING";
-            analysis.poi = analysis.entry;
-            analysis.logic = `RR 1:${currentRR.toFixed(1)} insufficient. Awaiting higher-precision entry.`;
+        // Requirement: Hard-coded 1:1.5 RR Filter
+        if (analysis.bias !== "WAIT" && currentRR < 1.5) {
+            analysis.bias = "WAIT";
+            analysis.logic = "RR below 1:1.5 threshold. Setup downgraded to observation.";
         }
 
-        renderOutput(analysis, currentRR, spreadBuffer);
+        renderOutput(analysis, currentRR, spread);
         
         if (out) {
             out.classList.remove('hidden');
@@ -68,21 +61,29 @@ async function executeSurgicalScan() {
 }
 
 async function fetchGeminiAnalysis(key, images) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
     
     const prompt = `
-        PROTOCOL: OMNI_V53_PRECISION
-        MANDATE: Read charts with 100% precision. 
-        HIGH RR TARGET: Place Stop Loss strictly at the nearest 1m candle wick/structural break. 
-        Aim for 1:2 to 1:8 Risk/Reward ratio if market structure allows.
-        JSON ONLY:
+        PROTOCOL: OMNI_V54_FINAL_STRUCTURAL_LOCK
+        MODEL_LOCK: Gemini 2.0 Flash (Mandatory)
+        
+        STRATEGY_ENGINE (COUNCIL OF 8): 
+        Cross-reference: SMC, ICT, VSA, Price Action, Wyckoff, Fibonacci, Mean Reversion, Elliott Wave.
+        
+        MANDATE:
+        1. 100% VISUAL SCRAPE: Perform OCR on Y-axis (Price) and X-axis (Time). Identify exact XM Terminal coordinates.
+        2. DXY SYNC: Use 4th image (DXY) to confirm asset bias. If DXY is bullish, short XAU/Crypto.
+        3. INSTITUTIONAL DETECTION: Mark MSS, FVG, and Liquidity Sweeps.
+        4. GRADE-A FILTER: Output "WAIT" if conviction < B+.
+        
+        OUTPUT STRICT JSON ONLY:
         {
           "assetName": "STRING",
           "currentPrice": number,
           "tradeType": "SCALP"|"DAY TRADE",
-          "bias": "BUY"|"SELL"|"WATCHING",
+          "bias": "BUY"|"SELL"|"WAIT",
           "entry": number, "sl": number, "tp": number, "poi": number,
-          "logic": "MAX 12 WORDS",
+          "logic": "10-15 WORD SUMMARY OF INSTITUTIONAL FOOTPRINT",
           "sup": "STRING", "res": "STRING"
         }
     `;
@@ -102,61 +103,58 @@ async function fetchGeminiAnalysis(key, images) {
 
     const data = await response.json();
     const rawText = data.candidates[0].content.parts[0].text;
-    const cleanJson = rawText.replace(/```json|```/g, "").trim();
-    return JSON.parse(cleanJson);
+    return JSON.parse(rawText.replace(/```json|```/g, "").trim());
 }
 
-function renderOutput(data, currentRR, spread) {
-    const ui = (id) => document.getElementById(id);
-    const update = (id, val) => { if (ui(id)) ui(id).innerText = val || "---"; };
-
+function renderOutput(data, rr, spread) {
     const bEl = ui('actionText');
+    const isWait = data.bias === "WAIT";
+
+    // --- DYNAMIC UI & OPERATIONAL CONSTRAINTS ---
     if (bEl) {
-        bEl.innerText = data.bias || "WATCHING";
+        bEl.innerText = data.bias || "WAIT";
         bEl.className = `text-7xl font-black italic tracking-tighter uppercase leading-none glow-text ${
             data.bias === 'BUY' ? 'text-emerald-400' : 
             data.bias === 'SELL' ? 'text-rose-500' : 'text-slate-400'
         }`;
     }
 
-    update('entText', data.entry);
-    update('slText', data.sl);
-    update('tpText', data.tp);
-    update('poiLevel', data.poi || data.entry || "WAITING");
+    update('entText', isWait ? "--" : data.entry);
+    update('slText', isWait ? "--" : data.sl);
+    update('tpText', isWait ? "--" : data.tp);
+    update('poiLevel', data.poi || data.entry || "RE-SCAN REQ");
     update('logicText', data.logic);
-    update('tradeTypeLabel', `${data.assetName || "ASSET"} | ${data.tradeType || "SCANNING"}`);
-    update('supText', data.sup);
-    update('resText', data.res);
-    update('rrText', `1:${currentRR.toFixed(1)}`);
+    update('tradeTypeLabel', `${data.assetName} | ${data.tradeType}`);
+    update('rrText', isWait ? "1:0.0" : `1:${rr.toFixed(1)}`);
 
-    if (ui('poiZone')) {
-        data.bias === 'WATCHING' ? ui('poiZone').classList.remove('hidden') : ui('poiZone').classList.add('hidden');
-    }
-
-    // --- DYNAMIC PRECISION LOT ENGINE ---
-    const bal = parseFloat(localStorage.getItem('omni_balance')) || 0;
-    const riskPct = parseFloat(localStorage.getItem('omni_risk')) || 0;
+    // --- SURGICAL LOT SIZING (XM-BROKER NORMALIZED) ---
+    const bal = parseFloat(localStorage.getItem('omni_balance')) || 7000;
+    const rPct = parseFloat(localStorage.getItem('omni_risk')) || 0.5;
     
-    if (bal && riskPct && data.entry && data.sl && data.bias !== "WATCHING") {
-        const riskCash = bal * (riskPct / 100); // Should be $35
+    if (!isWait && data.entry && data.sl) {
+        const riskCash = bal * (rPct / 100); 
         const priceDiff = Math.abs(data.entry - data.sl) + spread;
         
-        let assetMultiplier = 1;
-        const asset = data.assetName?.toUpperCase() || "";
-
-        // Standard Contract Scaling
-        if (asset.includes("OIL") || asset.includes("WTI") || asset.includes("XAU") || asset.includes("GOLD")) {
-            assetMultiplier = 100; 
-        } else if (priceDiff < 1) {
-            assetMultiplier = 10;
+        let brokerScale = 1; // Default Crypto/Forex
+        if (data.assetName.includes("OIL") || data.assetName.includes("GOLD") || data.assetName.includes("XAU")) {
+            brokerScale = 100; // XM MetaTrader Calibration
         }
 
-        const lotSize = riskCash / (priceDiff * assetMultiplier);
+        const lotSize = riskCash / (priceDiff * brokerScale);
         update('lotText', lotSize.toFixed(3));
     } else {
-        update('lotText', "WAIT");
+        update('lotText', "WAITING");
     }
 }
+
+function calibrateBrokerSpread(asset) {
+    if (asset.includes("OIL") || asset.includes("WTI")) return 0.03;
+    if (asset.includes("GOLD") || asset.includes("XAU")) return 0.20;
+    return 0.01;
+}
+
+function ui(id) { return document.getElementById(id); }
+function update(id, val) { if (ui(id)) ui(id).innerText = val || "---"; }
 
 function toBase64(file) {
     return new Promise((res) => {

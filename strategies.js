@@ -1,15 +1,37 @@
 /**
- * OMNI-BLACK | VERSION 80.0 MASTER (DYNAMIC WEIGHTING)
- * Strategy: Institutional SMC + Internal Math Engine
+ * OMNI-BLACK | VERSION 80.0 MASTER
+ * Strategy: Internal Math Indicators + Dynamic Weighting
  */
 
 let files = [null, null, null, null]; 
+
 const ui = (id) => document.getElementById(id);
 const toBase64 = (file) => new Promise(res => {
     const r = new FileReader(); r.readAsDataURL(file); r.onload = () => res(r.result);
 });
 
-// --- INTERNAL MATH ENGINE ---
+// --- PERSISTENCE ENGINE (FIXED) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const fields = ['apiKeyInput', 'balanceInput', 'riskInput'];
+    fields.forEach(id => {
+        const val = localStorage.getItem('omni_' + id);
+        if (val && ui(id)) ui(id).value = val;
+    });
+});
+
+async function secureParameters() {
+    const fields = ['apiKeyInput', 'balanceInput', 'riskInput'];
+    fields.forEach(id => {
+        const element = ui(id);
+        if (element) {
+            localStorage.setItem('omni_' + id, element.value);
+        }
+    });
+    alert("SYSTEM LOCKED & SAVED");
+    toggleDrawer();
+}
+
+// --- INTERNAL INDICATOR MATH ---
 const MathEngine = {
     calcRSI: (prices, period = 14) => {
         if (!prices || prices.length < period) return 50;
@@ -21,52 +43,50 @@ const MathEngine = {
         return 100 - (100 / (1 + rs));
     },
     calcEMA: (prices, period) => {
+        if (!prices || prices.length < 2) return 0;
         const k = 2 / (period + 1);
         return prices.reduce((acc, val) => (val * k) + (acc * (1 - k)), prices[0]);
     }
 };
 
-// --- DYNAMIC WEIGHTING ENGINE ---
-function runWeightedAnalysis(data) {
-    let score = 0; // Total potential: 100
+// --- CORE WEIGHTED LOGIC ---
+function runStrategicAnalysis(data) {
+    let score = 0;
     let bias = "WAIT";
-    
-    // 1. LIQUIDITY SWEEP (Weight: 40) - Highest Reliability
-    const sweepDist = Math.abs(data.currentPrice - data.liquiditySweep) / data.currentPrice;
-    if (sweepDist < 0.0015) score += 40; 
 
-    // 2. MARKET STRUCTURE SHIFT (Weight: 25)
+    // 1. LIQUIDITY & STRUCTURE (Weight: 65%)
     if (data.mss === "BULLISH") score += 25;
     if (data.mss === "BEARISH") score -= 25;
-
-    // 3. DXY GRAVITY FILTER (Weight: 20)
-    if (data.dxyTrend === "BEARISH") score += 20; // Bullish for Gold/Crypto
-    if (data.dxyTrend === "BULLISH") score -= 20; // Bearish for Gold/Crypto
-
-    // 4. RETAIL CONFLUENCE (Weight: 15) - Calculated Internally
-    const currentRSI = MathEngine.calcRSI(data.recentCloses);
-    const ema200 = MathEngine.calcEMA(data.recentCloses, 200);
     
-    if (currentRSI < 30) score += 7.5;
-    if (currentRSI > 70) score -= 7.5;
+    const sweepDetected = Math.abs(data.currentPrice - data.liquiditySweep) / data.currentPrice < 0.0015;
+    if (sweepDetected) score += 40;
+
+    // 2. DXY GRAVITY (Weight: 20%)
+    if (data.dxyTrend === "BEARISH") score += 20;
+    if (data.dxyTrend === "BULLISH") score -= 20;
+
+    // 3. INTERNAL MATH CONFLUENCE (Weight: 15%)
+    const rsi = MathEngine.calcRSI(data.recentCloses);
+    const ema200 = MathEngine.calcEMA(data.recentCloses, 200);
+
+    if (rsi < 30) score += 7.5;
+    if (rsi > 70) score -= 7.5;
     if (data.currentPrice > ema200) score += 7.5;
     if (data.currentPrice < ema200) score -= 7.5;
 
-    // --- FINAL BIAS CALCULATION ---
-    // Scalp Requirement: 65% Confidence | Day Trade Requirement: 85% Confidence
+    // Final Decision Thresholds
     if (score >= 85) bias = "DAY TRADE BUY";
     else if (score >= 65) bias = "SCALP BUY";
     else if (score <= -85) bias = "DAY TRADE SELL";
     else if (score <= -65) bias = "SCALP SELL";
-    else bias = "WAIT";
 
-    return { bias, confidence: Math.abs(score), rsi: currentRSI.toFixed(1) };
+    return { bias, confidence: Math.abs(score), rsi: rsi.toFixed(1) };
 }
 
-// --- EXECUTION PIPELINE ---
+// --- SYSTEM EXECUTION ---
 async function executeSurgicalScan() {
     const btn = ui('scanBtn');
-    if (files.filter(f => f).length < 4) return alert("Upload all 4 Plain Charts.");
+    if (files.filter(f => f).length < 4) return alert("All 4 Plain Charts required.");
 
     btn.innerText = "COUNCIL OF 8 ANALYZING...";
     btn.disabled = true;
@@ -75,45 +95,35 @@ async function executeSurgicalScan() {
         const key = localStorage.getItem('omni_apiKeyInput');
         const b64Images = await Promise.all(files.map(f => toBase64(f)));
 
-        // 1. Data Scrape (Vision)
-        const rawData = await fetchVisionData(key, b64Images);
+        const rawData = await fetchMarketData(key, b64Images);
+        const analysis = runStrategicAnalysis(rawData);
+        const logicTxt = await fetchTradeExplanation(key, analysis.bias, rawData);
 
-        // 2. Weighted Logic (JS)
-        const analysis = runWeightedAnalysis(rawData);
-
-        // 3. Narrative logic (AI)
-        const logicTxt = await fetchNarrative(key, analysis.bias, rawData);
-
-        renderUI(rawData, analysis, logicTxt);
+        renderResults(rawData, analysis, logicTxt);
     } catch (e) {
         console.error(e);
-        alert("CRITICAL SYSTEM ERROR");
+        alert("CRITICAL ERROR: Check API key or Image Clarity.");
     } finally {
         btn.innerText = "Perform Surgical Scan";
         btn.disabled = false;
     }
 }
 
-async function fetchVisionData(key, images) {
+async function fetchMarketData(key, images) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     const prompt = `
-        PROTOCOL: OMNI_V80_VISION_SCRAPE
-        Mandate: Scrape plain charts. Extract exact numeric price data.
-        1. Current Price.
-        2. Identify most recent Liquidity Sweep level (Wick Level).
-        3. Identify MSS (BULLISH/BEARISH/NONE).
-        4. DXY Trend.
-        5. Extract last 20 candle closes as an array.
-        6. Define entry, sl, tp, and a POI (Wait level).
+        PROTOCOL: OMNI_V80_SCRAPE
+        Extract raw numeric data from these 4 plain charts.
+        Return last 30 candle closes in an array for RSI calculation.
         
-        STRICT JSON ONLY:
+        JSON ONLY:
         {
           "asset": "STRING",
           "currentPrice": number,
-          "liquiditySweep": number,
-          "mss": "STRING",
-          "dxyTrend": "STRING",
           "recentCloses": [numbers],
+          "liquiditySweep": number,
+          "mss": "BULLISH"|"BEARISH"|"NONE",
+          "dxyTrend": "BULLISH"|"BEARISH",
           "entry": number, "sl": number, "tp": number, "poi": number
         }
     `;
@@ -128,15 +138,15 @@ async function fetchVisionData(key, images) {
     return JSON.parse(json.candidates[0].content.parts[0].text);
 }
 
-async function fetchNarrative(key, bias, data) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
-    const prompt = `Give a 12-word institutional trade logic for a ${bias} on ${data.asset}. Focus on liquidity.`;
+async function fetchTradeExplanation(key, bias, data) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+    const prompt = `Give exactly 12 words explaining a ${bias} on ${data.asset} using liquidity sweeps.`;
     const res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
     const json = await res.json();
     return json.candidates[0].content.parts[0].text;
 }
 
-function renderUI(rawData, analysis, logic) {
+function renderResults(rawData, analysis, logic) {
     const isWait = analysis.bias === "WAIT";
     ui('resultBox').classList.remove('hidden');
     ui('actionText').innerText = analysis.bias;
@@ -148,7 +158,6 @@ function renderUI(rawData, analysis, logic) {
     ui('logicText').innerText = logic;
     ui('rsiVal').innerText = analysis.rsi;
     ui('dxyStatus').innerText = rawData.dxyTrend;
-    
     ui('entText').innerText = isWait ? "---" : rawData.entry;
     ui('slText').innerText = isWait ? "---" : rawData.sl;
     ui('tpText').innerText = isWait ? "---" : rawData.tp;
@@ -159,7 +168,6 @@ function renderUI(rawData, analysis, logic) {
     if (isWait) {
         ui('poiZone').classList.remove('hidden');
         ui('poiLevel').innerText = rawData.poi || "MONITORING";
-        ui('lotText').innerText = "WAIT";
     } else {
         ui('poiZone').classList.add('hidden');
         const bal = parseFloat(localStorage.getItem('omni_balanceInput'));

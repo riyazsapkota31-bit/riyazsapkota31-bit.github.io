@@ -24,7 +24,7 @@
     <header class="flex justify-between items-center mb-10">
         <div>
             <h1 class="text-2xl font-extrabold italic text-white uppercase tracking-tighter">OMNI—BLACK</h1>
-            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Logic: Split-Brain v80</p>
+            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Logic: Weighted Strategic Engine</p>
         </div>
         <button onclick="toggleDrawer()" class="w-12 h-12 terminal-border rounded-2xl flex items-center justify-center text-slate-400">
             <i class="fa-solid fa-sliders text-lg"></i>
@@ -54,15 +54,15 @@
         </div>
     </div>
 
-    <button id="scanBtn" onclick="executeSurgicalScan()" class="scan-btn w-full py-6 rounded-[2rem] font-extrabold text-xs uppercase tracking-widest text-white">
+    <button id="scanBtn" onclick="executeSurgicalScan()" class="scan-btn w-full py-6 rounded-[2rem] font-extrabold text-xs uppercase tracking-widest text-white shadow-2xl">
         Perform Surgical Scan
     </button>
 
     <div id="resultBox" class="hidden mt-8 terminal-border rounded-[2.5rem] p-8 bg-black/40">
         <div class="flex justify-between items-center mb-8">
             <div class="flex flex-col">
-                <span class="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase">Surgical Analysis</span>
-                <span id="tradeTypeLabel" class="text-[9px] font-bold text-slate-500 uppercase mt-1">---</span>
+                <span id="tradeTypeLabel" class="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase">Surgical Analysis</span>
+                <span id="scoreText" class="text-[9px] font-bold text-slate-500 uppercase mt-1">Confidence: 0%</span>
             </div>
             <div class="text-right">
                 <p id="logicText" class="text-[11px] text-slate-400 italic max-w-[180px] leading-tight">Waiting...</p>
@@ -70,7 +70,7 @@
         </div>
         
         <div class="text-center mb-10">
-            <h2 id="actionText" class="text-7xl font-black italic tracking-tighter uppercase leading-none glow-text">---</h2>
+            <h2 id="actionText" class="text-5xl font-black italic tracking-tighter uppercase leading-none glow-text">---</h2>
         </div>
 
         <div id="poiZone" class="hidden mb-8 bg-amber-500/5 border border-amber-500/20 p-5 rounded-[2rem] text-center">
@@ -99,8 +99,9 @@
                 <span id="lotText" class="text-4xl font-black text-white">0.00</span>
             </div>
             <div class="space-y-3 px-2">
+                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">DXY</span><span id="dxyStatus" class="text-[12px] font-bold text-white">---</span></div>
+                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">RSI</span><span id="rsiVal" class="text-[12px] font-bold text-white">---</span></div>
                 <div class="flex justify-between items-center pt-2 border-t border-white/5"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">RR</span><span id="rrText" class="text-[12px] font-black text-emerald-400">0:0</span></div>
-                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Score</span><span id="scoreText" class="text-[12px] font-bold text-white">0%</span></div>
             </div>
         </div>
     </div>
@@ -112,12 +113,17 @@
         <div class="space-y-6">
             <div class="bg-white/5 p-6 rounded-[2rem]">
                 <label class="text-[10px] uppercase text-slate-500 mb-2 block">API Key</label>
-                <input type="password" id="apiKeyInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 text-white outline-none">
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Balance ($)</label>
-                <input type="number" id="balanceInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 text-white outline-none">
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Risk %</label>
-                <input type="number" id="riskInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 text-white outline-none">
-                <button onclick="secureParameters().then(() => toggleDrawer())" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase text-white">LOCK SYSTEM</button>
+                <input type="password" id="apiKeyInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 outline-none text-white">
+                
+                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Risk Engine</label>
+                <div class="space-y-4 mb-8">
+                    <input type="number" id="balanceInput" placeholder="Balance ($)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
+                    <input type="number" id="riskInput" placeholder="Risk %" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
+                </div>
+
+                <button onclick="secureParameters()" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-white">
+                    LOCK SYSTEM
+                </button>
             </div>
         </div>
     </div>

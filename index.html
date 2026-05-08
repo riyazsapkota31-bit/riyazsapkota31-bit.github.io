@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMNI-BLACK | V80.0</title>
+    <title>OMNI-BLACK | V80.0 MASTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -24,7 +24,7 @@
     <header class="flex justify-between items-center mb-10">
         <div>
             <h1 class="text-2xl font-extrabold italic text-white uppercase tracking-tighter">OMNI—BLACK</h1>
-            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Protocol Version 80.0</p>
+            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Logic: Split-Brain v80</p>
         </div>
         <button onclick="toggleDrawer()" class="w-12 h-12 terminal-border rounded-2xl flex items-center justify-center text-slate-400">
             <i class="fa-solid fa-sliders text-lg"></i>
@@ -49,23 +49,23 @@
         </div>
         <div id="box3" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img3').click()">
             <input type="file" id="img3" accept="image/*" class="hidden" onchange="markFile(3)">
-            <div id="label3" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">DXY DATA</span></div>
+            <div id="label3" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">DXY INDEX</span></div>
             <div id="icon3" class="hidden text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
         </div>
     </div>
 
-    <button id="scanBtn" onclick="executeSurgicalScan()" class="scan-btn w-full py-6 rounded-[2rem] font-extrabold text-xs uppercase tracking-widest text-white shadow-2xl shadow-indigo-500/20">
+    <button id="scanBtn" onclick="executeSurgicalScan()" class="scan-btn w-full py-6 rounded-[2rem] font-extrabold text-xs uppercase tracking-widest text-white">
         Perform Surgical Scan
     </button>
 
-    <div id="resultBox" class="hidden mt-8 terminal-border rounded-[2.5rem] p-8 bg-black/40 border border-white/5">
+    <div id="resultBox" class="hidden mt-8 terminal-border rounded-[2.5rem] p-8 bg-black/40">
         <div class="flex justify-between items-center mb-8">
             <div class="flex flex-col">
                 <span class="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase">Surgical Analysis</span>
                 <span id="tradeTypeLabel" class="text-[9px] font-bold text-slate-500 uppercase mt-1">---</span>
             </div>
             <div class="text-right">
-                <p id="logicText" class="text-[11px] text-slate-400 italic max-w-[180px] leading-tight">Waiting for data...</p>
+                <p id="logicText" class="text-[11px] text-slate-400 italic max-w-[180px] leading-tight">Waiting...</p>
             </div>
         </div>
         
@@ -99,9 +99,8 @@
                 <span id="lotText" class="text-4xl font-black text-white">0.00</span>
             </div>
             <div class="space-y-3 px-2">
-                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Support</span><span id="supText" class="text-[12px] font-bold text-white">---</span></div>
-                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Resistance</span><span id="resText" class="text-[12px] font-bold text-white">---</span></div>
                 <div class="flex justify-between items-center pt-2 border-t border-white/5"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">RR</span><span id="rrText" class="text-[12px] font-black text-emerald-400">0:0</span></div>
+                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Score</span><span id="scoreText" class="text-[12px] font-bold text-white">0%</span></div>
             </div>
         </div>
     </div>
@@ -112,32 +111,22 @@
         <h3 class="text-xs font-black uppercase text-indigo-400 mb-10 tracking-[0.3em]">System Config</h3>
         <div class="space-y-6">
             <div class="bg-white/5 p-6 rounded-[2rem]">
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Hardware Key</label>
-                <input type="password" id="apiKeyInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 outline-none text-white">
-                
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Risk Engine</label>
-                <div class="space-y-4 mb-8">
-                    <input type="number" id="balanceInput" placeholder="Balance ($7000)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
-                    <input type="number" id="riskInput" placeholder="Risk % (0.5)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm outline-none text-white">
-                </div>
-
-                <button onclick="secureParameters().then(() => toggleDrawer())" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-white">
-                    Secure Parameters
-                </button>
+                <label class="text-[10px] uppercase text-slate-500 mb-2 block">API Key</label>
+                <input type="password" id="apiKeyInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 text-white outline-none">
+                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Balance ($)</label>
+                <input type="number" id="balanceInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 text-white outline-none">
+                <label class="text-[10px] uppercase text-slate-500 mb-2 block">Risk %</label>
+                <input type="number" id="riskInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 text-white outline-none">
+                <button onclick="secureParameters().then(() => toggleDrawer())" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase text-white">LOCK SYSTEM</button>
             </div>
         </div>
     </div>
 
     <script src="strategies.js"></script>
     <script>
-        function toggleDrawer() { 
-            document.getElementById('sideDrawer').classList.toggle('open'); 
-            document.getElementById('overlay').classList.toggle('hidden'); 
-        }
-        
+        function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
         function markFile(i) { 
-            const b = document.getElementById('box'+i); 
-            b.classList.add('has-file'); 
+            const b = document.getElementById('box'+i); b.classList.add('has-file'); 
             document.getElementById('label'+i).classList.add('hidden'); 
             document.getElementById('icon'+i).classList.remove('hidden'); 
             files[i] = document.getElementById('img'+i).files[0]; 

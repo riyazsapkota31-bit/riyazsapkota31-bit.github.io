@@ -1,121 +1,102 @@
 /**
- * OMNI-BLACK | VERSION 80.0 MASTER
- * Strategy: Internal Math Indicators + Dynamic Weighting
+ * OMNI-BLACK | VERSION 85.0 (SENSOR-EXECUTION SPLIT)
+ * Gemini = Sensor & Narrator | JS = Decision Engine
  */
 
 let files = [null, null, null, null]; 
-
 const ui = (id) => document.getElementById(id);
 const toBase64 = (file) => new Promise(res => {
     const r = new FileReader(); r.readAsDataURL(file); r.onload = () => res(r.result);
 });
 
-// --- PERSISTENCE ENGINE (FIXED) ---
+// --- PERSISTENCE ---
 document.addEventListener('DOMContentLoaded', () => {
-    const fields = ['apiKeyInput', 'balanceInput', 'riskInput'];
-    fields.forEach(id => {
+    ['apiKeyInput', 'balanceInput', 'riskInput'].forEach(id => {
         const val = localStorage.getItem('omni_' + id);
         if (val && ui(id)) ui(id).value = val;
     });
 });
 
 async function secureParameters() {
-    const fields = ['apiKeyInput', 'balanceInput', 'riskInput'];
-    fields.forEach(id => {
-        const element = ui(id);
-        if (element) {
-            localStorage.setItem('omni_' + id, element.value);
-        }
+    ['apiKeyInput', 'balanceInput', 'riskInput'].forEach(id => {
+        localStorage.setItem('omni_' + id, ui(id).value);
     });
-    alert("SYSTEM LOCKED & SAVED");
+    alert("SYSTEM LOCKED");
     toggleDrawer();
 }
 
-// --- INTERNAL INDICATOR MATH ---
-const MathEngine = {
-    calcRSI: (prices, period = 14) => {
-        if (!prices || prices.length < period) return 50;
-        let changes = [];
-        for (let i = 1; i < prices.length; i++) changes.push(prices[i] - prices[i-1]);
-        let gains = changes.map(v => v > 0 ? v : 0).slice(0, period).reduce((a,b) => a+b, 0) / period;
-        let losses = changes.map(v => v < 0 ? -v : 0).slice(0, period).reduce((a,b) => a+b, 0) / period;
-        let rs = gains / (losses || 1);
-        return 100 - (100 / (1 + rs));
+// --- APP DECISION ENGINE (The "Brain") ---
+const DecisionEngine = {
+    calcRSI: (prices) => {
+        if (!prices || prices.length < 14) return 50;
+        let gains = 0, losses = 0;
+        for (let i = 1; i < 15; i++) {
+            let d = prices[i] - prices[i-1];
+            d > 0 ? gains += d : losses -= d;
+        }
+        return 100 - (100 / (1 + (gains / (losses || 1))));
     },
-    calcEMA: (prices, period) => {
-        if (!prices || prices.length < 2) return 0;
-        const k = 2 / (period + 1);
-        return prices.reduce((acc, val) => (val * k) + (acc * (1 - k)), prices[0]);
+    
+    analyze: (data) => {
+        let score = 0;
+        const rsi = DecisionEngine.calcRSI(data.recentCloses);
+        
+        // Institutional Weight (65%)
+        if (data.mss === "BULLISH") score += 25;
+        if (data.mss === "BEARISH") score -= 25;
+        if (Math.abs(data.currentPrice - data.liquiditySweep) / data.currentPrice < 0.002) score += 40;
+
+        // DXY Weight (20%)
+        if (data.dxyTrend === "BEARISH") score += 20;
+        if (data.dxyTrend === "BULLISH") score -= 20;
+
+        // Retail/Internal Math (15%)
+        if (rsi < 35) score += 15;
+        if (rsi > 65) score -= 15;
+
+        let bias = "WAIT";
+        if (score >= 60) bias = "BUY";
+        else if (score <= -60) bias = "SELL";
+
+        return { bias, confidence: Math.abs(score), rsi: rsi.toFixed(1) };
     }
 };
 
-// --- CORE WEIGHTED LOGIC ---
-function runStrategicAnalysis(data) {
-    let score = 0;
-    let bias = "WAIT";
-
-    // 1. LIQUIDITY & STRUCTURE (Weight: 65%)
-    if (data.mss === "BULLISH") score += 25;
-    if (data.mss === "BEARISH") score -= 25;
-    
-    const sweepDetected = Math.abs(data.currentPrice - data.liquiditySweep) / data.currentPrice < 0.0015;
-    if (sweepDetected) score += 40;
-
-    // 2. DXY GRAVITY (Weight: 20%)
-    if (data.dxyTrend === "BEARISH") score += 20;
-    if (data.dxyTrend === "BULLISH") score -= 20;
-
-    // 3. INTERNAL MATH CONFLUENCE (Weight: 15%)
-    const rsi = MathEngine.calcRSI(data.recentCloses);
-    const ema200 = MathEngine.calcEMA(data.recentCloses, 200);
-
-    if (rsi < 30) score += 7.5;
-    if (rsi > 70) score -= 7.5;
-    if (data.currentPrice > ema200) score += 7.5;
-    if (data.currentPrice < ema200) score -= 7.5;
-
-    // Final Decision Thresholds
-    if (score >= 85) bias = "DAY TRADE BUY";
-    else if (score >= 65) bias = "SCALP BUY";
-    else if (score <= -85) bias = "DAY TRADE SELL";
-    else if (score <= -65) bias = "SCALP SELL";
-
-    return { bias, confidence: Math.abs(score), rsi: rsi.toFixed(1) };
-}
-
-// --- SYSTEM EXECUTION ---
+// --- SYSTEM PIPELINE ---
 async function executeSurgicalScan() {
     const btn = ui('scanBtn');
-    if (files.filter(f => f).length < 4) return alert("All 4 Plain Charts required.");
-
-    btn.innerText = "COUNCIL OF 8 ANALYZING...";
+    if (files.filter(f => f).length < 4) return alert("Upload all 4 plain charts.");
+    
+    btn.innerText = "GEMINI SENSORS SCANNING...";
     btn.disabled = true;
 
     try {
         const key = localStorage.getItem('omni_apiKeyInput');
         const b64Images = await Promise.all(files.map(f => toBase64(f)));
 
-        const rawData = await fetchMarketData(key, b64Images);
-        const analysis = runStrategicAnalysis(rawData);
-        const logicTxt = await fetchTradeExplanation(key, analysis.bias, rawData);
+        // 1. GEMINI READS CHART DATA
+        const marketData = await geminiSensor(key, b64Images);
 
-        renderResults(rawData, analysis, logicTxt);
+        // 2. APP MAKES THE SIGNAL DECISION
+        const decision = DecisionEngine.analyze(marketData);
+
+        // 3. GEMINI GENERATES LOGIC BASED ON APP'S SIGNAL
+        const finalNarrative = await geminiNarrator(key, decision.bias, marketData);
+
+        renderUI(marketData, decision, finalNarrative);
     } catch (e) {
-        console.error(e);
-        alert("CRITICAL ERROR: Check API key or Image Clarity.");
+        alert("SCAN ERROR: Ensure API Key is valid.");
     } finally {
         btn.innerText = "Perform Surgical Scan";
         btn.disabled = false;
     }
 }
 
-async function fetchMarketData(key, images) {
+async function geminiSensor(key, images) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     const prompt = `
-        PROTOCOL: OMNI_V80_SCRAPE
-        Extract raw numeric data from these 4 plain charts.
-        Return last 30 candle closes in an array for RSI calculation.
-        
+        TASK: Extract precise data from these plain charts. 
+        Focus on: Last 20 candle closes, Liquidity Sweep level, MSS status, DXY Trend, and specific POI price.
         JSON ONLY:
         {
           "asset": "STRING",
@@ -124,55 +105,59 @@ async function fetchMarketData(key, images) {
           "liquiditySweep": number,
           "mss": "BULLISH"|"BEARISH"|"NONE",
           "dxyTrend": "BULLISH"|"BEARISH",
-          "entry": number, "sl": number, "tp": number, "poi": number
-        }
-    `;
+          "poi": number,
+          "suggested_sl": number, "suggested_tp": number
+        }`;
 
-    const body = {
-        contents: [{ parts: [{ text: prompt }, ...images.map(img => ({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } }))] }],
-        generationConfig: { response_mime_type: "application/json", temperature: 0.1 }
-    };
-
-    const res = await fetch(url, { method: 'POST', body: JSON.stringify(body) });
-    const json = await res.json();
-    return JSON.parse(json.candidates[0].content.parts[0].text);
+    const res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }, ...images.map(img => ({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } }))] }],
+            generationConfig: { response_mime_type: "application/json", temperature: 0.1 }
+        })
+    });
+    const j = await res.json();
+    return JSON.parse(j.candidates[0].content.parts[0].text);
 }
 
-async function fetchTradeExplanation(key, bias, data) {
+async function geminiNarrator(key, signal, data) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
-    const prompt = `Give exactly 12 words explaining a ${bias} on ${data.asset} using liquidity sweeps.`;
-    const res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-    const json = await res.json();
-    return json.candidates[0].content.parts[0].text;
+    const prompt = signal === "WAIT" 
+        ? `The app signal is WAIT. Explain in 10-15 words why we must wait for the POI at ${data.poi} based on the chart structure.`
+        : `The app signal is ${signal}. Give a 10-15 word logic for this ${signal} on ${data.asset} based on institutional liquidity.`;
+
+    const res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const j = await res.json();
+    return j.candidates[0].content.parts[0].text;
 }
 
-function renderResults(rawData, analysis, logic) {
-    const isWait = analysis.bias === "WAIT";
+function renderUI(data, decision, narrative) {
     ui('resultBox').classList.remove('hidden');
-    ui('actionText').innerText = analysis.bias;
-    ui('actionText').className = `text-5xl font-black italic tracking-tighter uppercase leading-none glow-text ${
-        analysis.bias.includes('BUY') ? 'text-emerald-400' : analysis.bias.includes('SELL') ? 'text-rose-500' : 'text-slate-400'
-    }`;
+    ui('actionText').innerText = decision.bias;
+    ui('actionText').className = `text-6xl font-black italic uppercase glow-text ${decision.bias === 'BUY' ? 'text-emerald-400' : decision.bias === 'SELL' ? 'text-rose-500' : 'text-slate-400'}`;
+    
+    ui('logicText').innerText = narrative;
+    ui('scoreText').innerText = `Confidence: ${decision.confidence}%`;
+    ui('rsiVal').innerText = decision.rsi;
+    ui('dxyStatus').innerText = data.dxyTrend;
+    ui('poiLevel').innerText = data.poi || "ANALYZING";
 
-    ui('scoreText').innerText = `Confidence: ${analysis.confidence}%`;
-    ui('logicText').innerText = logic;
-    ui('rsiVal').innerText = analysis.rsi;
-    ui('dxyStatus').innerText = rawData.dxyTrend;
-    ui('entText').innerText = isWait ? "---" : rawData.entry;
-    ui('slText').innerText = isWait ? "---" : rawData.sl;
-    ui('tpText').innerText = isWait ? "---" : rawData.tp;
-
-    const rr = Math.abs(rawData.tp - rawData.entry) / Math.abs(rawData.entry - rawData.sl);
-    ui('rrText').innerText = isWait ? "1:0.0" : `1:${rr.toFixed(1)}`;
-
-    if (isWait) {
+    if (decision.bias === "WAIT") {
         ui('poiZone').classList.remove('hidden');
-        ui('poiLevel').innerText = rawData.poi || "MONITORING";
+        ui('entText').innerText = "---"; ui('slText').innerText = "---"; ui('tpText').innerText = "---";
+        ui('lotText').innerText = "0.00";
     } else {
         ui('poiZone').classList.add('hidden');
+        ui('entText').innerText = data.currentPrice;
+        ui('slText').innerText = data.suggested_sl;
+        ui('tpText').innerText = data.suggested_tp;
+        
         const bal = parseFloat(localStorage.getItem('omni_balanceInput'));
         const risk = parseFloat(localStorage.getItem('omni_riskInput')) / 100;
-        const lot = (bal * risk) / (Math.abs(rawData.entry - rawData.sl) * 10);
+        const lot = (bal * risk) / (Math.abs(data.currentPrice - data.suggested_sl) * 10);
         ui('lotText').innerText = lot.toFixed(3);
     }
 }

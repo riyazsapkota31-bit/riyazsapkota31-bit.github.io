@@ -1,6 +1,6 @@
 /**
- * OMNI-BLACK | VERSION 80.0 (MASTER ARCHITECT)
- * Protocol: Internal Indicator Calculation (No Indicator Charts Needed)
+ * OMNI-BLACK | VERSION 80.0 MASTER (DYNAMIC WEIGHTING)
+ * Strategy: Institutional SMC + Internal Math Engine
  */
 
 let files = [null, null, null, null]; 
@@ -9,106 +9,112 @@ const toBase64 = (file) => new Promise(res => {
     const r = new FileReader(); r.readAsDataURL(file); r.onload = () => res(r.result);
 });
 
-// --- INDICATOR MATH ENGINE ---
-const Indicators = {
-    // Calculate RSI internally from raw price array
+// --- INTERNAL MATH ENGINE ---
+const MathEngine = {
     calcRSI: (prices, period = 14) => {
-        if (prices.length < period) return 50;
-        let gains = 0, losses = 0;
-        for (let i = 1; i <= period; i++) {
-            let diff = prices[i] - prices[i - 1];
-            diff > 0 ? gains += diff : losses -= diff;
-        }
+        if (!prices || prices.length < period) return 50;
+        let changes = [];
+        for (let i = 1; i < prices.length; i++) changes.push(prices[i] - prices[i-1]);
+        let gains = changes.map(v => v > 0 ? v : 0).slice(0, period).reduce((a,b) => a+b, 0) / period;
+        let losses = changes.map(v => v < 0 ? -v : 0).slice(0, period).reduce((a,b) => a+b, 0) / period;
         let rs = gains / (losses || 1);
         return 100 - (100 / (1 + rs));
     },
-    // Calculate EMA internally
     calcEMA: (prices, period) => {
-        if (prices.length < period) return prices[prices.length - 1];
         const k = 2 / (period + 1);
-        let ema = prices[0];
-        for (let i = 1; i < prices.length; i++) {
-            ema = (prices[i] * k) + (ema * (1 - k));
-        }
-        return ema;
+        return prices.reduce((acc, val) => (val * k) + (acc * (1 - k)), prices[0]);
     }
 };
 
-// --- CORE STRATEGIC BRAIN ---
-function runStrategicBrain(data) {
-    let score = 0;
+// --- DYNAMIC WEIGHTING ENGINE ---
+function runWeightedAnalysis(data) {
+    let score = 0; // Total potential: 100
     let bias = "WAIT";
     
-    // 1. Internal Indicator Processing
-    const currentRSI = Indicators.calcRSI(data.recentCloses);
-    const ema200 = Indicators.calcEMA(data.recentCloses, 200);
-    const isAboveEMA = data.currentPrice > ema200;
+    // 1. LIQUIDITY SWEEP (Weight: 40) - Highest Reliability
+    const sweepDist = Math.abs(data.currentPrice - data.liquiditySweep) / data.currentPrice;
+    if (sweepDist < 0.0015) score += 40; 
 
-    // 2. SMC & Institutional Logic
+    // 2. MARKET STRUCTURE SHIFT (Weight: 25)
     if (data.mss === "BULLISH") score += 25;
     if (data.mss === "BEARISH") score -= 25;
+
+    // 3. DXY GRAVITY FILTER (Weight: 20)
+    if (data.dxyTrend === "BEARISH") score += 20; // Bullish for Gold/Crypto
+    if (data.dxyTrend === "BULLISH") score -= 20; // Bearish for Gold/Crypto
+
+    // 4. RETAIL CONFLUENCE (Weight: 15) - Calculated Internally
+    const currentRSI = MathEngine.calcRSI(data.recentCloses);
+    const ema200 = MathEngine.calcEMA(data.recentCloses, 200);
     
-    // Liquidity & DXY Filter
-    if (data.dxyTrend === "BEARISH") score += 20; 
-    if (data.dxyTrend === "BULLISH") score -= 20;
+    if (currentRSI < 30) score += 7.5;
+    if (currentRSI > 70) score -= 7.5;
+    if (data.currentPrice > ema200) score += 7.5;
+    if (data.currentPrice < ema200) score -= 7.5;
 
-    // 3. Indicator Confluence (Calculated Internally)
-    if (currentRSI < 30) score += 15; // Oversold confluence
-    if (currentRSI > 70) score -= 15; // Overbought confluence
-
-    // 4. Decision
-    if (score >= 60) bias = "BUY";
-    else if (score <= -60) bias = "SELL";
+    // --- FINAL BIAS CALCULATION ---
+    // Scalp Requirement: 65% Confidence | Day Trade Requirement: 85% Confidence
+    if (score >= 85) bias = "DAY TRADE BUY";
+    else if (score >= 65) bias = "SCALP BUY";
+    else if (score <= -85) bias = "DAY TRADE SELL";
+    else if (score <= -65) bias = "SCALP SELL";
     else bias = "WAIT";
 
-    return { bias, score: Math.abs(score), calculatedRSI: currentRSI.toFixed(1) };
+    return { bias, confidence: Math.abs(score), rsi: currentRSI.toFixed(1) };
 }
 
+// --- EXECUTION PIPELINE ---
 async function executeSurgicalScan() {
     const btn = ui('scanBtn');
-    if (files.filter(f => f).length < 4) return alert("Upload all 4 plain charts.");
-    btn.innerText = "EXTRACTING RAW PIXELS...";
+    if (files.filter(f => f).length < 4) return alert("Upload all 4 Plain Charts.");
+
+    btn.innerText = "COUNCIL OF 8 ANALYZING...";
     btn.disabled = true;
 
     try {
         const key = localStorage.getItem('omni_apiKeyInput');
-        const images = await Promise.all(files.map(f => toBase64(f)));
+        const b64Images = await Promise.all(files.map(f => toBase64(f)));
 
-        // STEP 1: Gemini extracts raw price points from plain chart
-        const rawData = await fetchRawData(key, images);
+        // 1. Data Scrape (Vision)
+        const rawData = await fetchVisionData(key, b64Images);
 
-        // STEP 2: JS Brain calculates indicators and finds the setup
-        const decision = runStrategicBrain(rawData);
+        // 2. Weighted Logic (JS)
+        const analysis = runWeightedAnalysis(rawData);
 
-        // STEP 3: AI generates the 12-word logic
-        const logicSummary = await fetchLogic(key, decision.bias, rawData);
+        // 3. Narrative logic (AI)
+        const logicTxt = await fetchNarrative(key, analysis.bias, rawData);
 
-        renderOutput(rawData, decision, logicSummary);
+        renderUI(rawData, analysis, logicTxt);
     } catch (e) {
-        alert("SYSTEM ERROR: Check API key or Image Quality.");
+        console.error(e);
+        alert("CRITICAL SYSTEM ERROR");
     } finally {
         btn.innerText = "Perform Surgical Scan";
         btn.disabled = false;
     }
 }
 
-async function fetchRawData(key, images) {
+async function fetchVisionData(key, images) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
     const prompt = `
-        PROTOCOL: OMNI_V80_OHLC_EXTRACTOR
-        TASK: Scrape the plain chart. Look at the last 30 candles.
-        Return the closing price for each candle in an array.
-        Also identify Liquidity Sweeps and Market Structure Shifts (MSS).
+        PROTOCOL: OMNI_V80_VISION_SCRAPE
+        Mandate: Scrape plain charts. Extract exact numeric price data.
+        1. Current Price.
+        2. Identify most recent Liquidity Sweep level (Wick Level).
+        3. Identify MSS (BULLISH/BEARISH/NONE).
+        4. DXY Trend.
+        5. Extract last 20 candle closes as an array.
+        6. Define entry, sl, tp, and a POI (Wait level).
         
-        JSON STRUCTURE ONLY:
+        STRICT JSON ONLY:
         {
-          "assetName": "STRING",
+          "asset": "STRING",
           "currentPrice": number,
-          "recentCloses": [number, number, ...], // Last 30 candle closes
-          "dxyTrend": "BULLISH"|"BEARISH"|"SIDEWAYS",
-          "mss": "BULLISH"|"BEARISH"|"NONE",
           "liquiditySweep": number,
-          "sl": number, "tp": number, "poi": number
+          "mss": "STRING",
+          "dxyTrend": "STRING",
+          "recentCloses": [numbers],
+          "entry": number, "sl": number, "tp": number, "poi": number
         }
     `;
 
@@ -122,30 +128,43 @@ async function fetchRawData(key, images) {
     return JSON.parse(json.candidates[0].content.parts[0].text);
 }
 
-async function fetchLogic(key, bias, data) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
-    const prompt = `Write 12 words max explaining a ${bias} on ${data.assetName} using SMC logic.`;
+async function fetchNarrative(key, bias, data) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
+    const prompt = `Give a 12-word institutional trade logic for a ${bias} on ${data.asset}. Focus on liquidity.`;
     const res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
     const json = await res.json();
     return json.candidates[0].content.parts[0].text;
 }
 
-function renderOutput(data, decision, logic) {
+function renderUI(rawData, analysis, logic) {
+    const isWait = analysis.bias === "WAIT";
     ui('resultBox').classList.remove('hidden');
-    ui('actionText').innerText = decision.bias;
-    ui('actionText').className = `text-7xl font-black italic tracking-tighter uppercase leading-none glow-text ${
-        decision.bias === 'BUY' ? 'text-emerald-400' : decision.bias === 'SELL' ? 'text-rose-500' : 'text-slate-400'
+    ui('actionText').innerText = analysis.bias;
+    ui('actionText').className = `text-5xl font-black italic tracking-tighter uppercase leading-none glow-text ${
+        analysis.bias.includes('BUY') ? 'text-emerald-400' : analysis.bias.includes('SELL') ? 'text-rose-500' : 'text-slate-400'
     }`;
-    ui('rsiVal').innerText = decision.calculatedRSI;
+
+    ui('scoreText').innerText = `Confidence: ${analysis.confidence}%`;
     ui('logicText').innerText = logic;
-    ui('entText').innerText = decision.bias === "WAIT" ? "---" : data.currentPrice;
-    ui('slText').innerText = decision.bias === "WAIT" ? "---" : data.sl;
-    ui('tpText').innerText = decision.bias === "WAIT" ? "---" : data.tp;
+    ui('rsiVal').innerText = analysis.rsi;
+    ui('dxyStatus').innerText = rawData.dxyTrend;
     
-    if (decision.bias === "WAIT") {
+    ui('entText').innerText = isWait ? "---" : rawData.entry;
+    ui('slText').innerText = isWait ? "---" : rawData.sl;
+    ui('tpText').innerText = isWait ? "---" : rawData.tp;
+
+    const rr = Math.abs(rawData.tp - rawData.entry) / Math.abs(rawData.entry - rawData.sl);
+    ui('rrText').innerText = isWait ? "1:0.0" : `1:${rr.toFixed(1)}`;
+
+    if (isWait) {
         ui('poiZone').classList.remove('hidden');
-        ui('poiLevel').innerText = data.poi || "MONITORING";
+        ui('poiLevel').innerText = rawData.poi || "MONITORING";
+        ui('lotText').innerText = "WAIT";
     } else {
         ui('poiZone').classList.add('hidden');
+        const bal = parseFloat(localStorage.getItem('omni_balanceInput'));
+        const risk = parseFloat(localStorage.getItem('omni_riskInput')) / 100;
+        const lot = (bal * risk) / (Math.abs(rawData.entry - rawData.sl) * 10);
+        ui('lotText').innerText = lot.toFixed(3);
     }
 }

@@ -1,163 +1,240 @@
-/**
- * OMNI-BLACK | VERSION 85.0 (SENSOR-EXECUTION SPLIT)
- * Gemini = Sensor & Narrator | JS = Decision Engine
- */
+// ========================= strategies.js =========================
+// OMNI-BLACK V2.0 – Full Multi‑Strategy Trading Engine
+// Strategies: SMC (OB, FVG, Liquidity Sweep, MSS), Supply & Demand,
+// Support & Resistance, BOS + Retest, Fibonacci Retracement, Spread filter.
+// =================================================================
 
-let files = [null, null, null, null]; 
-const ui = (id) => document.getElementById(id);
-const toBase64 = (file) => new Promise(res => {
-    const r = new FileReader(); r.readAsDataURL(file); r.onload = () => res(r.result);
-});
-
-// --- PERSISTENCE ---
-document.addEventListener('DOMContentLoaded', () => {
-    ['apiKeyInput', 'balanceInput', 'riskInput'].forEach(id => {
-        const val = localStorage.getItem('omni_' + id);
-        if (val && ui(id)) ui(id).value = val;
-    });
-});
-
-async function secureParameters() {
-    ['apiKeyInput', 'balanceInput', 'riskInput'].forEach(id => {
-        localStorage.setItem('omni_' + id, ui(id).value);
-    });
-    alert("SYSTEM LOCKED");
-    toggleDrawer();
-}
-
-// --- APP DECISION ENGINE (The "Brain") ---
-const DecisionEngine = {
-    calcRSI: (prices) => {
-        if (!prices || prices.length < 14) return 50;
+class StrategyEngine {
+    // ---------- Helper: RSI ----------
+    static calcRSI(prices, period = 14) {
+        if (!prices || prices.length < period + 1) return 50;
         let gains = 0, losses = 0;
-        for (let i = 1; i < 15; i++) {
-            let d = prices[i] - prices[i-1];
-            d > 0 ? gains += d : losses -= d;
+        for (let i = prices.length - period; i < prices.length; i++) {
+            let diff = prices[i] - prices[i - 1];
+            if (diff >= 0) gains += diff;
+            else losses -= diff;
         }
-        return 100 - (100 / (1 + (gains / (losses || 1))));
-    },
-    
-    analyze: (data) => {
+        let avgGain = gains / period, avgLoss = losses / period;
+        let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+        return 100 - (100 / (1 + rs));
+    }
+
+    // ---------- Strategy 1: SMC (Smart Money Concepts) ----------
+    // Includes: MSS, Order Block, FVG, Liquidity Sweep
+    static evaluateSMC(data) {
         let score = 0;
-        const rsi = DecisionEngine.calcRSI(data.recentCloses);
-        
-        // Institutional Weight (65%)
-        if (data.mss === "BULLISH") score += 25;
-        if (data.mss === "BEARISH") score -= 25;
-        if (Math.abs(data.currentPrice - data.liquiditySweep) / data.currentPrice < 0.002) score += 40;
+        let reasons = [];
+        const { mss, liquiditySweep, ob_level, fvg_level, currentPrice } = data;
 
-        // DXY Weight (20%)
-        if (data.dxyTrend === "BEARISH") score += 20;
-        if (data.dxyTrend === "BULLISH") score -= 20;
-
-        // Retail/Internal Math (15%)
-        if (rsi < 35) score += 15;
-        if (rsi > 65) score -= 15;
-
-        let bias = "WAIT";
-        if (score >= 60) bias = "BUY";
-        else if (score <= -60) bias = "SELL";
-
-        return { bias, confidence: Math.abs(score), rsi: rsi.toFixed(1) };
+        if (mss === "BULLISH") {
+            score += 30;
+            reasons.push("Bullish MSS (market structure shift)");
+            if (liquiditySweep && currentPrice > liquiditySweep) {
+                score += 25;
+                reasons.push("Liquidity swept below low → stop hunt");
+            }
+            if (ob_level && Math.abs(currentPrice - ob_level) / currentPrice < 0.002) {
+                score += 20;
+                reasons.push("Price at bullish Order Block");
+            }
+            if (fvg_level && currentPrice >= fvg_level * 0.999) {
+                score += 15;
+                reasons.push("Fair Value Gap acting as support");
+            }
+        } else if (mss === "BEARISH") {
+            score -= 30;
+            reasons.push("Bearish MSS");
+            if (liquiditySweep && currentPrice < liquiditySweep) {
+                score -= 25;
+                reasons.push("Liquidity swept above high");
+            }
+            if (ob_level && Math.abs(currentPrice - ob_level) / currentPrice < 0.002) {
+                score -= 20;
+                reasons.push("Price at bearish Order Block");
+            }
+            if (fvg_level && currentPrice <= fvg_level * 1.001) {
+                score -= 15;
+                reasons.push("FVG acting as resistance");
+            }
+        }
+        return { score, reasons, action: score >= 40 ? "BUY" : (score <= -40 ? "SELL" : null) };
     }
-};
 
-// --- SYSTEM PIPELINE ---
-async function executeSurgicalScan() {
-    const btn = ui('scanBtn');
-    if (files.filter(f => f).length < 4) return alert("Upload all 4 plain charts.");
-    
-    btn.innerText = "GEMINI SENSORS SCANNING...";
-    btn.disabled = true;
+    // ---------- Strategy 2: Supply & Demand (Fresh Zones) ----------
+    static evaluateSD(data) {
+        let score = 0;
+        let reasons = [];
+        const { supplyZone, demandZone, currentPrice, liquiditySweep } = data;
 
-    try {
-        const key = localStorage.getItem('omni_apiKeyInput');
-        const b64Images = await Promise.all(files.map(f => toBase64(f)));
+        if (demandZone && currentPrice >= demandZone.low && currentPrice <= demandZone.high) {
+            score += 35;
+            reasons.push(`Fresh demand zone [${demandZone.low} - ${demandZone.high}]`);
+            if (liquiditySweep && liquiditySweep < demandZone.low) {
+                score += 20;
+                reasons.push("Liquidity swept below demand → premium reaction");
+            }
+        }
+        if (supplyZone && currentPrice >= supplyZone.low && currentPrice <= supplyZone.high) {
+            score -= 35;
+            reasons.push(`Fresh supply zone [${supplyZone.low} - ${supplyZone.high}]`);
+            if (liquiditySweep && liquiditySweep > supplyZone.high) {
+                score -= 20;
+                reasons.push("Liquidity swept above supply");
+            }
+        }
+        return { score, reasons, action: score >= 40 ? "BUY" : (score <= -40 ? "SELL" : null) };
+    }
 
-        // 1. GEMINI READS CHART DATA
-        const marketData = await geminiSensor(key, b64Images);
+    // ---------- Strategy 3: Support & Resistance (Classic) ----------
+    static evaluateSR(data) {
+        let score = 0;
+        let reasons = [];
+        const { support, resistance, currentPrice, bounceConfirm } = data;
 
-        // 2. APP MAKES THE SIGNAL DECISION
-        const decision = DecisionEngine.analyze(marketData);
+        if (support && Math.abs(currentPrice - support) / currentPrice < 0.002) {
+            score += 25;
+            reasons.push(`Strong support at ${support}`);
+            if (bounceConfirm === true) {
+                score += 15;
+                reasons.push("Confirmed bullish rejection (wick/bullish candle)");
+            }
+        }
+        if (resistance && Math.abs(currentPrice - resistance) / currentPrice < 0.002) {
+            score -= 25;
+            reasons.push(`Strong resistance at ${resistance}`);
+            if (bounceConfirm === false) {
+                score -= 15;
+                reasons.push("Confirmed bearish rejection");
+            }
+        }
+        return { score, reasons, action: score >= 30 ? "BUY" : (score <= -30 ? "SELL" : null) };
+    }
 
-        // 3. GEMINI GENERATES LOGIC BASED ON APP'S SIGNAL
-        const finalNarrative = await geminiNarrator(key, decision.bias, marketData);
+    // ---------- Strategy 4: Break of Structure (BOS) + Retest ----------
+    static evaluateBOS(data) {
+        let score = 0;
+        let reasons = [];
+        const { bosType, retestZone, currentPrice } = data;
 
-        renderUI(marketData, decision, finalNarrative);
-    } catch (e) {
-        alert("SCAN ERROR: Ensure API Key is valid.");
-    } finally {
-        btn.innerText = "Perform Surgical Scan";
-        btn.disabled = false;
+        if (bosType === "BULLISH" && retestZone) {
+            if (currentPrice >= retestZone.low && currentPrice <= retestZone.high) {
+                score += 35;
+                reasons.push(`Bullish BOS retesting broken resistance as support [${retestZone.low} - ${retestZone.high}]`);
+            }
+        } else if (bosType === "BEARISH" && retestZone) {
+            if (currentPrice >= retestZone.low && currentPrice <= retestZone.high) {
+                score -= 35;
+                reasons.push(`Bearish BOS retesting broken support as resistance`);
+            }
+        }
+        return { score, reasons, action: score >= 35 ? "BUY" : (score <= -35 ? "SELL" : null) };
+    }
+
+    // ---------- Strategy 5: Fibonacci Retracement (38.2%, 50%, 61.8%) ----------
+    static evaluateFibRetracement(data) {
+        let score = 0;
+        let reasons = [];
+        const { fibLevel, currentPrice, trendDirection } = data; // trendDirection = "UP" or "DOWN"
+
+        if (fibLevel && trendDirection === "UP" && Math.abs(currentPrice - fibLevel) / currentPrice < 0.002) {
+            score += 20;
+            reasons.push(`Price at ${fibLevel} Fibonacci retracement in uptrend`);
+        } else if (fibLevel && trendDirection === "DOWN" && Math.abs(currentPrice - fibLevel) / currentPrice < 0.002) {
+            score -= 20;
+            reasons.push(`Price at ${fibLevel} Fib retracement in downtrend`);
+        }
+        return { score, reasons, action: score >= 20 ? "BUY" : (score <= -20 ? "SELL" : null) };
+    }
+
+    // ---------- Strategy 6: Spread Filter (Prevents High Spread Trades) ----------
+    static checkSpread(data) {
+        const { spread, currentPrice } = data;
+        if (!spread) return { passed: true, penalty: 0 };
+        const spreadPercent = (spread / currentPrice) * 100;
+        if (spreadPercent > 0.05) {
+            return { passed: false, penalty: -30, reason: `Spread too high (${spreadPercent.toFixed(2)}%)` };
+        }
+        if (spreadPercent > 0.03) {
+            return { passed: true, penalty: -10, reason: `Wide spread (${spreadPercent.toFixed(2)}%) – reduce confidence` };
+        }
+        return { passed: true, penalty: 0, reason: "Spread acceptable" };
+    }
+
+    // ---------- Main Aggregator: runs all strategies and builds final setup ----------
+    static getBestSetup(data) {
+        // 1. Run all strategy evaluations
+        const smc = this.evaluateSMC(data);
+        const sd = this.evaluateSD(data);
+        const sr = this.evaluateSR(data);
+        const bos = this.evaluateBOS(data);
+        const fib = this.evaluateFibRetracement(data);
+        const spreadCheck = this.checkSpread(data);
+
+        const allResults = [smc, sd, sr, bos, fib];
+        let totalScore = 0;
+        let allReasons = [];
+        let actionVotes = { BUY: 0, SELL: 0, WAIT: 0 };
+
+        for (let res of allResults) {
+            totalScore += res.score;
+            allReasons.push(...res.reasons);
+            if (res.action === "BUY") actionVotes.BUY++;
+            else if (res.action === "SELL") actionVotes.SELL++;
+            else actionVotes.WAIT++;
+        }
+
+        // Apply spread penalty
+        totalScore += spreadCheck.penalty;
+        if (!spreadCheck.passed) {
+            allReasons.unshift(spreadCheck.reason);
+        }
+
+        // DXY filter (override if extreme)
+        if (data.dxyTrend === "BULLISH" && totalScore > 0) totalScore *= 0.7;
+        if (data.dxyTrend === "BEARISH" && totalScore < 0) totalScore *= 0.7;
+
+        // Final action
+        let finalAction = "WAIT";
+        let confidence = Math.abs(totalScore);
+        if (totalScore >= 55) finalAction = "BUY";
+        else if (totalScore <= -55) finalAction = "SELL";
+
+        // Grade based on confidence & vote unanimity
+        let grade = "B";
+        if (confidence >= 75 && (actionVotes.BUY >= 3 || actionVotes.SELL >= 3)) grade = "A+";
+        else if (confidence >= 65) grade = "A";
+        else if (confidence >= 50) grade = "B+";
+
+        // Build POI, SL, TP using the strongest confluent level
+        let poi = null, sl = null, tp = null;
+        if (finalAction === "BUY") {
+            poi = data.demandZone?.high || data.support || data.ob_level || data.fvg_level || data.currentPrice;
+            sl = poi * 0.997;   // 0.3% below POI
+            tp = poi * 1.012;   // 1.2% target
+        } else if (finalAction === "SELL") {
+            poi = data.supplyZone?.low || data.resistance || data.ob_level || data.fvg_level || data.currentPrice;
+            sl = poi * 1.003;
+            tp = poi * 0.988;
+        } else {
+            poi = data.poi || data.currentPrice;
+        }
+
+        // Calculate RSI from recent closes
+        const rsi = this.calcRSI(data.recentCloses);
+
+        return {
+            action: finalAction,
+            confidence: Math.min(confidence, 100),
+            grade,
+            poi: poi ? poi.toFixed(5) : "N/A",
+            sl: sl ? sl.toFixed(5) : "N/A",
+            tp: tp ? tp.toFixed(5) : "N/A",
+            reasons: allReasons.slice(0, 5), // top 5 reasons
+            rsi: rsi.toFixed(1)
+        };
     }
 }
 
-async function geminiSensor(key, images) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
-    const prompt = `
-        TASK: Extract precise data from these plain charts. 
-        Focus on: Last 20 candle closes, Liquidity Sweep level, MSS status, DXY Trend, and specific POI price.
-        JSON ONLY:
-        {
-          "asset": "STRING",
-          "currentPrice": number,
-          "recentCloses": [numbers],
-          "liquiditySweep": number,
-          "mss": "BULLISH"|"BEARISH"|"NONE",
-          "dxyTrend": "BULLISH"|"BEARISH",
-          "poi": number,
-          "suggested_sl": number, "suggested_tp": number
-        }`;
-
-    const res = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }, ...images.map(img => ({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } }))] }],
-            generationConfig: { response_mime_type: "application/json", temperature: 0.1 }
-        })
-    });
-    const j = await res.json();
-    return JSON.parse(j.candidates[0].content.parts[0].text);
-}
-
-async function geminiNarrator(key, signal, data) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
-    const prompt = signal === "WAIT" 
-        ? `The app signal is WAIT. Explain in 10-15 words why we must wait for the POI at ${data.poi} based on the chart structure.`
-        : `The app signal is ${signal}. Give a 10-15 word logic for this ${signal} on ${data.asset} based on institutional liquidity.`;
-
-    const res = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    const j = await res.json();
-    return j.candidates[0].content.parts[0].text;
-}
-
-function renderUI(data, decision, narrative) {
-    ui('resultBox').classList.remove('hidden');
-    ui('actionText').innerText = decision.bias;
-    ui('actionText').className = `text-6xl font-black italic uppercase glow-text ${decision.bias === 'BUY' ? 'text-emerald-400' : decision.bias === 'SELL' ? 'text-rose-500' : 'text-slate-400'}`;
-    
-    ui('logicText').innerText = narrative;
-    ui('scoreText').innerText = `Confidence: ${decision.confidence}%`;
-    ui('rsiVal').innerText = decision.rsi;
-    ui('dxyStatus').innerText = data.dxyTrend;
-    ui('poiLevel').innerText = data.poi || "ANALYZING";
-
-    if (decision.bias === "WAIT") {
-        ui('poiZone').classList.remove('hidden');
-        ui('entText').innerText = "---"; ui('slText').innerText = "---"; ui('tpText').innerText = "---";
-        ui('lotText').innerText = "0.00";
-    } else {
-        ui('poiZone').classList.add('hidden');
-        ui('entText').innerText = data.currentPrice;
-        ui('slText').innerText = data.suggested_sl;
-        ui('tpText').innerText = data.suggested_tp;
-        
-        const bal = parseFloat(localStorage.getItem('omni_balanceInput'));
-        const risk = parseFloat(localStorage.getItem('omni_riskInput')) / 100;
-        const lot = (bal * risk) / (Math.abs(data.currentPrice - data.suggested_sl) * 10);
-        ui('lotText').innerText = lot.toFixed(3);
-    }
-}
+// Make available globally
+if (typeof window !== 'undefined') window.StrategyEngine = StrategyEngine;
+if (typeof module !== 'undefined') module.exports = StrategyEngine;

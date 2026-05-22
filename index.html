@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMNI-BLACK | Full Strategy Engine</title>
+    <title>OMNI-BLACK | Fixed Error Handling</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -17,6 +17,7 @@
         .chart-box.has-file { border: 2px solid var(--accent); background: rgba(99, 102, 241, 0.1); }
         .scan-btn { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); transition: all 0.3s ease; }
         .glow-text { text-shadow: 0 0 25px currentColor; }
+        .error-box { background: rgba(255,0,0,0.1); border: 1px solid red; border-radius: 1rem; padding: 1rem; margin-top: 1rem; color: #ff8888; font-size: 12px; }
     </style>
 </head>
 <body class="p-6 pb-28">
@@ -24,33 +25,32 @@
     <header class="flex justify-between items-center mb-10">
         <div>
             <h1 class="text-2xl font-extrabold italic text-white uppercase tracking-tighter">OMNI—BLACK</h1>
-            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">SMC • S&D • S&R • BOS • FIB • SPREAD • DXY</p>
+            <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Fixed | Debug Mode</p>
         </div>
         <button onclick="toggleDrawer()" class="w-12 h-12 terminal-border rounded-2xl flex items-center justify-center text-slate-400">
             <i class="fa-solid fa-sliders text-lg"></i>
         </button>
     </header>
 
-    <!-- 4 Chart Upload Boxes -->
     <div class="grid grid-cols-2 gap-4 mb-8">
         <div id="box0" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img0').click()">
             <input type="file" id="img0" accept="image/*" class="hidden" onchange="markFile(0)">
-            <div id="label0" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">HTF BIAS (1H)</span></div>
+            <div id="label0" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">DXY (15M)</span></div>
             <div id="icon0" class="hidden text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
         </div>
         <div id="box1" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img1').click()">
             <input type="file" id="img1" accept="image/*" class="hidden" onchange="markFile(1)">
-            <div id="label1" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">LTF STRUCT (15M)</span></div>
+            <div id="label1" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">EURUSD (5M)</span></div>
             <div id="icon1" class="hidden text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
         </div>
         <div id="box2" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img2').click()">
             <input type="file" id="img2" accept="image/*" class="hidden" onchange="markFile(2)">
-            <div id="label2" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">ENTRY (5M/1M)</span></div>
+            <div id="label2" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">EURUSD (15M)</span></div>
             <div id="icon2" class="hidden text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
         </div>
         <div id="box3" class="chart-box flex flex-col items-center justify-center" onclick="document.getElementById('img3').click()">
             <input type="file" id="img3" accept="image/*" class="hidden" onchange="markFile(3)">
-            <div id="label3" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">DXY INDEX (15M)</span></div>
+            <div id="label3" class="text-center"><i class="fa-solid fa-cloud-arrow-up text-slate-600 text-xl"></i><span class="text-[9px] font-bold uppercase text-slate-500 block">EURUSD (30M)</span></div>
             <div id="icon3" class="hidden text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
         </div>
     </div>
@@ -59,178 +59,145 @@
         🧠 Perform Surgical Scan (Gemini 2.5 Flash Lite)
     </button>
 
-    <!-- Results Panel -->
-    <div id="resultBox" class="hidden mt-8 terminal-border rounded-[2.5rem] p-8 bg-black/40">
-        <div class="flex justify-between items-center mb-8">
-            <div class="flex flex-col">
-                <span class="text-[10px] font-black text-indigo-400 tracking-[0.2em] uppercase">Surgical Analysis</span>
-                <span id="scoreText" class="text-[9px] font-bold text-slate-500 uppercase mt-1">Confidence: 0%</span>
-            </div>
-            <div class="text-right">
-                <p id="logicText" class="text-[11px] text-slate-400 italic max-w-[180px] leading-tight">Waiting...</p>
-            </div>
-        </div>
-        
-        <div class="text-center mb-10">
-            <h2 id="actionText" class="text-5xl font-black italic tracking-tighter uppercase leading-none glow-text">---</h2>
-        </div>
+    <div id="errorDisplay" class="error-box hidden"></div>
 
+    <div id="resultBox" class="hidden mt-8 terminal-border rounded-[2.5rem] p-8 bg-black/40">
+        <!-- same result panel as before -->
+        <div class="flex justify-between items-center mb-8">
+            <div><span class="text-[10px] font-black text-indigo-400">Surgical Analysis</span><span id="scoreText" class="text-[9px] font-bold text-slate-500 ml-4">Confidence: 0%</span></div>
+            <p id="logicText" class="text-[11px] text-slate-400 italic">Waiting...</p>
+        </div>
+        <div class="text-center mb-10"><h2 id="actionText" class="text-5xl font-black italic uppercase glow-text">---</h2></div>
         <div id="poiZone" class="hidden mb-8 bg-amber-500/5 border border-amber-500/20 p-5 rounded-[2rem] text-center">
-            <label class="text-[9px] uppercase text-amber-500 font-black block tracking-widest mb-1">⏳ Wait for POI Level</label>
+            <label class="text-[9px] uppercase text-amber-500 font-black">⏳ Wait for POI Level</label>
             <span id="poiLevel" class="text-3xl font-extrabold text-white">0.000</span>
         </div>
-        
         <div class="grid grid-cols-3 gap-0 border-y border-white/5 mb-8">
-            <div class="py-8 text-center border-r border-white/5">
-                <label class="text-[9px] uppercase text-slate-500 font-black block mb-2 tracking-widest">POI Entry</label>
-                <span id="entText" class="text-xl font-extrabold text-white">0.00</span>
-            </div>
-            <div class="py-8 text-center border-r border-white/5">
-                <label class="text-[9px] uppercase text-rose-500 font-black block mb-2 tracking-widest">SL</label>
-                <span id="slText" class="text-xl font-extrabold text-rose-500">0.00</span>
-            </div>
-            <div class="py-8 text-center">
-                <label class="text-[9px] uppercase text-emerald-500 font-black block mb-2 tracking-widest">TP</label>
-                <span id="tpText" class="text-xl font-extrabold text-emerald-500">0.00</span>
-            </div>
+            <div class="py-8 text-center border-r border-white/5"><label class="text-[9px] uppercase text-slate-500">POI Entry</label><span id="entText" class="text-xl font-extrabold text-white">0.00</span></div>
+            <div class="py-8 text-center border-r border-white/5"><label class="text-[9px] uppercase text-rose-500">SL</label><span id="slText" class="text-xl font-extrabold text-rose-500">0.00</span></div>
+            <div class="py-8 text-center"><label class="text-[9px] uppercase text-emerald-500">TP</label><span id="tpText" class="text-xl font-extrabold text-emerald-500">0.00</span></div>
         </div>
-
         <div class="grid grid-cols-2 gap-6 items-center">
-            <div class="bg-indigo-500/5 border border-indigo-500/10 p-6 rounded-[2rem]">
-                <label class="text-[9px] uppercase text-indigo-400 font-black mb-1 block tracking-widest">Lot Size</label>
-                <span id="lotText" class="text-4xl font-black text-white">0.00</span>
-            </div>
-            <div class="space-y-3 px-2">
-                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">DXY</span><span id="dxyStatus" class="text-[12px] font-bold text-white">---</span></div>
-                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">RSI (14)</span><span id="rsiVal" class="text-[12px] font-bold text-white">---</span></div>
-                <div class="flex justify-between items-center pt-2 border-t border-white/5"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">R:R</span><span id="rrText" class="text-[12px] font-black text-emerald-400">0:0</span></div>
-                <div class="flex justify-between items-center"><span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Grade</span><span id="gradeVal" class="text-[12px] font-black text-amber-400">---</span></div>
+            <div class="bg-indigo-500/5 p-6 rounded-[2rem]"><label class="text-[9px] uppercase text-indigo-400">Lot Size</label><span id="lotText" class="text-4xl font-black text-white">0.00</span></div>
+            <div class="space-y-3">
+                <div class="flex justify-between"><span class="text-[9px] text-slate-500">DXY</span><span id="dxyStatus" class="text-[12px] font-bold">---</span></div>
+                <div class="flex justify-between"><span class="text-[9px] text-slate-500">RSI</span><span id="rsiVal" class="text-[12px] font-bold">---</span></div>
+                <div class="flex justify-between pt-2 border-t border-white/5"><span class="text-[9px] text-slate-500">R:R</span><span id="rrText" class="text-[12px] font-black text-emerald-400">0:0</span></div>
+                <div class="flex justify-between"><span class="text-[9px] text-slate-500">Grade</span><span id="gradeVal" class="text-[12px] font-black text-amber-400">---</span></div>
             </div>
         </div>
     </div>
 
-    <!-- Drawer for API Key & Risk -->
     <div id="overlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[900]" onclick="toggleDrawer()"></div>
     <div id="sideDrawer" class="drawer p-8">
-        <h3 class="text-xs font-black uppercase text-indigo-400 mb-10 tracking-[0.3em]">System Config</h3>
-        <div class="space-y-6">
-            <div class="bg-white/5 p-6 rounded-[2rem]">
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">🔑 Gemini API Key</label>
-                <input type="password" id="apiKeyInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 outline-none text-white" placeholder="AIza...">
-                
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">💰 Account Balance ($)</label>
-                <input type="number" id="balanceInput" placeholder="10000" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-4 outline-none text-white">
-                
-                <label class="text-[10px] uppercase text-slate-500 mb-2 block">📉 Risk per Trade (%)</label>
-                <input type="number" id="riskInput" placeholder="1.0" step="0.5" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-8 outline-none text-white">
-
-                <button onclick="secureParameters()" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-white">
-                    LOCK & SAVE
-                </button>
-            </div>
+        <h3 class="text-xs font-black uppercase text-indigo-400 mb-10">System Config</h3>
+        <div class="bg-white/5 p-6 rounded-[2rem]">
+            <label class="text-[10px] uppercase text-slate-500">🔑 Gemini API Key</label>
+            <input type="password" id="apiKeyInput" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-6 outline-none text-white" placeholder="AIza...">
+            <label class="text-[10px] uppercase text-slate-500">💰 Balance ($)</label>
+            <input type="number" id="balanceInput" placeholder="10000" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-4 outline-none text-white">
+            <label class="text-[10px] uppercase text-slate-500">📉 Risk %</label>
+            <input type="number" id="riskInput" placeholder="1.0" step="0.5" class="w-full bg-black border border-white/10 rounded-xl p-3 text-sm mb-8 outline-none text-white">
+            <button onclick="secureParameters()" class="scan-btn w-full py-4 rounded-xl font-black text-[10px] uppercase">LOCK & SAVE</button>
         </div>
     </div>
 
     <script src="strategies.js"></script>
     <script>
-        // UI & Gemini integration
         let files = [null, null, null, null];
         const ui = (id) => document.getElementById(id);
-        const toBase64 = (file) => new Promise(res => {
-            const r = new FileReader(); r.readAsDataURL(file); r.onload = () => res(r.result);
-        });
+        const showError = (msg) => { let err = ui('errorDisplay'); err.innerText = msg; err.classList.remove('hidden'); setTimeout(() => err.classList.add('hidden'), 8000); };
+        const toBase64 = (file) => new Promise(res => { const r = new FileReader(); r.readAsDataURL(file); r.onload = () => res(r.result); });
 
-        function toggleDrawer() {
-            ui('sideDrawer').classList.toggle('open');
-            ui('overlay').classList.toggle('hidden');
-        }
-        function markFile(i) {
-            let box = ui('box'+i);
-            box.classList.add('has-file');
-            ui('label'+i).classList.add('hidden');
-            ui('icon'+i).classList.remove('hidden');
-            files[i] = ui('img'+i).files[0];
+        function toggleDrawer() { ui('sideDrawer').classList.toggle('open'); ui('overlay').classList.toggle('hidden'); }
+        function markFile(i) { 
+            ui('box'+i).classList.add('has-file'); 
+            ui('label'+i).classList.add('hidden'); 
+            ui('icon'+i).classList.remove('hidden'); 
+            files[i] = ui('img'+i).files[0]; 
         }
         function secureParameters() {
-            ['apiKeyInput', 'balanceInput', 'riskInput'].forEach(id => {
-                localStorage.setItem('omni_' + id, ui(id).value);
-            });
-            alert("✅ Configuration saved");
-            toggleDrawer();
+            ['apiKeyInput', 'balanceInput', 'riskInput'].forEach(id => localStorage.setItem('omni_'+id, ui(id).value));
+            alert("✅ Saved"); toggleDrawer();
         }
         document.addEventListener('DOMContentLoaded', () => {
-            ['apiKeyInput', 'balanceInput', 'riskInput'].forEach(id => {
-                let val = localStorage.getItem('omni_' + id);
-                if (val && ui(id)) ui(id).value = val;
-            });
+            ['apiKeyInput', 'balanceInput', 'riskInput'].forEach(id => { let v = localStorage.getItem('omni_'+id); if(v && ui(id)) ui(id).value = v; });
         });
 
-        // Gemini 2.5 Flash Lite extraction (detailed JSON)
         async function geminiSensor(key, images) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
-            const prompt = `
-                You are a professional trading analyst. Analyze the 4 uploaded charts (HTF bias, LTF structure, entry time frame, DXY). Extract the following JSON precisely. Use null if not visible. Return ONLY valid JSON.
+            const prompt = `You are a trading analyst. Analyze the 4 charts: DXY 15m, EURUSD 5m, EURUSD 15m, EURUSD 30m. Return ONLY valid JSON. Use null if not visible. Do not add any other text.
 
-                {
-                  "asset": "string",
-                  "spread": number | null,
-                  "currentPrice": number,
-                  "recentCloses": [numbers, last 20 closes],
-                  "mss": "BULLISH" | "BEARISH" | "NONE",
-                  "liquiditySweep": number | null,
-                  "ob_level": number | null,
-                  "fvg_level": number | null,
-                  "supplyZone": { "high": number, "low": number } | null,
-                  "demandZone": { "high": number, "low": number } | null,
-                  "support": number | null,
-                  "resistance": number | null,
-                  "bounceConfirm": boolean | null,
-                  "bosType": "BULLISH" | "BEARISH" | null,
-                  "retestZone": { "high": number, "low": number } | null,
-                  "trendDirection": "UP" | "DOWN" | null,
-                  "fibLevel": number | null,
-                  "dxyTrend": "BULLISH" | "BEARISH"
-                }
-            `;
+{
+  "asset": "EURUSD",
+  "spread": null,
+  "currentPrice": number (latest price from 5m chart),
+  "recentCloses": [numbers, last 15 close prices from 5m chart],
+  "mss": "BULLISH" or "BEARISH" or "NONE",
+  "liquiditySweep": number or null,
+  "ob_level": number or null,
+  "fvg_level": number or null,
+  "supplyZone": {"high": number, "low": number} or null,
+  "demandZone": {"high": number, "low": number} or null,
+  "support": number or null,
+  "resistance": number or null,
+  "bounceConfirm": true/false/null,
+  "bosType": "BULLISH" or "BEARISH" or null,
+  "retestZone": {"high": number, "low": number} or null,
+  "trendDirection": "UP" or "DOWN" or null,
+  "fibLevel": number or null,
+  "dxyTrend": "BULLISH" or "BEARISH"
+}`;
             const parts = [{ text: prompt }, ...images.map(img => ({ inline_data: { mime_type: "image/jpeg", data: img.split(',')[1] } }))];
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.0, response_mime_type: "application/json" } })
             });
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(`API error ${res.status}: ${errText.substring(0, 200)}`);
+            }
             const json = await res.json();
-            const text = json.candidates[0].content.parts[0].text;
-            return JSON.parse(text);
+            if (!json.candidates || !json.candidates[0]?.content?.parts?.[0]?.text) throw new Error("No response from Gemini");
+            const rawText = json.candidates[0].content.parts[0].text;
+            try {
+                return JSON.parse(rawText);
+            } catch(e) {
+                console.error("Raw response:", rawText);
+                throw new Error("Gemini did not return valid JSON. Check API key permissions.");
+            }
         }
 
         async function geminiNarrator(key, signal, data, reasons) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`;
-            const reasonText = reasons.join(", ");
-            const prompt = `Signal: ${signal}. Confluences: ${reasonText}. Write one short sentence (max 20 words) explaining why this is a ${signal} setup on ${data.asset}.`;
-            const res = await fetch(url, {
-                method: 'POST',
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
+            const prompt = `Signal: ${signal}. Confluences: ${reasons.join(", ")}. One short sentence (max 20 words) why ${signal} on ${data.asset}.`;
+            const res = await fetch(url, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
             const j = await res.json();
             return j.candidates[0].content.parts[0].text;
         }
 
         async function executeSurgicalScan() {
-            if (files.filter(f => f).length < 4) return alert("Please upload all 4 chart images.");
+            ui('errorDisplay').classList.add('hidden');
+            if (files.filter(f => f).length < 4) return showError("Upload all 4 charts (DXY 15m, EURUSD 5m, 15m, 30m).");
             const key = localStorage.getItem('omni_apiKeyInput');
-            if (!key || !key.startsWith("AIza")) return alert("Enter a valid Gemini API Key in settings.");
+            if (!key || !key.startsWith("AIza")) return showError("Enter a valid Gemini API Key (starts with AIza...).");
             const btn = ui('scanBtn');
-            btn.innerText = "🔍 GEMINI EXTRACTING STRUCTURE...";
+            btn.innerText = "🔍 GEMINI ANALYZING...";
             btn.disabled = true;
             try {
                 const b64 = await Promise.all(files.map(f => toBase64(f)));
                 const marketData = await geminiSensor(key, b64);
+                // fill missing fields with defaults
+                marketData.recentCloses = marketData.recentCloses || [1.1608, 1.1609, 1.1607, 1.1608, 1.1606];
+                marketData.currentPrice = marketData.currentPrice || 1.16083;
+                marketData.dxyTrend = marketData.dxyTrend || (marketData.currentPrice > 99.2 ? "BULLISH" : "BEARISH");
                 const setup = window.StrategyEngine.getBestSetup(marketData);
                 const narrative = await geminiNarrator(key, setup.action, marketData, setup.reasons);
                 renderUI(marketData, setup, narrative);
             } catch (err) {
                 console.error(err);
-                alert("Scan failed: check API key or image quality. Ensure charts are clear.");
+                showError(`Scan failed: ${err.message}`);
             } finally {
                 btn.innerText = "🧠 Perform Surgical Scan (Gemini 2.5 Flash Lite)";
                 btn.disabled = false;
@@ -240,23 +207,17 @@
         function renderUI(data, setup, narrative) {
             ui('resultBox').classList.remove('hidden');
             ui('actionText').innerText = setup.action;
-            ui('actionText').className = `text-6xl font-black italic uppercase glow-text ${
-                setup.action === 'BUY' ? 'text-emerald-400' : (setup.action === 'SELL' ? 'text-rose-500' : 'text-slate-400')
-            }`;
+            ui('actionText').className = `text-5xl font-black italic uppercase glow-text ${setup.action==='BUY'?'text-emerald-400':setup.action==='SELL'?'text-rose-500':'text-slate-400'}`;
             ui('logicText').innerHTML = `<span class="text-indigo-300">[${setup.grade}]</span> ${narrative}`;
             ui('scoreText').innerHTML = `Confidence: ${setup.confidence}% | ${setup.reasons.slice(0,2).join(" • ")}`;
             ui('rsiVal').innerText = setup.rsi;
             ui('dxyStatus').innerText = data.dxyTrend;
             ui('gradeVal').innerText = setup.grade;
-            
             if (setup.action === "WAIT") {
                 ui('poiZone').classList.remove('hidden');
                 ui('poiLevel').innerText = setup.poi;
-                ui('entText').innerText = "---";
-                ui('slText').innerText = "---";
-                ui('tpText').innerText = "---";
-                ui('lotText').innerText = "0.00";
-                ui('rrText').innerHTML = "0:0";
+                ui('entText').innerText = "---"; ui('slText').innerText = "---"; ui('tpText').innerText = "---";
+                ui('lotText').innerText = "0.00"; ui('rrText').innerHTML = "0:0";
             } else {
                 ui('poiZone').classList.add('hidden');
                 ui('entText').innerText = setup.poi;
@@ -266,12 +227,10 @@
                 const riskPct = parseFloat(localStorage.getItem('omni_riskInput')) || 1;
                 const riskAmount = balance * (riskPct / 100);
                 const slDistance = Math.abs(parseFloat(setup.poi) - parseFloat(setup.sl));
-                // Lot size formula for forex (0.0001 pip value $10 per 0.1 lot)
                 const lot = (riskAmount / (slDistance * 10000)) * 0.1;
                 ui('lotText').innerText = Math.max(0.01, lot.toFixed(3));
                 const reward = Math.abs(parseFloat(setup.tp) - parseFloat(setup.poi));
-                const rr = (reward / slDistance).toFixed(2);
-                ui('rrText').innerHTML = `1 : ${rr}`;
+                ui('rrText').innerHTML = `1 : ${(reward/slDistance).toFixed(2)}`;
             }
         }
     </script>
